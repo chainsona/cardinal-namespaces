@@ -1,5 +1,5 @@
 export type Namespaces = {
-  version: "4.1.28";
+  version: "4.1.29";
   name: "namespaces";
   instructions: [
     {
@@ -681,7 +681,7 @@ export type Namespaces = {
         },
         {
           name: "nameEntry";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -1821,12 +1821,17 @@ export type Namespaces = {
       code: 6024;
       name: "InvalidInvalidationType";
       msg: "Namespace has invalid invalidation type";
+    },
+    {
+      code: 6025;
+      name: "InvalidReverseEntryForNameEntry";
+      msg: "Invalid reverse entry for name entry";
     }
   ];
 };
 
 export const IDL: Namespaces = {
-  version: "4.1.28",
+  version: "4.1.29",
   name: "namespaces",
   instructions: [
     {
@@ -2508,7 +2513,7 @@ export const IDL: Namespaces = {
         },
         {
           name: "nameEntry",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -3648,6 +3653,11 @@ export const IDL: Namespaces = {
       code: 6024,
       name: "InvalidInvalidationType",
       msg: "Namespace has invalid invalidation type",
+    },
+    {
+      code: 6025,
+      name: "InvalidReverseEntryForNameEntry",
+      msg: "Invalid reverse entry for name entry",
     },
   ],
 };
