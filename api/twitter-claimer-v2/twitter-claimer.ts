@@ -8,17 +8,13 @@ import {
   withApproveClaimRequest,
   withClaimNameEntry,
   withInitNameEntry,
+  withInitNameEntryMint,
   withRevokeNameEntry,
   withRevokeReverseEntry,
   withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
 import * as anchor from "@project-serum/anchor";
-import {
-  Keypair,
-  PublicKey,
-  // sendAndConfirmRawTransaction,
-  Transaction,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import fetch from "node-fetch";
 
 import { connectionFor } from "../common/connection";
@@ -156,6 +152,14 @@ export async function claimTransaction(
     console.log("---> Initializing and claiming entry:", entryName);
     mintKeypair = Keypair.generate();
     await withInitNameEntry(tx, connection, userWallet, namespace, entryName);
+    await withInitNameEntryMint(
+      tx,
+      connection,
+      userWallet,
+      namespace,
+      entryName,
+      mintKeypair
+    );
     await withClaimNameEntry(
       tx,
       connection,
@@ -313,7 +317,7 @@ export async function claimTransaction(
   tx.feePayer = userWallet.publicKey;
   tx.recentBlockhash = (await connection.getRecentBlockhash("max")).blockhash;
   tx.partialSign(approverAuthority);
-  // mintKeypair && tx.partialSign(mintKeypair);
+  mintKeypair && tx.partialSign(mintKeypair);
   tx = Transaction.from(
     tx.serialize({
       verifySignatures: false,
