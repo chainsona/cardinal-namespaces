@@ -475,7 +475,7 @@ export async function withSetReverseEntry(
   entryName: string,
   certificateMintId: PublicKey,
   transaction: Transaction,
-  newVersion = false
+  global = false
 ): Promise<Transaction> {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
@@ -508,7 +508,7 @@ export async function withSetReverseEntry(
     namespacesProgram.programId
   );
 
-  const [certificateId] = newVersion
+  const [certificateId] = global
     ? await findTokenManagerAddress(certificateMintId)
     : await certificate.certificateIdForMint(certificateMintId);
 
