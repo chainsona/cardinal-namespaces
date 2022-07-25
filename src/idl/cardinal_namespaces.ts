@@ -1102,7 +1102,7 @@ export type Namespaces = {
         },
         {
           name: "certificate";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -2934,7 +2934,7 @@ export const IDL: Namespaces = {
         },
         {
           name: "certificate",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {

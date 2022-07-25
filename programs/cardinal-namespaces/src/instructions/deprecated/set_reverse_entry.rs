@@ -1,5 +1,6 @@
 use anchor_spl::token::TokenAccount;
-use cardinal_certificate::{self};
+use cardinal_certificate::state::{Certificate, CertificateState};
+use cardinal_token_manager::state::{TokenManager, TokenManagerState};
 use {
     crate::{errors::ErrorCode, state::*},
     anchor_lang::prelude::*,
@@ -31,13 +32,15 @@ pub struct SetReverseEntryCtx<'info> {
         @ ErrorCode::InvalidOwnerMint
     )]
     user_certificate_token_account: Box<Account<'info, TokenAccount>>,
-    #[account(constraint =
-        certificate.mint == entry.mint
-        && certificate.issuer == namespace.key()
-        && certificate.state != cardinal_certificate::state::CertificateState::Invalidated as u8
-        @ ErrorCode::InvalidCertificate
-    )]
-    certificate: Box<Account<'info, cardinal_certificate::state::Certificate>>,
+    // #[account(constraint =
+    //     certificate.mint == entry.mint
+    //     && certificate.issuer == namespace.key()
+    //     && certificate.state != cardinal_certificate::state::CertificateState::Invalidated as u8
+    //     @ ErrorCode::InvalidCertificate
+    // )]
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(mut)]
+    certificate: UncheckedAccount<'info>,
 
     #[account(mut)]
     user: Signer<'info>,
@@ -47,8 +50,22 @@ pub struct SetReverseEntryCtx<'info> {
 }
 
 pub fn handler(ctx: Context<SetReverseEntryCtx>, _reverse_entry_bump: u8) -> Result<()> {
+    let namespace = &mut ctx.accounts.namespace;
     let entry = &mut ctx.accounts.entry;
     entry.reverse_entry = Some(ctx.accounts.reverse_entry.key());
+
+    let certificate_result = Account::<Certificate>::try_from(&ctx.accounts.certificate);
+    if certificate_result.is_ok() {
+        let certificate = certificate_result?;
+        if certificate.mint != entry.mint || certificate.issuer != namespace.key() || certificate.state == CertificateState::Invalidated as u8 {
+            return Err(error!(ErrorCode::InvalidCertificate));
+        }
+    } else {
+        let token_manager = Account::<TokenManager>::try_from(&ctx.accounts.certificate)?;
+        if token_manager.mint != entry.mint || token_manager.issuer != namespace.key() || token_manager.state == TokenManagerState::Invalidated as u8 {
+            return Err(error!(ErrorCode::InvalidTokenManager));
+        }
+    }
 
     let reverse_entry = &mut ctx.accounts.reverse_entry;
     reverse_entry.bump = *ctx.bumps.get("reverse_entry").unwrap();
