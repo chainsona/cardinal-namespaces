@@ -30,7 +30,7 @@ pub enum ErrorCode {
     InvalidReverseEntry,
     #[msg("Claim not allowed")]
     ClaimNotAllowed,
-    #[msg("Invalid udapte authority")]
+    #[msg("Invalid update authority")]
     InvalidUpdateAuthority,
     #[msg("Invalid approve authority")]
     InvalidApproveAuthority,

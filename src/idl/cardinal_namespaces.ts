@@ -1102,7 +1102,7 @@ export type Namespaces = {
         },
         {
           name: "certificate";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -1770,7 +1770,7 @@ export type Namespaces = {
     {
       code: 6014;
       name: "InvalidUpdateAuthority";
-      msg: "Invalid udapte authority";
+      msg: "Invalid update authority";
     },
     {
       code: 6015;
@@ -2934,7 +2934,7 @@ export const IDL: Namespaces = {
         },
         {
           name: "certificate",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -3602,7 +3602,7 @@ export const IDL: Namespaces = {
     {
       code: 6014,
       name: "InvalidUpdateAuthority",
-      msg: "Invalid udapte authority",
+      msg: "Invalid update authority",
     },
     {
       code: 6015,

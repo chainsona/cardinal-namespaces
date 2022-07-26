@@ -59,7 +59,6 @@ module.exports.claim = async (event) => {
       const temp = handle.split(">");
       handle = temp.slice(0, -1).join() + "#" + String(temp.pop());
     }
-    console.log("I AM HEREEEEE");
     const response = await twitterClaimer.claimTransaction(
       event?.queryStringParameters?.namespace,
       account,

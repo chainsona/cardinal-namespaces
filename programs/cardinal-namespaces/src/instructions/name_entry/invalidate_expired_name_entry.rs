@@ -33,10 +33,12 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
     if name_entry.reverse_entry.is_some() {
         let remaining_accs = &mut ctx.remaining_accounts.iter();
         let reverse_entry_info = next_account_info(remaining_accs)?;
-        let reverse_entry = Account::<ReverseEntry>::try_from(reverse_entry_info)?;
 
-        if reverse_entry.entry_name == name_entry.name {
-            reverse_entry.close(ctx.accounts.invalidator.to_account_info())?;
+        if !reverse_entry_info.data_is_empty() {
+            let reverse_entry = Account::<ReverseEntry>::try_from(reverse_entry_info)?;
+            if reverse_entry.entry_name == name_entry.name {
+                reverse_entry.close(ctx.accounts.invalidator.to_account_info())?;
+            }
         }
     }
 

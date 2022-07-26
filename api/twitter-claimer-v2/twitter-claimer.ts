@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-import { emptyWallet } from "@cardinal/common";
+import { emptyWallet, findAta } from "@cardinal/common";
 import {
   deprecated,
   findClaimRequestId,
@@ -7,13 +7,17 @@ import {
   shortenAddress,
   withApproveClaimRequest,
   withClaimNameEntry,
+  withCloseNameEntry,
   withInitNameEntry,
   withInitNameEntryMint,
   withRevokeNameEntry,
   withRevokeReverseEntry,
   withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
+import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
+import * as splToken from "@solana/spl-token";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import fetch from "node-fetch";
 
@@ -72,7 +76,6 @@ export async function claimTransaction(
           entryName,
           publicKey
         );
-        console.log(tweetApproved);
       } catch (e) {
         console.log("Failed twitter check: ", e);
         return {
@@ -147,6 +150,55 @@ export async function claimTransaction(
     approveAuthority: approverAuthority.publicKey,
   });
 
+  // let bypassNameEntry = false;
+  if (checkNameEntry) {
+    const mintId = checkNameEntry.parsed.mint;
+    const masterEditionId = await MasterEdition.getPDA(mintId);
+    let isMasterEdition = true;
+    try {
+      await MasterEdition.getInfo(connection, masterEditionId);
+    } catch (e) {
+      isMasterEdition = false;
+    }
+    console.log("isMasterEdition", isMasterEdition);
+    if (!isMasterEdition) {
+      console.log(
+        "---> Instance of certificate, close token account and close mint"
+      );
+      // bypassNameEntry = true;
+      // const mint = checkNameEntry.parsed.mint;
+      // close namespace ATA
+      // const namespaceeATA = await findAta(mint, namespaceId, true);
+      // tx.add(
+      //   splToken.Token.createCloseAccountInstruction(
+      //     splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      //     namespaceeATA,
+      //     approverAuthority.publicKey,
+      //     approverAuthority.publicKey,
+      //     [approverAuthority]
+      //   )
+      // );
+      // // close mint
+      // tx.add(
+      //   splToken.Token.createCloseAccountInstruction(
+      //     splToken.TOKEN_PROGRAM_ID,
+      //     mint,
+      //     approverAuthority.publicKey,
+      //     approverAuthority.publicKey,
+      //     [approverAuthority]
+      //   )
+      // );
+
+      // close name entry
+      // withCloseNameEntry(
+      //   connection,
+      //   new SignerWallet(approverAuthority),
+      //   namespaceId,
+      //   tx
+      // );
+    }
+  }
+
   if (!checkNameEntry) {
     ////////////////////// Init and claim //////////////////////
     console.log("---> Initializing and claiming entry:", entryName);
@@ -186,7 +238,8 @@ export async function claimTransaction(
       namespace,
       entryName,
       mintKeypair.publicKey,
-      tx
+      tx,
+      true
     );
   } else if (checkNameEntry && !checkNameEntry.parsed.isClaimed) {
     ////////////////////// Invalidated claim //////////////////////
@@ -217,7 +270,8 @@ export async function claimTransaction(
       namespace,
       entryName,
       checkNameEntry.parsed.mint,
-      tx
+      tx,
+      true
     );
   } else {
     const namespaceTokenAccount = await tryGetAta(
@@ -258,7 +312,8 @@ export async function claimTransaction(
         namespace,
         entryName,
         checkNameEntry.parsed.mint,
-        tx
+        tx,
+        true
       );
     } else {
       ////////////////////// Revoke and claim //////////////////////
@@ -309,7 +364,8 @@ export async function claimTransaction(
         namespace,
         entryName,
         checkNameEntry.parsed.mint,
-        tx
+        tx,
+        true
       );
     }
   }
