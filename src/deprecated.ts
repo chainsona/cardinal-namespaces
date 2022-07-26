@@ -5,6 +5,7 @@ import {
   MINT_MANAGER_SEED,
 } from "@cardinal/certificates";
 import { withFindOrInitAssociatedTokenAccount } from "@cardinal/common";
+import { findTokenManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/tokenManager/pda";
 import * as mplTokenMetadata from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
 import type { Wallet } from "@saberhq/solana-contrib";
@@ -473,7 +474,8 @@ export async function withSetReverseEntry(
   namespaceName: string,
   entryName: string,
   certificateMintId: PublicKey,
-  transaction: Transaction
+  transaction: Transaction,
+  global = false
 ): Promise<Transaction> {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
@@ -506,9 +508,9 @@ export async function withSetReverseEntry(
     namespacesProgram.programId
   );
 
-  const [certificateId] = await certificate.certificateIdForMint(
-    certificateMintId
-  );
+  const [certificateId] = global
+    ? await findTokenManagerAddress(certificateMintId)
+    : await certificate.certificateIdForMint(certificateMintId);
 
   const userCertificateTokenAccountId =
     await splToken.Token.getAssociatedTokenAddress(
