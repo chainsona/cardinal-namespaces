@@ -1,5 +1,5 @@
 export type Namespaces = {
-  version: "4.1.29";
+  version: "4.1.31";
   name: "namespaces";
   instructions: [
     {
@@ -846,6 +846,52 @@ export type Namespaces = {
       args: [];
     },
     {
+      name: "setGlobalReverseEntry";
+      accounts: [
+        {
+          name: "namespace";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "nameEntry";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "reverseNameEntry";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userNameEntryMintTokenAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenManager";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "user";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    },
+    {
       name: "initEntry";
       accounts: [
         {
@@ -1102,7 +1148,7 @@ export type Namespaces = {
         },
         {
           name: "certificate";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -1831,7 +1877,7 @@ export type Namespaces = {
 };
 
 export const IDL: Namespaces = {
-  version: "4.1.29",
+  version: "4.1.31",
   name: "namespaces",
   instructions: [
     {
@@ -2678,6 +2724,52 @@ export const IDL: Namespaces = {
       args: [],
     },
     {
+      name: "setGlobalReverseEntry",
+      accounts: [
+        {
+          name: "namespace",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "nameEntry",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "reverseNameEntry",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userNameEntryMintTokenAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenManager",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "user",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "initEntry",
       accounts: [
         {
@@ -2934,7 +3026,7 @@ export const IDL: Namespaces = {
         },
         {
           name: "certificate",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {

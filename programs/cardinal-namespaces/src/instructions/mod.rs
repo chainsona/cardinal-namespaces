@@ -42,4 +42,5 @@ pub mod reverse_name_entry;
 pub use reverse_name_entry::invalidate_expired_reverse_name_entry::*;
 pub use reverse_name_entry::invalidate_transferable_reverse_name_entry::*;
 pub use reverse_name_entry::revoke_reverse_name_entry::*;
+pub use reverse_name_entry::set_global_reverse_entry::*;
 pub use reverse_name_entry::set_namespace_reverse_name_entry::*;

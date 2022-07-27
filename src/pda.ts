@@ -79,6 +79,9 @@ export const findDeprecatedReverseEntryId = async (
 };
 
 /**
+ * @Deprecated moving to only using findReverseNameEntryForNamespaceId and findGlobalReverseNameEntryId
+ * but keeping it for backwards compatibility. Essentially same as findReverseNameEntryForNamespaceId
+ *
  * Finds the reverse entry ID for a given publickey.
  * @returns
  */
@@ -92,6 +95,37 @@ export const findReverseEntryId = async (
       namespace.toBuffer(),
       pubkey.toBytes(),
     ],
+    NAMESPACES_PROGRAM_ID
+  );
+};
+
+/**
+ * Finds the reverse entry ID for a given publickey.
+ * @returns
+ */
+export const findReverseNameEntryForNamespaceId = async (
+  namespace: PublicKey,
+  pubkey: PublicKey
+): Promise<[PublicKey, number]> => {
+  return PublicKey.findProgramAddress(
+    [
+      utils.bytes.utf8.encode(REVERSE_ENTRY_SEED),
+      namespace.toBuffer(),
+      pubkey.toBytes(),
+    ],
+    NAMESPACES_PROGRAM_ID
+  );
+};
+
+/**
+ * Finds the global reverse entry ID for a given publickey.
+ * @returns
+ */
+export const findGlobalReverseNameEntryId = async (
+  pubkey: PublicKey
+): Promise<[PublicKey, number]> => {
+  return PublicKey.findProgramAddress(
+    [utils.bytes.utf8.encode(REVERSE_ENTRY_SEED), pubkey.toBytes()],
     NAMESPACES_PROGRAM_ID
   );
 };

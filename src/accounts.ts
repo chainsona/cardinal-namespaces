@@ -22,9 +22,10 @@ import {
   findClaimRequestId,
   findDeprecatedReverseEntryId,
   findGlobalContextId,
+  findGlobalReverseNameEntryId,
   findNameEntryId,
   findNamespaceId,
-  findReverseEntryId,
+  findReverseNameEntryForNamespaceId,
 } from "./pda";
 
 export async function getNamespaceByName(
@@ -245,7 +246,10 @@ export async function getReverseNameEntryForNamespace(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [reverseEntryId] = await findReverseEntryId(namespace, pubkey);
+  const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
+    namespace,
+    pubkey
+  );
   const parsed = await namespacesProgram.account.reverseEntry.fetch(
     reverseEntryId
   );
@@ -255,6 +259,33 @@ export async function getReverseNameEntryForNamespace(
   };
 }
 
+export async function getGlobalReverseNameEntry(
+  connection: Connection,
+  pubkey: PublicKey
+): Promise<AccountData<ReverseEntryData>> {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const provider = new AnchorProvider(connection, null, {});
+  const namespacesProgram = new Program<NAMESPACES_PROGRAM>(
+    NAMESPACES_IDL,
+    NAMESPACES_PROGRAM_ID,
+    provider
+  );
+  const [reverseEntryId] = await findGlobalReverseNameEntryId(pubkey);
+  const parsed = await namespacesProgram.account.reverseEntry.fetch(
+    reverseEntryId
+  );
+  return {
+    parsed,
+    pubkey: reverseEntryId,
+  };
+}
+
+/**
+ * @Deprecated moving to only using getGlobalReverseNameEntry and getReverseNameEntryForNamespace
+ * but keeping for backward compatibility
+ * @returns
+ */
 export async function getReverseEntry(
   connection: Connection,
   pubkey: PublicKey,
@@ -273,7 +304,10 @@ export async function getReverseEntry(
     if (!namespace) {
       throw new Error("Skipping to deprecated version");
     }
-    const [reverseEntryId] = await findReverseEntryId(namespace, pubkey);
+    const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
+      namespace,
+      pubkey
+    );
     const parsed = await namespacesProgram.account.reverseEntry.fetch(
       reverseEntryId
     );
