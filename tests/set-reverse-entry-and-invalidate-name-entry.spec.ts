@@ -10,7 +10,7 @@ import { expect } from "chai";
 
 import {
   findNamespaceId,
-  findReverseEntryId,
+  findReverseNameEntryForNamespaceId,
   getClaimRequest,
   getNameEntry,
   getNamespaceByName,
@@ -582,7 +582,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       namespaceDataBefore.parsed.count - 1
     );
 
-    const [reverseEntryId] = await findReverseEntryId(
+    const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
       (
         await findNamespaceId(namespaceName)
       )[0],

@@ -11,7 +11,7 @@ import { expect } from "chai";
 import {
   findClaimRequestId,
   findNamespaceId,
-  findReverseEntryId,
+  findReverseNameEntryForNamespaceId,
   getClaimRequest,
   getNameEntry,
   getNamespaceByName,
@@ -353,7 +353,7 @@ describe("create-claim-revoke-name-entry", () => {
       }
     ).to.be.fulfilled;
 
-    const [reverseEntryId] = await findReverseEntryId(
+    const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
       (
         await findNamespaceId(namespaceName)
       )[0],

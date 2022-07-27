@@ -27,9 +27,10 @@ import type { NAMESPACES_PROGRAM } from ".";
 import {
   findClaimRequestId,
   findGlobalContextId,
+  findGlobalReverseNameEntryId,
   findNameEntryId,
   findNamespaceId,
-  findReverseEntryId,
+  findReverseNameEntryForNamespaceId,
   getNameEntry,
   getNamespace,
   NAMESPACES_IDL,
@@ -627,7 +628,7 @@ export async function withSetNamespaceReverseEntry(
   );
   const [namespaceId] = await findNamespaceId(namespaceName);
   const [entryId] = await findNameEntryId(namespaceId, entryName);
-  const [reverseEntryId] = await findReverseEntryId(
+  const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
     namespaceId,
     wallet.publicKey
   );
@@ -955,6 +956,57 @@ export async function withApproveClaimRequest(
         },
       }
     )
+  );
+  return transaction;
+}
+
+export async function withSetGlobalReverseEntry(
+  transaction: Transaction,
+  connection: Connection,
+  wallet: Wallet,
+  params: {
+    namespaceName: string;
+    entryName: string;
+    mintId: PublicKey;
+  }
+): Promise<Transaction> {
+  const provider = new anchor.AnchorProvider(connection, wallet, {});
+  const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
+    NAMESPACES_IDL,
+    NAMESPACES_PROGRAM_ID,
+    provider
+  );
+  const [namespaceId] = await findNamespaceId(params.namespaceName);
+  const [entryNameId] = await findNameEntryId(namespaceId, params.entryName);
+  const [reverseEntryId] = await findGlobalReverseNameEntryId(wallet.publicKey);
+
+  const [tokenManagerId] = await findTokenManagerAddress(params.mintId);
+
+  const userTokenManagerTokenAccountId =
+    await withFindOrInitAssociatedTokenAccount(
+      transaction,
+      connection,
+      params.mintId,
+      wallet.publicKey,
+      wallet.publicKey,
+      true
+    );
+
+  transaction.add(
+    namespacesProgram.instruction.setGlobalReverseEntry({
+      accounts: {
+        namespace: namespaceId,
+        entry: entryNameId,
+        reverseEntry: reverseEntryId,
+
+        userTokenManagerTokenAccount: userTokenManagerTokenAccountId,
+        tokenManager: tokenManagerId,
+
+        user: provider.wallet.publicKey,
+        payer: provider.wallet.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+    })
   );
   return transaction;
 }

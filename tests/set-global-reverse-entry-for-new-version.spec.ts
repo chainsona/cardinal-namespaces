@@ -20,10 +20,10 @@ import {
   withCreateNamespace,
   withInitNameEntry,
   withInitNameEntryMint,
+  withSetGlobalReverseEntry,
   withSetNamespaceReverseEntry,
   withUpdateClaimRequest,
 } from "../src";
-import { withSetReverseEntry } from "../src/deprecated";
 import { createMint } from "./utils";
 import { getProvider } from "./workspace";
 
@@ -275,14 +275,15 @@ describe("set-global-reverse-entry-for-new-version", () => {
 
   it("Set global reverse entry for token manager", async () => {
     const transaction = new web3.Transaction();
-    await withSetReverseEntry(
+    await withSetGlobalReverseEntry(
+      transaction,
       provider.connection,
       provider.wallet,
-      namespaceName,
-      entryName,
-      nameEntryMint,
-      transaction,
-      true
+      {
+        namespaceName,
+        entryName,
+        mintId: nameEntryMint,
+      }
     );
     await expectTXTable(
       new TransactionEnvelope(
