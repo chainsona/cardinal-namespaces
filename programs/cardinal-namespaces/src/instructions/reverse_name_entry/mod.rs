@@ -1,4 +1,5 @@
 pub mod invalidate_expired_reverse_name_entry;
 pub mod invalidate_transferable_reverse_name_entry;
 pub mod revoke_reverse_name_entry;
+pub mod set_global_reverse_entry;
 pub mod set_namespace_reverse_name_entry;

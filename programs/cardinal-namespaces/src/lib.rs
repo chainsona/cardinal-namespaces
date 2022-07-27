@@ -104,6 +104,10 @@ pub mod namespaces {
         reverse_name_entry::set_namespace_reverse_name_entry::handler(ctx)
     }
 
+    pub fn set_global_reverse_entry(ctx: Context<SetGlobalReverseEntryCtx>) -> Result<()> {
+        reverse_name_entry::set_global_reverse_entry::handler(ctx)
+    }
+
     // deprecated
     #[deprecated]
     pub fn init_entry(ctx: Context<InitEntry>, ix: InitEntryIx) -> Result<()> {
