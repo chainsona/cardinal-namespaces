@@ -977,12 +977,14 @@ export async function withSetGlobalReverseEntry(
     provider
   );
   const [namespaceId] = await findNamespaceId(params.namespaceName);
-  const [entryNameId] = await findNameEntryId(namespaceId, params.entryName);
-  const [reverseEntryId] = await findGlobalReverseNameEntryId(wallet.publicKey);
+  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+  const [reverseNameEntry] = await findGlobalReverseNameEntryId(
+    wallet.publicKey
+  );
 
   const [tokenManagerId] = await findTokenManagerAddress(params.mintId);
 
-  const userTokenManagerTokenAccountId =
+  const userNameEntryMintTokenAccount =
     await withFindOrInitAssociatedTokenAccount(
       transaction,
       connection,
@@ -996,10 +998,10 @@ export async function withSetGlobalReverseEntry(
     namespacesProgram.instruction.setGlobalReverseEntry({
       accounts: {
         namespace: namespaceId,
-        entry: entryNameId,
-        reverseEntry: reverseEntryId,
+        nameEntry: nameEntryId,
+        reverseNameEntry: reverseNameEntry,
 
-        userTokenManagerTokenAccount: userTokenManagerTokenAccountId,
+        userNameEntryMintTokenAccount: userNameEntryMintTokenAccount,
         tokenManager: tokenManagerId,
 
         user: provider.wallet.publicKey,

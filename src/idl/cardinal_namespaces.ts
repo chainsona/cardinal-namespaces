@@ -854,17 +854,17 @@ export type Namespaces = {
           isSigner: false;
         },
         {
-          name: "entry";
+          name: "nameEntry";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "reverseEntry";
+          name: "reverseNameEntry";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "userTokenManagerTokenAccount";
+          name: "userNameEntryMintTokenAccount";
           isMut: false;
           isSigner: false;
         },
@@ -2732,17 +2732,17 @@ export const IDL: Namespaces = {
           isSigner: false,
         },
         {
-          name: "entry",
+          name: "nameEntry",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "reverseEntry",
+          name: "reverseNameEntry",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "userTokenManagerTokenAccount",
+          name: "userNameEntryMintTokenAccount",
           isMut: false,
           isSigner: false,
         },
