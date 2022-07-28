@@ -1012,3 +1012,38 @@ export async function withSetGlobalReverseEntry(
   );
   return transaction;
 }
+
+export async function withMigrateNameEntryMint(
+  transaction: Transaction,
+  connection: Connection,
+  wallet: Wallet,
+  params: {
+    namespaceName: string;
+    entryName: string;
+    mintId: PublicKey;
+    updateAuthority: PublicKey;
+  }
+): Promise<Transaction> {
+  const provider = new anchor.AnchorProvider(connection, wallet, {});
+  const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
+    NAMESPACES_IDL,
+    NAMESPACES_PROGRAM_ID,
+    provider
+  );
+  const [namespaceId] = await findNamespaceId(params.namespaceName);
+  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+
+  transaction.add(
+    namespacesProgram.instruction.migrateNameEntryMint(
+      { mint: params.mintId },
+      {
+        accounts: {
+          namespace: namespaceId,
+          nameEntry: nameEntryId,
+          updateAuthority: params.updateAuthority,
+        },
+      }
+    )
+  );
+  return transaction;
+}
