@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-import { emptyWallet, findAta } from "@cardinal/common";
+import { emptyWallet } from "@cardinal/common";
 import {
   deprecated,
   findClaimRequestId,
@@ -7,7 +7,6 @@ import {
   shortenAddress,
   withApproveClaimRequest,
   withClaimNameEntry,
-  withCloseNameEntry,
   withInitNameEntry,
   withInitNameEntryMint,
   withRevokeNameEntry,
@@ -17,10 +16,15 @@ import {
 import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
-import * as splToken from "@solana/spl-token";
-import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  sendAndConfirmRawTransaction,
+  Transaction,
+} from "@solana/web3.js";
 import fetch from "node-fetch";
 
+import { withMigrateNameEntryMint } from "../../src/instructions";
 import { connectionFor } from "../common/connection";
 import {
   tryGetAta,
@@ -165,37 +169,44 @@ export async function claimTransaction(
       console.log(
         "---> Instance of certificate, close token account and close mint"
       );
-      // bypassNameEntry = true;
-      // const mint = checkNameEntry.parsed.mint;
-      // close namespace ATA
-      // const namespaceeATA = await findAta(mint, namespaceId, true);
-      // tx.add(
-      //   splToken.Token.createCloseAccountInstruction(
-      //     splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      //     namespaceeATA,
-      //     approverAuthority.publicKey,
-      //     approverAuthority.publicKey,
-      //     [approverAuthority]
-      //   )
-      // );
-      // // close mint
-      // tx.add(
-      //   splToken.Token.createCloseAccountInstruction(
-      //     splToken.TOKEN_PROGRAM_ID,
-      //     mint,
-      //     approverAuthority.publicKey,
-      //     approverAuthority.publicKey,
-      //     [approverAuthority]
-      //   )
-      // );
+      const transaction = new Transaction();
+      const mintKeypair = Keypair.generate();
+      const approveAuthorityWallet = new SignerWallet(approverAuthority);
 
-      // close name entry
-      // withCloseNameEntry(
-      //   connection,
-      //   new SignerWallet(approverAuthority),
-      //   namespaceId,
-      //   tx
-      // );
+      // make name entry mint emptty
+      await withMigrateNameEntryMint(
+        transaction,
+        connection,
+        approveAuthorityWallet,
+        {
+          namespaceName: namespace,
+          entryName: entryName,
+          mintId: PublicKey.default,
+          updateAuthority: approverAuthority.publicKey,
+        }
+      );
+
+      // initialize new name entry mint
+      await withInitNameEntryMint(
+        transaction,
+        connection,
+        userWallet,
+        namespace,
+        entryName,
+        mintKeypair
+      );
+
+      transaction.feePayer = approveAuthorityWallet.publicKey;
+      transaction.recentBlockhash = (
+        await connection.getRecentBlockhash("max")
+      ).blockhash;
+      await approveAuthorityWallet.signTransaction(transaction);
+      transaction.partialSign(mintKeypair);
+      const txid = await sendAndConfirmRawTransaction(
+        connection,
+        transaction.serialize()
+      );
+      console.log(`Successfully migrated name entry mint: ${txid}`);
     }
   }
 
