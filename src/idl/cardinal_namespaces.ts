@@ -1,5 +1,5 @@
 export type Namespaces = {
-  version: "4.1.31";
+  version: "4.1.32";
   name: "namespaces";
   instructions: [
     {
@@ -488,6 +488,34 @@ export type Namespaces = {
         }
       ];
       args: [];
+    },
+    {
+      name: "migrateNameEntryMint";
+      accounts: [
+        {
+          name: "namespace";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "nameEntry";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "updateAuthority";
+          isMut: true;
+          isSigner: true;
+        }
+      ];
+      args: [
+        {
+          name: "ix";
+          type: {
+            defined: "MigrateNameEntryMintIx";
+          };
+        }
+      ];
     },
     {
       name: "collectNamespaceFunds";
@@ -1578,6 +1606,18 @@ export type Namespaces = {
       };
     },
     {
+      name: "MigrateNameEntryMintIx";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "mint";
+            type: "publicKey";
+          }
+        ];
+      };
+    },
+    {
       name: "UpdateNameEntryMintMetadataIx";
       type: {
         kind: "struct";
@@ -1877,7 +1917,7 @@ export type Namespaces = {
 };
 
 export const IDL: Namespaces = {
-  version: "4.1.31",
+  version: "4.1.32",
   name: "namespaces",
   instructions: [
     {
@@ -2366,6 +2406,34 @@ export const IDL: Namespaces = {
         },
       ],
       args: [],
+    },
+    {
+      name: "migrateNameEntryMint",
+      accounts: [
+        {
+          name: "namespace",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "nameEntry",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "updateAuthority",
+          isMut: true,
+          isSigner: true,
+        },
+      ],
+      args: [
+        {
+          name: "ix",
+          type: {
+            defined: "MigrateNameEntryMintIx",
+          },
+        },
+      ],
     },
     {
       name: "collectNamespaceFunds",
@@ -3451,6 +3519,18 @@ export const IDL: Namespaces = {
           {
             name: "name",
             type: "string",
+          },
+        ],
+      },
+    },
+    {
+      name: "MigrateNameEntryMintIx",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "mint",
+            type: "publicKey",
           },
         ],
       },
