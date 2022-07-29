@@ -21,5 +21,11 @@ pub struct MigrateNameEntryMintCtx<'info> {
 pub fn handler(ctx: Context<MigrateNameEntryMintCtx>, ix: MigrateNameEntryMintIx) -> Result<()> {
     let name_entry = &mut ctx.accounts.name_entry;
     name_entry.mint = ix.mint;
+    name_entry.data = None;
+    name_entry.is_claimed = false;
+
+    let namespace = &mut ctx.accounts.namespace;
+    namespace.count = namespace.count.checked_sub(1).expect("Sub error");
+
     Ok(())
 }
