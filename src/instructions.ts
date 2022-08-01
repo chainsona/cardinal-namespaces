@@ -5,6 +5,7 @@ import {
   InvalidationType,
   TOKEN_MANAGER_ADDRESS,
   TokenManagerKind,
+  withRemainingAccountsForHanldePaymentWithRoyalties,
   withRemainingAccountsForReturn,
 } from "@cardinal/token-manager/dist/cjs/programs/tokenManager";
 import { getTokenManager } from "@cardinal/token-manager/dist/cjs/programs/tokenManager/accounts";
@@ -257,6 +258,15 @@ export async function withClaimNameEntry(
       : TokenManagerKind.Edition
   );
 
+  const remainingAccountsForRoyalties =
+    await withRemainingAccountsForHanldePaymentWithRoyalties(
+      transaction,
+      connection,
+      wallet,
+      mintId,
+      namespace.parsed.paymentMint
+    );
+
   transaction.add(
     namespacesProgram.instruction.claimNameEntry(
       {
@@ -285,6 +295,7 @@ export async function withClaimNameEntry(
         remainingAccounts: [
           ...remainingAccountsForClaim,
           ...remainingAccountsForKind,
+          ...remainingAccountsForRoyalties,
         ],
       }
     )
