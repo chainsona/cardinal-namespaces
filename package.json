@@ -46,7 +46,7 @@
   "dependencies": {
     "@cardinal/certificates": "^2.0.0",
     "@cardinal/common": "^2.0.1",
-    "@cardinal/token-manager": "^1.5.5",
+    "@cardinal/token-manager": "^1.5.6",
     "@metaplex-foundation/mpl-token-metadata": "^1.2.5"
   },
   "devDependencies": {
