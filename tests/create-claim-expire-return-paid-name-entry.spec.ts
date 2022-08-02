@@ -70,7 +70,6 @@ describe("create-claim-expire-name-entry", () => {
         paymentAmountDaily,
         paymentMint: paymentMint.publicKey,
         transferableEntries: false,
-        maxExpiration: new anchor.BN((10 * Date.now()) / 1000 + 1),
       }
     );
     await expectTXTable(
