@@ -235,8 +235,16 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
         token_program: ctx.accounts.token_program.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
     };
-    let cpi_ctx = CpiContext::new(ctx.accounts.token_manager_program.to_account_info(), cpi_accounts).with_remaining_accounts(remaining_accs.cloned().collect::<Vec<AccountInfo<'info>>>());
-    cardinal_token_manager::cpi::claim(cpi_ctx)?;
+    if ctx.accounts.namespace.transferable_entries {
+        let cpi_ctx = CpiContext::new(ctx.accounts.token_manager_program.to_account_info(), cpi_accounts);
+        cardinal_token_manager::cpi::claim(cpi_ctx)?;
+    } else {
+        let edition_info = next_account_info(remaining_accs)?;
+        let metadata_program_info = next_account_info(remaining_accs)?;
+        let cpi_ctx = CpiContext::new(ctx.accounts.token_manager_program.to_account_info(), cpi_accounts)
+            .with_remaining_accounts([edition_info.to_account_info(), metadata_program_info.to_account_info()].to_vec());
+        cardinal_token_manager::cpi::claim(cpi_ctx)?;
+    }
 
     if ctx.accounts.namespace.payment_amount_daily > 0 && ix.duration.expect("Duration required") > 0 {
         let payer_token_account_info = next_account_info(remaining_accs)?;
@@ -255,7 +263,9 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
             token_program: ctx.accounts.token_program.to_account_info(),
             cardinal_payment_manager: payment_manager_program.to_account_info(),
         };
-        let cpi_ctx = CpiContext::new(time_invalidator_program.expect("Expected time_invalidator_program").to_account_info(), cpi_accounts).with_signer(namespace_signer);
+        let cpi_ctx = CpiContext::new(time_invalidator_program.expect("Expected time_invalidator_program").to_account_info(), cpi_accounts)
+            .with_signer(namespace_signer)
+            .with_remaining_accounts(remaining_accs.cloned().collect::<Vec<AccountInfo<'info>>>());
         cardinal_time_invalidator::cpi::extend_expiration(cpi_ctx, ix.duration.expect("Duration required").try_into().expect("Duration invalid"))?;
     }
     Ok(())
