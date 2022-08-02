@@ -838,7 +838,7 @@ dependencies = [
 
 [[package]]
 name = "namespaces"
-version = "4.1.35"
+version = "4.1.36"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
