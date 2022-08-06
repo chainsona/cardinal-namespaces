@@ -212,7 +212,8 @@ export async function claimTransaction(
       await approveAuthorityWallet.signTransaction(transaction);
       const txid = await sendAndConfirmRawTransaction(
         connection,
-        transaction.serialize()
+        transaction.serialize(),
+        { skipPreflight: true }
       );
       console.log(`Successfully migrated name entry mint: ${txid}`);
     }

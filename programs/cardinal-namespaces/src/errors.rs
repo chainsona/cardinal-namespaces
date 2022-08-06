@@ -16,10 +16,14 @@ pub enum ErrorCode {
     InvalidAuthority,
     #[msg("Invalid authorty token account")]
     InvalidAuthorityTokenAccount,
+    #[msg("Invalid requestor")]
+    InvalidRequestor,
     #[msg("Invalid namespace payment account")]
     InvalidNamespacePaymentAccount,
     #[msg("Invalid global context payment account")]
     InvalidGlobalContextPaymentAccount,
+    #[msg("Invalid user token account")]
+    InvalidUserTokenAccount,
     #[msg("Invalid namespace")]
     InvalidNamespace,
     #[msg("Invalid entry")]

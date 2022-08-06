@@ -18,6 +18,10 @@ import {
   Metadata,
 } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
+import {
+  ASSOCIATED_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@project-serum/anchor/dist/cjs/utils/token";
 import type { Wallet } from "@saberhq/solana-contrib";
 import * as splToken from "@solana/spl-token";
 import type { Connection, Keypair, Transaction } from "@solana/web3.js";
@@ -1016,8 +1020,10 @@ export async function withMigrateNameEntryMint(
   params: {
     namespaceName: string;
     entryName: string;
-    mintId: PublicKey;
-    updateAuthority: PublicKey;
+    mintKeypair: Keypair;
+    duration?: number;
+    requestor?: PublicKey;
+    payer?: PublicKey;
   }
 ): Promise<Transaction> {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
@@ -1028,16 +1034,102 @@ export async function withMigrateNameEntryMint(
   );
   const [namespaceId] = await findNamespaceId(params.namespaceName);
   const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+  const [tokenManagerId] = await findTokenManagerAddress(
+    params.mintKeypair.publicKey
+  );
+  const namespace = await getNamespace(connection, namespaceId);
+
+  const [claimRequestId] = await findClaimRequestId(
+    namespaceId,
+    params.entryName,
+    params.requestor || provider.wallet.publicKey
+  );
+
+  const namespaceTokenAccountId =
+    await splToken.Token.getAssociatedTokenAddress(
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      splToken.TOKEN_PROGRAM_ID,
+      params.mintKeypair.publicKey,
+      namespaceId,
+      true
+    );
+
+  const tokenManagerTokenAccountId =
+    await splToken.Token.getAssociatedTokenAddress(
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      splToken.TOKEN_PROGRAM_ID,
+      params.mintKeypair.publicKey,
+      tokenManagerId,
+      true
+    );
+
+  const recipientTokenAccount = await withFindOrInitAssociatedTokenAccount(
+    transaction,
+    provider.connection,
+    params.mintKeypair.publicKey,
+    wallet.publicKey,
+    params.payer || provider.wallet.publicKey,
+    true
+  );
+
+  const [mintCounterId] = await findMintCounterId(params.mintKeypair.publicKey);
+
+  const remainingAccountsForClaim = await withRemainingAccountsForClaim(
+    connection,
+    transaction,
+    wallet,
+    namespaceId,
+    tokenManagerId,
+    params.duration && params.duration > 0 ? params.duration : undefined
+  );
+
+  const remainingAccountsForKind = await getRemainingAccountsForKind(
+    params.mintKeypair.publicKey,
+    namespace.parsed.transferableEntries
+      ? TokenManagerKind.Unmanaged
+      : TokenManagerKind.Edition
+  );
+
+  const mintMetadataId = await Metadata.getPDA(params.mintKeypair.publicKey);
+  const mintMasterEditionId = await MasterEdition.getPDA(
+    params.mintKeypair.publicKey
+  );
 
   transaction.add(
     namespacesProgram.instruction.migrateNameEntryMint(
-      { mint: params.mintId },
+      {
+        duration:
+          params.duration && params.duration > 0
+            ? new anchor.BN(params.duration)
+            : null,
+      },
       {
         accounts: {
           namespace: namespaceId,
           nameEntry: nameEntryId,
-          updateAuthority: params.updateAuthority,
+          namespaceTokenAccount: namespaceTokenAccountId,
+          requestor: params.requestor || provider.wallet.publicKey,
+          recipient: provider.wallet.publicKey,
+          payer: provider.wallet.publicKey,
+          mint: params.mintKeypair.publicKey,
+          mintMetadata: mintMetadataId,
+          masterEdition: mintMasterEditionId,
+          mintCounter: mintCounterId,
+          tokenManager: tokenManagerId,
+          tokenManagerTokenAccount: tokenManagerTokenAccountId,
+          recipientTokenAccount: recipientTokenAccount,
+          claimRequest: claimRequestId,
+          tokenMetadataProgram: mplTokenMetadata.MetadataProgram.PUBKEY,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedToken: ASSOCIATED_PROGRAM_ID,
+          tokenManagerProgram: TOKEN_MANAGER_ADDRESS,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: SystemProgram.programId,
         },
+        remainingAccounts: [
+          ...remainingAccountsForClaim,
+          ...remainingAccountsForKind,
+        ],
       }
     )
   );

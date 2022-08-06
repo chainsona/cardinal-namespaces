@@ -494,7 +494,7 @@ export type Namespaces = {
       accounts: [
         {
           name: "namespace";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -503,9 +503,89 @@ export type Namespaces = {
           isSigner: false;
         },
         {
-          name: "updateAuthority";
+          name: "namespaceTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
           isMut: true;
           isSigner: true;
+        },
+        {
+          name: "namespaceCertificateTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mint";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "mintMetadata";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "masterEdition";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mintCounter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenManager";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenManagerTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "recipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "claimRequest";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadataProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedToken";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenManagerProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rent";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
         }
       ];
       args: [
@@ -714,8 +794,8 @@ export type Namespaces = {
         },
         {
           name: "approveAuthority";
-          isMut: false;
-          isSigner: true;
+          isMut: true;
+          isSigner: false;
         },
         {
           name: "systemProgram";
@@ -1611,8 +1691,10 @@ export type Namespaces = {
         kind: "struct";
         fields: [
           {
-            name: "mint";
-            type: "publicKey";
+            name: "duration";
+            type: {
+              option: "i64";
+            };
           }
         ];
       };
@@ -1820,96 +1902,106 @@ export type Namespaces = {
     },
     {
       code: 6007;
+      name: "InvalidRequestor";
+      msg: "Invalid requestor";
+    },
+    {
+      code: 6008;
       name: "InvalidNamespacePaymentAccount";
       msg: "Invalid namespace payment account";
     },
     {
-      code: 6008;
+      code: 6009;
       name: "InvalidGlobalContextPaymentAccount";
       msg: "Invalid global context payment account";
     },
     {
-      code: 6009;
+      code: 6010;
+      name: "InvalidUserTokenAccount";
+      msg: "Invalid user token account";
+    },
+    {
+      code: 6011;
       name: "InvalidNamespace";
       msg: "Invalid namespace";
     },
     {
-      code: 6010;
+      code: 6012;
       name: "InvalidEntry";
       msg: "Invalid entry";
     },
     {
-      code: 6011;
+      code: 6013;
       name: "InvalidPaymentMint";
       msg: "Invalid payment mint";
     },
     {
-      code: 6012;
+      code: 6014;
       name: "InvalidReverseEntry";
       msg: "Invalid reverse entry";
     },
     {
-      code: 6013;
+      code: 6015;
       name: "ClaimNotAllowed";
       msg: "Claim not allowed";
     },
     {
-      code: 6014;
+      code: 6016;
       name: "InvalidUpdateAuthority";
       msg: "Invalid update authority";
     },
     {
-      code: 6015;
+      code: 6017;
       name: "InvalidApproveAuthority";
       msg: "Invalid approve authority";
     },
     {
-      code: 6016;
+      code: 6018;
       name: "NamespaceRequiresToken";
       msg: "Namespace requires token";
     },
     {
-      code: 6017;
+      code: 6019;
       name: "MintAlreadyInitialized";
       msg: "Mint already initialized";
     },
     {
-      code: 6018;
+      code: 6020;
       name: "InvalidEntryMint";
       msg: "Mint invalid for entry";
     },
     {
-      code: 6019;
+      code: 6021;
       name: "InvalidTimeInvalidatorProgramId";
       msg: "Time invalidator program ID is invalid";
     },
     {
-      code: 6020;
+      code: 6022;
       name: "InvalidTokenManager";
       msg: "Invalid token manager";
     },
     {
-      code: 6021;
+      code: 6023;
       name: "NameEntryAlreadyClaimed";
       msg: "Name Entry already claimed";
     },
     {
-      code: 6022;
+      code: 6024;
       name: "InvalidCertificate";
       msg: "Invalid certificate";
     },
     {
-      code: 6023;
+      code: 6025;
       name: "NamespaceReachedLimit";
       msg: "Namespace has reached the limit";
     },
     {
-      code: 6024;
+      code: 6026;
       name: "InvalidInvalidationType";
       msg: "Namespace has invalid invalidation type";
     },
     {
-      code: 6025;
+      code: 6027;
       name: "InvalidReverseEntryForNameEntry";
       msg: "Invalid reverse entry for name entry";
     }
@@ -2412,7 +2504,7 @@ export const IDL: Namespaces = {
       accounts: [
         {
           name: "namespace",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -2421,9 +2513,89 @@ export const IDL: Namespaces = {
           isSigner: false,
         },
         {
-          name: "updateAuthority",
+          name: "namespaceTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
           isMut: true,
           isSigner: true,
+        },
+        {
+          name: "namespaceCertificateTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mint",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "mintMetadata",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "masterEdition",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mintCounter",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenManager",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenManagerTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "recipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "claimRequest",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadataProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedToken",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenManagerProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
         },
       ],
       args: [
@@ -2632,8 +2804,8 @@ export const IDL: Namespaces = {
         },
         {
           name: "approveAuthority",
-          isMut: false,
-          isSigner: true,
+          isMut: true,
+          isSigner: false,
         },
         {
           name: "systemProgram",
@@ -3529,8 +3701,10 @@ export const IDL: Namespaces = {
         kind: "struct",
         fields: [
           {
-            name: "mint",
-            type: "publicKey",
+            name: "duration",
+            type: {
+              option: "i64",
+            },
           },
         ],
       },
@@ -3738,96 +3912,106 @@ export const IDL: Namespaces = {
     },
     {
       code: 6007,
+      name: "InvalidRequestor",
+      msg: "Invalid requestor",
+    },
+    {
+      code: 6008,
       name: "InvalidNamespacePaymentAccount",
       msg: "Invalid namespace payment account",
     },
     {
-      code: 6008,
+      code: 6009,
       name: "InvalidGlobalContextPaymentAccount",
       msg: "Invalid global context payment account",
     },
     {
-      code: 6009,
+      code: 6010,
+      name: "InvalidUserTokenAccount",
+      msg: "Invalid user token account",
+    },
+    {
+      code: 6011,
       name: "InvalidNamespace",
       msg: "Invalid namespace",
     },
     {
-      code: 6010,
+      code: 6012,
       name: "InvalidEntry",
       msg: "Invalid entry",
     },
     {
-      code: 6011,
+      code: 6013,
       name: "InvalidPaymentMint",
       msg: "Invalid payment mint",
     },
     {
-      code: 6012,
+      code: 6014,
       name: "InvalidReverseEntry",
       msg: "Invalid reverse entry",
     },
     {
-      code: 6013,
+      code: 6015,
       name: "ClaimNotAllowed",
       msg: "Claim not allowed",
     },
     {
-      code: 6014,
+      code: 6016,
       name: "InvalidUpdateAuthority",
       msg: "Invalid update authority",
     },
     {
-      code: 6015,
+      code: 6017,
       name: "InvalidApproveAuthority",
       msg: "Invalid approve authority",
     },
     {
-      code: 6016,
+      code: 6018,
       name: "NamespaceRequiresToken",
       msg: "Namespace requires token",
     },
     {
-      code: 6017,
+      code: 6019,
       name: "MintAlreadyInitialized",
       msg: "Mint already initialized",
     },
     {
-      code: 6018,
+      code: 6020,
       name: "InvalidEntryMint",
       msg: "Mint invalid for entry",
     },
     {
-      code: 6019,
+      code: 6021,
       name: "InvalidTimeInvalidatorProgramId",
       msg: "Time invalidator program ID is invalid",
     },
     {
-      code: 6020,
+      code: 6022,
       name: "InvalidTokenManager",
       msg: "Invalid token manager",
     },
     {
-      code: 6021,
+      code: 6023,
       name: "NameEntryAlreadyClaimed",
       msg: "Name Entry already claimed",
     },
     {
-      code: 6022,
+      code: 6024,
       name: "InvalidCertificate",
       msg: "Invalid certificate",
     },
     {
-      code: 6023,
+      code: 6025,
       name: "NamespaceReachedLimit",
       msg: "Namespace has reached the limit",
     },
     {
-      code: 6024,
+      code: 6026,
       name: "InvalidInvalidationType",
       msg: "Namespace has invalid invalidation type",
     },
     {
-      code: 6025,
+      code: 6027,
       name: "InvalidReverseEntryForNameEntry",
       msg: "Invalid reverse entry for name entry",
     },

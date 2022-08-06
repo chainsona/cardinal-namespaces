@@ -258,5 +258,6 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
         let cpi_ctx = CpiContext::new(time_invalidator_program.expect("Expected time_invalidator_program").to_account_info(), cpi_accounts).with_signer(namespace_signer);
         cardinal_time_invalidator::cpi::extend_expiration(cpi_ctx, ix.duration.expect("Duration required").try_into().expect("Duration invalid"))?;
     }
+
     Ok(())
 }
