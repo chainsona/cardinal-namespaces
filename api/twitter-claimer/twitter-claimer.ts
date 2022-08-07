@@ -95,7 +95,6 @@ export async function claimTransaction(
         Authorization: `Bearer ${accessToken!}`,
       },
     });
-
     const userJson = await userResponse.json();
     let parsedUserResponse: UserInfoParams | undefined;
     try {

@@ -55,8 +55,10 @@ pub struct MigrateNameEntryMintCtx<'info> {
     #[account(mut)]
     master_edition: AccountInfo<'info>,
 
+    /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     mint_counter: AccountInfo<'info>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     token_manager: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
