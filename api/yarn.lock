@@ -87,17 +87,17 @@
     tiny-invariant "^1.2.0"
     tslib "^2.3.1"
 
-"@cardinal/namespaces@^4.1.30":
-  version "4.1.37"
-  resolved "https://registry.yarnpkg.com/@cardinal/namespaces/-/namespaces-4.1.37.tgz#c598b097dc2799808f5f604e7dc57d7218613413"
-  integrity sha512-uLKwiJ1BPby5Uh1zmUbr6FFKrcCqDNu0cKewfQBhRtuWyuxrBpS/B/ooZZSHzwYVgejP6KvF9mCoegM/bqWeEQ==
+"@cardinal/namespaces@4.1.30":
+  version "4.1.30"
+  resolved "https://registry.yarnpkg.com/@cardinal/namespaces/-/namespaces-4.1.30.tgz#9adbdbb2acf7b43cdf5497d2e1f5fe4d0eec8501"
+  integrity sha512-AuM9xvtJDGmjijKHGqXZv7OOQSOrwYmW6jTWcSKbM1/avKPEPe/I8PaAk/EO+MzRzlJVaa7hgCFPOWOpRDKz3Q==
   dependencies:
     "@cardinal/certificates" "^2.0.0"
     "@cardinal/common" "^2.0.1"
-    "@cardinal/token-manager" "^1.5.7"
+    "@cardinal/token-manager" "^1.4.7"
     "@metaplex-foundation/mpl-token-metadata" "^1.2.5"
 
-"@cardinal/token-manager@^1.5.7":
+"@cardinal/token-manager@^1.4.7":
   version "1.5.7"
   resolved "https://registry.yarnpkg.com/@cardinal/token-manager/-/token-manager-1.5.7.tgz#170a57fc6ed342365a7f0f214392cdb891e07d50"
   integrity sha512-V1jL6DVXbaAkJzyxyUO2eb5BhMqbhekzOvXhwLbAdtfLDCdFFE8/GKf178KHshGaFcgo+UoCXx6WZcO2pLlH+g==
