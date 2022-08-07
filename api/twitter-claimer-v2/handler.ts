@@ -1,17 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+import { tryPublicKey } from "@cardinal/common";
 
-import * as twitterVerifier from "./twitter-verifier";
+import * as twitterClaimer from "./twitter-claimer";
 
-module.exports.verify = async (event) => {
+module.exports.claim = async (event) => {
   const headers = {
     "Access-Control-Allow-Methods": "*",
     "Access-Control-Allow-Origin": "*", // Required for CORS support to work
     "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
   };
+  const data = JSON.parse(event.body);
+  const account = data.account as string;
   try {
     if (
-      !event?.queryStringParameters?.publicKey ||
-      event?.queryStringParameters?.publicKey === "undefined"
+      !account ||
+      !tryPublicKey(account) ||
+      !event?.queryStringParameters?.handle ||
+      event?.queryStringParameters?.handle === "undefined" ||
+      !event?.queryStringParameters?.namespace ||
+      event?.queryStringParameters?.namespace === "undefined"
     ) {
       return {
         headers: headers,
@@ -19,14 +26,13 @@ module.exports.verify = async (event) => {
         body: JSON.stringify({ error: "Invalid API request" }),
       };
     }
+
     // custom params for each identity namespace
     const namespace = event?.queryStringParameters?.namespace || "twitter";
     if (
       namespace === "twitter" &&
       (!event?.queryStringParameters?.tweetId ||
-        event?.queryStringParameters?.tweetId === "undefined" ||
-        !event?.queryStringParameters?.handle ||
-        event?.queryStringParameters?.handle === "undefined")
+        event?.queryStringParameters?.tweetId === "undefined")
     ) {
       return {
         headers: headers,
@@ -35,8 +41,8 @@ module.exports.verify = async (event) => {
       };
     } else if (
       namespace === "discord" &&
-      (!event?.queryStringParameters?.code ||
-        event?.queryStringParameters?.code === "undefined")
+      (!event?.queryStringParameters?.accessToken ||
+        event?.queryStringParameters?.accessToken === "undefined")
     ) {
       return {
         headers: headers,
@@ -47,26 +53,35 @@ module.exports.verify = async (event) => {
       ("pass");
     }
 
-    const { status, message, info } = await twitterVerifier.verifyTweet(
-      namespace,
-      event?.queryStringParameters?.publicKey,
-      event?.queryStringParameters?.handle,
+    // account for special characters
+    let handle = String(event?.queryStringParameters?.handle);
+    if (namespace === "discord") {
+      const temp = handle.split(">");
+      handle = temp.slice(0, -1).join() + "#" + String(temp.pop());
+    }
+    const response = await twitterClaimer.claimTransaction(
+      event?.queryStringParameters?.namespace,
+      account,
+      handle,
       event?.queryStringParameters?.tweetId,
-      event?.queryStringParameters?.code,
       event?.queryStringParameters?.accessToken,
       event?.queryStringParameters?.cluster
     );
     return {
       headers: headers,
-      statusCode: status,
-      body: JSON.stringify({ result: "done", message, info: info }),
+      statusCode: response.status,
+      body: JSON.stringify({
+        result: "done",
+        transaction: response.transaction || "",
+        message: response.message || "",
+      }),
     };
   } catch (e) {
-    console.log("Error approving claim request: ", e);
+    console.log("Error building claim transaction: ", e);
     return {
       headers: headers,
       statusCode: 500,
-      body: JSON.stringify({ error: (e as string).toString() }),
+      body: JSON.stringify({ error: String(e) }),
     };
   }
 };
