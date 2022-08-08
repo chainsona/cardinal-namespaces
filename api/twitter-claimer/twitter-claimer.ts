@@ -1,12 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import { emptyWallet } from "@cardinal/common";
 import {
-  deprecated,
   findClaimRequestId,
   findNamespaceId,
   shortenAddress,
   withApproveClaimRequest,
+  withClaimNameEntry,
+  withInitNameEntry,
+  withInitNameEntryMint,
+  withRevokeNameEntry,
   withRevokeReverseEntry,
+  withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
 import * as anchor from "@project-serum/anchor";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
@@ -141,50 +145,61 @@ export async function claimTransaction(
     ////////////////////// Init and claim //////////////////////
     console.log("---> Initializing and claiming entry:", entryName);
     mintKeypair = Keypair.generate();
-    await deprecated.withInitEntry(
-      connection,
-      userWallet,
-      mintKeypair.publicKey,
-      namespace,
-      entryName,
-      tx
-    );
-    await deprecated.withClaimEntry(
+    await withInitNameEntry(tx, connection, userWallet, namespace, entryName);
+    await withInitNameEntryMint(
+      tx,
       connection,
       userWallet,
       namespace,
       entryName,
-      mintKeypair.publicKey,
-      0,
-      tx
+      mintKeypair
     );
-    await deprecated.withSetReverseEntry(
+    await withClaimNameEntry(
+      tx,
       connection,
       userWallet,
       namespace,
       entryName,
       mintKeypair.publicKey,
-      tx
+      0
     );
+    // set namespace reverse entry
+    await withSetNamespaceReverseEntry(
+      tx,
+      connection,
+      userWallet,
+      namespace,
+      entryName,
+      mintKeypair.publicKey,
+      userWallet.publicKey
+    );
+    // set global reverse entry
+    // await withSetGlobalReverseEntry(tx, connection, userWallet, {
+    //   namespaceName: namespace,
+    //   entryName: entryName,
+    //   mintId: mintKeypair.publicKey,
+    // });
   } else if (checkNameEntry && !checkNameEntry.parsed.isClaimed) {
     ////////////////////// Invalidated claim //////////////////////
     console.log("---> Claiming invalidated entry:", entryName);
-    await deprecated.withClaimEntry(
+    await withClaimNameEntry(
+      tx,
       connection,
       userWallet,
       namespace,
       entryName,
       checkNameEntry.parsed.mint,
-      0,
-      tx
+      0
     );
-    await deprecated.withSetReverseEntry(
+    // set namespace reverse entry
+    await withSetNamespaceReverseEntry(
+      tx,
       connection,
       userWallet,
       namespace,
       entryName,
       checkNameEntry.parsed.mint,
-      tx
+      userWallet.publicKey
     );
   } else {
     const namespaceTokenAccount = await tryGetAta(
@@ -199,23 +214,31 @@ export async function claimTransaction(
     ) {
       ////////////////////// Expired claim //////////////////////
       console.log("---> Claiming expired entry:", entryName);
-      await deprecated.withClaimEntry(
+      await withClaimNameEntry(
+        tx,
         connection,
         userWallet,
         namespace,
         entryName,
         checkNameEntry.parsed.mint,
-        0,
-        tx
+        0
       );
-      await deprecated.withSetReverseEntry(
+      // set namespace reverse entry
+      await withSetNamespaceReverseEntry(
+        tx,
         connection,
         userWallet,
         namespace,
         entryName,
         checkNameEntry.parsed.mint,
-        tx
+        userWallet.publicKey
       );
+      // set global reverse entry
+      // await withSetGlobalReverseEntry(tx, connection, userWallet, {
+      //   namespaceName: namespace,
+      //   entryName: entryName,
+      //   mintId: checkNameEntry.parsed.mint,
+      // });
     } else {
       ////////////////////// Revoke and claim //////////////////////
       console.log("---> and claiming entry:", entryName);
@@ -230,33 +253,40 @@ export async function claimTransaction(
           claimRequestId
         );
       }
-      await deprecated.withRevokeEntry(
+      await withRevokeNameEntry(
+        tx,
         connection,
         userWallet,
         namespace,
         entryName,
         checkNameEntry.parsed.mint,
-        checkNameEntry.parsed.data!,
-        claimRequestId,
-        tx
+        claimRequestId
       );
-      await deprecated.withClaimEntry(
+      await withClaimNameEntry(
+        tx,
         connection,
         userWallet,
         namespace,
         entryName,
         checkNameEntry.parsed.mint,
-        0,
-        tx
+        0
       );
-      await deprecated.withSetReverseEntry(
+      // set namespace reverse entry
+      await withSetNamespaceReverseEntry(
+        tx,
         connection,
         userWallet,
         namespace,
         entryName,
         checkNameEntry.parsed.mint,
-        tx
+        userWallet.publicKey
       );
+      // set global reverse entry
+      // await withSetGlobalReverseEntry(tx, connection, userWallet, {
+      //   namespaceName: namespace,
+      //   entryName: entryName,
+      //   mintId: checkNameEntry.parsed.mint,
+      // });
     }
   }
 
