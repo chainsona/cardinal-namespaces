@@ -8,7 +8,6 @@ import {
   withClaimNameEntry,
   withInitNameEntry,
   withInitNameEntryMint,
-  withMigrateNameEntryMint,
   withRevokeNameEntry,
   withRevokeReverseEntry,
   withSetGlobalReverseEntry,
@@ -69,10 +68,7 @@ export async function claimTransaction(
   );
 
   let migrateBool = false;
-  if (
-    checkNameEntry &&
-    checkNameEntry.parsed.data?.toString() === publicKey.toString()
-  ) {
+  if (checkNameEntry && checkNameEntry.parsed.data?.toString() === publicKey) {
     migrateBool = true;
   }
 
@@ -182,17 +178,18 @@ export async function claimTransaction(
       const approveAuthorityWallet = new SignerWallet(approverAuthority);
 
       // make name entry mint emptty
-      await withMigrateNameEntryMint(
-        transaction,
-        connection,
-        approveAuthorityWallet,
-        {
-          namespaceName: namespace,
-          entryName: entryName,
-          mintId: PublicKey.default,
-          updateAuthority: approverAuthority.publicKey,
-        }
-      );
+      // await withMigrateNameEntryMint(
+      //   transaction,
+      //   connection,
+      //   approveAuthorityWallet,
+      //   {
+      //     namespaceName: namespace,
+      //     entryName: entryName,
+      //     certificateMint: PublicKey.default,
+      //     mintId: PublicKey.default,
+      //     updateAuthority: approverAuthority.publicKey,
+      //   }
+      // );
 
       // initialize new name entry mint
       await withInitNameEntryMint(

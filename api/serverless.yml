@@ -55,6 +55,16 @@ functions:
               - name: request.path.usernames
 
   ################################ Twitter ################################
+  twitter-migrate:
+    handler: twitter-migrate/handler.migrate
+    environment:
+      TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
+    events:
+      - http:
+          path: /twitter/migrate
+          method: post
+          cors: true
   twitter-approver:
     handler: twitter-approver/handler.approve
     timeout: 30

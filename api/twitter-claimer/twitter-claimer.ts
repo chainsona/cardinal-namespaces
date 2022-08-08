@@ -9,12 +9,7 @@ import {
   withRevokeReverseEntry,
 } from "@cardinal/namespaces";
 import * as anchor from "@project-serum/anchor";
-import {
-  Keypair,
-  PublicKey,
-  // sendAndConfirmRawTransaction,
-  Transaction,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import fetch from "node-fetch";
 
 import { connectionFor } from "../common/connection";
