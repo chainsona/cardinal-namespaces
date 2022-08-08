@@ -4,7 +4,6 @@ import {
   findNamespaceId,
   getGlobalReverseNameEntry,
   getNameEntry,
-  getReverseNameEntryForNamespace,
   withApproveClaimRequest,
   withInvalidateExpiredNameEntry,
   withInvalidateExpiredReverseEntry,
@@ -29,7 +28,12 @@ export async function migrate(
   publicKey: string,
   entryName: string,
   cluster = "mainnet"
-): Promise<{ status: number; transactions?: string[]; message?: string }> {
+): Promise<{
+  status: number;
+  mintId?: string;
+  transactions?: string[];
+  message?: string;
+}> {
   const connection = connectionFor(cluster);
   const userAddress = tryPublicKey(publicKey);
   if (!userAddress) {
@@ -122,6 +126,7 @@ export async function migrate(
     namespaceName: namespaceName,
     entryName: entryName,
     user: userWallet.publicKey,
+    approveAuthority: approverAuthority.publicKey,
   });
   /// End Approve
 
@@ -132,29 +137,9 @@ export async function migrate(
     revokeRecipient: namespaceId,
   });
 
-  const namespaceReverseEntry = await tryGetAccount(() =>
-    getReverseNameEntryForNamespace(
-      connection,
-      userWallet.publicKey,
-      namespaceId
-    )
-  );
   const globalReverseEntry = await tryGetAccount(() =>
     getGlobalReverseNameEntry(connection, userWallet.publicKey)
   );
-  if (namespaceReverseEntry) {
-    await withInvalidateExpiredReverseEntry(
-      revokeTransaction,
-      connection,
-      userWallet,
-      {
-        namespaceName: namespaceName,
-        mintId: nameEntry.parsed.mint,
-        entryName: nameEntry.parsed.name,
-        reverseEntryId: namespaceReverseEntry.pubkey,
-      }
-    );
-  }
   if (globalReverseEntry) {
     await withInvalidateExpiredReverseEntry(
       revokeTransaction,
@@ -210,7 +195,7 @@ export async function migrate(
   revokeTransaction.recentBlockhash = (
     await connection.getRecentBlockhash("max")
   ).blockhash;
-  // revokeTransaction.partialSign(approverAuthority);
+  revokeTransaction.partialSign(approverAuthority);
   const revokeTx = Transaction.from(
     revokeTransaction.serialize({
       verifySignatures: false,
@@ -231,7 +216,7 @@ export async function migrate(
   ).blockhash;
   migrateTransaction.partialSign(mintKeypair);
   const migrateTx = Transaction.from(
-    revokeTransaction.serialize({
+    migrateTransaction.serialize({
       verifySignatures: false,
       requireAllSignatures: false,
     })
@@ -246,6 +231,7 @@ export async function migrate(
 
   return {
     status: 200,
+    mintId: mintKeypair.publicKey.toString(),
     transactions: [revokeBase64, migrateBase64],
     message: `Returned succesfull transaction for ${publicKey} to migrate handle (${entryName})`,
   };

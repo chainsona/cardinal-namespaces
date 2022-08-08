@@ -41,6 +41,7 @@ module.exports.migrate = async (event) => {
         result: "done",
         transactions: response.transactions || "",
         message: response.message || "",
+        mintId: response.mintId || "",
       }),
     };
   } catch (e) {
