@@ -794,8 +794,8 @@ export type Namespaces = {
         },
         {
           name: "approveAuthority";
-          isMut: true;
-          isSigner: false;
+          isMut: false;
+          isSigner: true;
         },
         {
           name: "systemProgram";
@@ -2804,8 +2804,8 @@ export const IDL: Namespaces = {
         },
         {
           name: "approveAuthority",
-          isMut: true,
-          isSigner: false,
+          isMut: false,
+          isSigner: true,
         },
         {
           name: "systemProgram",

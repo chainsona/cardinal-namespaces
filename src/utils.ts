@@ -1,7 +1,17 @@
+import {
+  findAta,
+  tryGetAccount,
+  withFindOrInitAssociatedTokenAccount,
+} from "@cardinal/common";
+import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/token-manager/dist/cjs/programs/paymentManager";
+import { getPaymentManager } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/accounts";
 import { findPaymentManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/pda";
 import { TIME_INVALIDATOR_ADDRESS } from "@cardinal/token-manager/dist/cjs/programs/timeInvalidator";
 import { findTimeInvalidatorAddress } from "@cardinal/token-manager/dist/cjs/programs/timeInvalidator/pda";
-import type { AccountMeta, Connection, PublicKey } from "@solana/web3.js";
+import { withRemainingAccountsForPayment } from "@cardinal/token-manager/dist/cjs/programs/tokenManager";
+import type { Wallet } from "@saberhq/solana-contrib";
+import type { AccountMeta, Connection, Transaction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
 import { getNamespace, getReverseEntry } from "./accounts";
 import { DEFAULT_PAYMENT_MANAGER, IDENTITIES } from "./constants";
@@ -83,8 +93,12 @@ export async function nameForDisplay(
 
 export const withRemainingAccountsForClaim = async (
   connection: Connection,
+  transaction: Transaction,
+  wallet: Wallet,
   namespaceId: PublicKey,
-  tokenManagerId: PublicKey
+  tokenManagerId: PublicKey,
+  mintId: PublicKey,
+  duration?: number
 ): Promise<AccountMeta[]> => {
   const namespace = await getNamespace(connection, namespaceId);
   if (
@@ -119,6 +133,57 @@ export const withRemainingAccountsForClaim = async (
         isWritable: false,
       },
     ];
+    if (duration && duration > 0) {
+      const [paymentTokenAccountId] = await withRemainingAccountsForPayment(
+        transaction,
+        connection,
+        wallet,
+        mintId,
+        namespace.parsed.paymentMint,
+        namespaceId,
+        paymentManagerId
+      );
+      const payerTokenAccountId = await findAta(
+        namespace.parsed.paymentMint,
+        wallet.publicKey
+      );
+      const paymentManagerData = await tryGetAccount(() =>
+        getPaymentManager(connection, paymentManagerId)
+      );
+      const feeCollectorTokenAccountId =
+        await withFindOrInitAssociatedTokenAccount(
+          transaction,
+          connection,
+          namespace.parsed.paymentMint,
+          paymentManagerData
+            ? paymentManagerData.parsed.feeCollector
+            : PublicKey.default,
+          wallet.publicKey,
+          true
+        );
+      accounts.concat([
+        {
+          pubkey: payerTokenAccountId,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: paymentTokenAccountId,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: feeCollectorTokenAccountId,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: PAYMENT_MANAGER_ADDRESS,
+          isSigner: false,
+          isWritable: false,
+        },
+      ]);
+    }
     return accounts;
   } else {
     return [];

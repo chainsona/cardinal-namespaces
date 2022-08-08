@@ -87,7 +87,7 @@ pub mod namespaces {
         requests::update_claim_request::handler(ctx, is_approved)
     }
 
-    pub fn approve_claim_request<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts, 'remaining, 'info, ApproveClaimRequestCtx<'info>>, entry_name: String, user: Pubkey) -> Result<()> {
+    pub fn approve_claim_request(ctx: Context<ApproveClaimRequestCtx>, entry_name: String, user: Pubkey) -> Result<()> {
         requests::approve_claim_request::handler(ctx, entry_name, user)
     }
 
