@@ -13,15 +13,8 @@ import {
   withSetGlobalReverseEntry,
   withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
-import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
-import { SignerWallet } from "@saberhq/solana-contrib";
-import {
-  Keypair,
-  PublicKey,
-  sendAndConfirmRawTransaction,
-  Transaction,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import fetch from "node-fetch";
 
 import { connectionFor } from "../common/connection";
@@ -67,14 +60,7 @@ export async function claimTransaction(
     entryName
   );
 
-  let migrateBool = false;
-  if (checkNameEntry && checkNameEntry.parsed.data?.toString() === publicKey) {
-    migrateBool = true;
-  }
-
-  if (migrateBool) {
-    // owner migrates, auto approve
-  } else if (namespace === "twitter") {
+  if (namespace === "twitter") {
     console.log(
       `Attempting to approve tweet for tweet (${tweetId!}) publicKey ${publicKey} entryName ${entryName} cluster ${cluster} `
     );
@@ -157,66 +143,7 @@ export async function claimTransaction(
     approveAuthority: approverAuthority.publicKey,
   });
 
-  let newMintKeypair: Keypair | undefined;
-  if (checkNameEntry && migrateBool) {
-    const mintId = checkNameEntry.parsed.mint;
-    const masterEditionId = await MasterEdition.getPDA(mintId);
-    let isMasterEdition = true;
-    try {
-      await MasterEdition.getInfo(connection, masterEditionId);
-    } catch (e) {
-      isMasterEdition = false;
-    }
-    console.log("isMasterEdition", isMasterEdition);
-    if (!isMasterEdition) {
-      console.log(
-        "---> Instance of certificate, close token account and close mint"
-      );
-      const transaction = new Transaction();
-      newMintKeypair = Keypair.generate();
-
-      const approveAuthorityWallet = new SignerWallet(approverAuthority);
-
-      // make name entry mint emptty
-      // await withMigrateNameEntryMint(
-      //   transaction,
-      //   connection,
-      //   approveAuthorityWallet,
-      //   {
-      //     namespaceName: namespace,
-      //     entryName: entryName,
-      //     certificateMint: PublicKey.default,
-      //     mintId: PublicKey.default,
-      //     updateAuthority: approverAuthority.publicKey,
-      //   }
-      // );
-
-      // initialize new name entry mint
-      await withInitNameEntryMint(
-        transaction,
-        connection,
-        approveAuthorityWallet,
-        namespace,
-        entryName,
-        newMintKeypair
-      );
-
-      transaction.feePayer = approveAuthorityWallet.publicKey;
-      transaction.recentBlockhash = (
-        await connection.getRecentBlockhash("max")
-      ).blockhash;
-      transaction.partialSign(newMintKeypair);
-      await approveAuthorityWallet.signTransaction(transaction);
-      const txid = await sendAndConfirmRawTransaction(
-        connection,
-        transaction.serialize(),
-        { skipPreflight: true }
-      );
-      console.log(`Successfully migrated name entry mint: ${txid}`);
-    }
-  }
-
-  if (!checkNameEntry || migrateBool) {
+  if (!checkNameEntry) {
     ////////////////////// Init and claim //////////////////////
     console.log("---> Initializing and claiming entry:", entryName);
     mintKeypair = Keypair.generate();
@@ -263,7 +190,7 @@ export async function claimTransaction(
       userWallet,
       namespace,
       entryName,
-      newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+      checkNameEntry.parsed.mint,
       0
     );
     // set namespace reverse entry
@@ -273,20 +200,20 @@ export async function claimTransaction(
       userWallet,
       namespace,
       entryName,
-      newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+      checkNameEntry.parsed.mint,
       userWallet.publicKey
     );
 
     // set global reverse entry
-    await withSetGlobalReverseEntry(tx, connection, userWallet, {
-      namespaceName: namespace,
-      entryName: entryName,
-      mintId: newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
-    });
+    // await withSetGlobalReverseEntry(tx, connection, userWallet, {
+    //   namespaceName: namespace,
+    //   entryName: entryName,
+    //   mintId: checkNameEntry.parsed.mint,
+    // });
   } else {
     const namespaceTokenAccount = await tryGetAta(
       connection,
-      newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+      checkNameEntry.parsed.mint,
       namespaceId
     );
 
@@ -302,7 +229,7 @@ export async function claimTransaction(
         userWallet,
         namespace,
         entryName,
-        newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+        checkNameEntry.parsed.mint,
         0
       );
       // set namespace reverse entry
@@ -312,14 +239,14 @@ export async function claimTransaction(
         userWallet,
         namespace,
         entryName,
-        newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+        checkNameEntry.parsed.mint,
         userWallet.publicKey
       );
       // set global reverse entry
       await withSetGlobalReverseEntry(tx, connection, userWallet, {
         namespaceName: namespace,
         entryName: entryName,
-        mintId: newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+        mintId: checkNameEntry.parsed.mint,
       });
     } else {
       ////////////////////// Revoke and claim //////////////////////
@@ -341,7 +268,7 @@ export async function claimTransaction(
         userWallet,
         namespace,
         entryName,
-        newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+        checkNameEntry.parsed.mint,
         claimRequestId
       );
       await withClaimNameEntry(
@@ -350,7 +277,7 @@ export async function claimTransaction(
         userWallet,
         namespace,
         entryName,
-        newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+        checkNameEntry.parsed.mint,
         0
       );
       // set namespace reverse entry
@@ -360,14 +287,14 @@ export async function claimTransaction(
         userWallet,
         namespace,
         entryName,
-        newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+        checkNameEntry.parsed.mint,
         userWallet.publicKey
       );
       // set global reverse entry
       await withSetGlobalReverseEntry(tx, connection, userWallet, {
         namespaceName: namespace,
         entryName: entryName,
-        mintId: newMintKeypair?.publicKey || checkNameEntry.parsed.mint,
+        mintId: checkNameEntry.parsed.mint,
       });
     }
   }
