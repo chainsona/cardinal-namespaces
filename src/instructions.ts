@@ -24,6 +24,7 @@ import {
   Metadata,
 } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
+import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import type { Wallet } from "@saberhq/solana-contrib";
 import * as splToken from "@solana/spl-token";
 import type {
@@ -33,6 +34,7 @@ import type {
   Transaction,
 } from "@solana/web3.js";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import { BN } from "bn.js";
 
 import type { NAMESPACES_PROGRAM } from ".";
 import {
@@ -254,6 +256,9 @@ export async function withClaimNameEntry(
 
   const remainingAccountsForClaim = await withRemainingAccountsForClaim(
     connection,
+    transaction,
+    wallet,
+    mintId,
     namespaceId,
     tokenManagerId
   );
@@ -1011,7 +1016,7 @@ export async function withApproveClaimRequest(
           nameEntry: entryNameId,
           approveAuthority:
             params.approveAuthority ?? provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
+          systemProgram: SystemProgram.programId,
         },
       }
     )
@@ -1068,6 +1073,138 @@ export async function withSetGlobalReverseEntry(
         systemProgram: anchor.web3.SystemProgram.programId,
       },
     })
+  );
+  return transaction;
+}
+
+export async function withMigrateNameEntryMint(
+  transaction: Transaction,
+  connection: Connection,
+  wallet: Wallet,
+  params: {
+    namespaceName: string;
+    entryName: string;
+    certificateMint: PublicKey;
+    mintKeypair: Keypair;
+    duration?: number;
+    requestor?: PublicKey;
+    payer?: PublicKey;
+  }
+): Promise<Transaction> {
+  const provider = new anchor.AnchorProvider(connection, wallet, {});
+  const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
+    NAMESPACES_IDL,
+    NAMESPACES_PROGRAM_ID,
+    provider
+  );
+  const [namespaceId] = await findNamespaceId(params.namespaceName);
+  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+  const [tokenManagerId] = await findTokenManagerAddress(
+    params.mintKeypair.publicKey
+  );
+  const namespace = await getNamespace(connection, namespaceId);
+
+  const [claimRequestId] = await findClaimRequestId(
+    namespaceId,
+    params.entryName,
+    params.requestor || provider.wallet.publicKey
+  );
+
+  const namespaceTokenAccountId =
+    await splToken.Token.getAssociatedTokenAddress(
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      splToken.TOKEN_PROGRAM_ID,
+      params.mintKeypair.publicKey,
+      namespaceId,
+      true
+    );
+
+  const tokenManagerTokenAccountId =
+    await splToken.Token.getAssociatedTokenAddress(
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      splToken.TOKEN_PROGRAM_ID,
+      params.mintKeypair.publicKey,
+      tokenManagerId,
+      true
+    );
+
+  const recipientTokenAccount = await splToken.Token.getAssociatedTokenAddress(
+    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+    splToken.TOKEN_PROGRAM_ID,
+    params.mintKeypair.publicKey,
+    params.payer || provider.wallet.publicKey,
+    true
+  );
+
+  const namespaceCertificateTokenAccountId =
+    await splToken.Token.getAssociatedTokenAddress(
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      splToken.TOKEN_PROGRAM_ID,
+      params.certificateMint,
+      namespaceId,
+      true
+    );
+
+  const [mintCounterId] = await findMintCounterId(params.mintKeypair.publicKey);
+
+  const remainingAccountsForClaim = await withRemainingAccountsForClaim(
+    connection,
+    transaction,
+    wallet,
+    namespaceId,
+    tokenManagerId,
+    params.mintKeypair.publicKey,
+    params.duration && params.duration > 0 ? params.duration : undefined
+  );
+
+  const remainingAccountsForKind = await getRemainingAccountsForKind(
+    params.mintKeypair.publicKey,
+    namespace.parsed.transferableEntries
+      ? TokenManagerKind.Unmanaged
+      : TokenManagerKind.Edition
+  );
+
+  const mintMetadataId = await Metadata.getPDA(params.mintKeypair.publicKey);
+  const mintMasterEditionId = await MasterEdition.getPDA(
+    params.mintKeypair.publicKey
+  );
+
+  transaction.add(
+    namespacesProgram.instruction.migrateNameEntryMint(
+      {
+        duration:
+          params.duration && params.duration > 0
+            ? new BN(params.duration)
+            : null,
+      },
+      {
+        accounts: {
+          namespace: namespaceId,
+          nameEntry: nameEntryId,
+          namespaceTokenAccount: namespaceTokenAccountId,
+          payer: provider.wallet.publicKey,
+          namespaceCertificateTokenAccount: namespaceCertificateTokenAccountId,
+          mint: params.mintKeypair.publicKey,
+          mintMetadata: mintMetadataId,
+          masterEdition: mintMasterEditionId,
+          mintCounter: mintCounterId,
+          tokenManager: tokenManagerId,
+          tokenManagerTokenAccount: tokenManagerTokenAccountId,
+          recipientTokenAccount: recipientTokenAccount,
+          claimRequest: claimRequestId,
+          tokenMetadataProgram: mplTokenMetadata.MetadataProgram.PUBKEY,
+          tokenProgram: splToken.TOKEN_PROGRAM_ID,
+          associatedToken: ASSOCIATED_PROGRAM_ID,
+          tokenManagerProgram: TOKEN_MANAGER_ADDRESS,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: SystemProgram.programId,
+        },
+        remainingAccounts: [
+          ...remainingAccountsForClaim,
+          ...remainingAccountsForKind,
+        ],
+      }
+    )
   );
   return transaction;
 }
