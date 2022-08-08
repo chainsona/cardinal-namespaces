@@ -61,6 +61,10 @@ pub mod namespaces {
         name_entry::close_name_entry::handler(ctx)
     }
 
+    pub fn migrate_name_entry_mint<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts, 'remaining, 'info, MigrateNameEntryMintCtx<'info>>, ix: MigrateNameEntryMintIx) -> Result<()> {
+        name_entry::migrate_name_entry_mint::handler(ctx, ix)
+    }
+
     // namespace
     pub fn collect_namespace_funds(ctx: Context<CollectNamespaceFundsCtx>, amount: u64) -> Result<()> {
         namespace::collect_namespace_funds::handler(ctx, amount)

@@ -21,6 +21,7 @@ pub use name_entry::init_name_entry::*;
 pub use name_entry::init_name_entry_mint::*;
 pub use name_entry::invalidate_expired_name_entry::*;
 pub use name_entry::invalidate_transferable_name_entry::*;
+pub use name_entry::migrate_name_entry_mint::*;
 pub use name_entry::revoke_name_entry::*;
 pub use name_entry::set_name_entry_data::*;
 pub use name_entry::update_name_entry_mint_metadata::*;
