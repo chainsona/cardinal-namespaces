@@ -490,6 +490,114 @@ export type Namespaces = {
       args: [];
     },
     {
+      name: "migrateNameEntryMint";
+      accounts: [
+        {
+          name: "namespace";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "nameEntry";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "namespaceTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "namespaceCertificateTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mint";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "mintMetadata";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "masterEdition";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mintCounter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenManager";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenManagerTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "recipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "claimRequest";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadataProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedToken";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenManagerProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rent";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "ix";
+          type: {
+            defined: "MigrateNameEntryMintIx";
+          };
+        }
+      ];
+    },
+    {
       name: "collectNamespaceFunds";
       accounts: [
         {
@@ -1578,6 +1686,20 @@ export type Namespaces = {
       };
     },
     {
+      name: "MigrateNameEntryMintIx";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "duration";
+            type: {
+              option: "i64";
+            };
+          }
+        ];
+      };
+    },
+    {
       name: "UpdateNameEntryMintMetadataIx";
       type: {
         kind: "struct";
@@ -2366,6 +2488,114 @@ export const IDL: Namespaces = {
         },
       ],
       args: [],
+    },
+    {
+      name: "migrateNameEntryMint",
+      accounts: [
+        {
+          name: "namespace",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "nameEntry",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "namespaceTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "namespaceCertificateTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mint",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "mintMetadata",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "masterEdition",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mintCounter",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenManager",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenManagerTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "recipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "claimRequest",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadataProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedToken",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenManagerProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "ix",
+          type: {
+            defined: "MigrateNameEntryMintIx",
+          },
+        },
+      ],
     },
     {
       name: "collectNamespaceFunds",
@@ -3451,6 +3681,20 @@ export const IDL: Namespaces = {
           {
             name: "name",
             type: "string",
+          },
+        ],
+      },
+    },
+    {
+      name: "MigrateNameEntryMintIx",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "duration",
+            type: {
+              option: "i64",
+            },
           },
         ],
       },
