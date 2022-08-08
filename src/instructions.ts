@@ -24,10 +24,7 @@ import {
   Metadata,
 } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
-import {
-  ASSOCIATED_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-} from "@project-serum/anchor/dist/cjs/utils/token";
+import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import type { Wallet } from "@saberhq/solana-contrib";
 import * as splToken from "@solana/spl-token";
 import type {
@@ -37,6 +34,7 @@ import type {
   Transaction,
 } from "@solana/web3.js";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import { BN } from "bn.js";
 
 import type { NAMESPACES_PROGRAM } from ".";
 import {
@@ -258,6 +256,9 @@ export async function withClaimNameEntry(
 
   const remainingAccountsForClaim = await withRemainingAccountsForClaim(
     connection,
+    transaction,
+    wallet,
+    mintId,
     namespaceId,
     tokenManagerId
   );
@@ -1015,7 +1016,7 @@ export async function withApproveClaimRequest(
           nameEntry: entryNameId,
           approveAuthority:
             params.approveAuthority ?? provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
+          systemProgram: SystemProgram.programId,
         },
       }
     )
@@ -1079,6 +1080,7 @@ export async function withMigrateNameEntryMint(
   params: {
     namespaceName: string;
     entryName: string;
+    certificateMint: PublicKey;
     mintKeypair: Keypair;
     duration?: number;
     requestor?: PublicKey;
@@ -1122,14 +1124,22 @@ export async function withMigrateNameEntryMint(
       true
     );
 
-  const recipientTokenAccount = await withFindOrInitAssociatedTokenAccount(
-    transaction,
-    provider.connection,
+  const recipientTokenAccount = await splToken.Token.getAssociatedTokenAddress(
+    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+    splToken.TOKEN_PROGRAM_ID,
     params.mintKeypair.publicKey,
-    wallet.publicKey,
     params.payer || provider.wallet.publicKey,
     true
   );
+
+  const namespaceCertificateTokenAccountId =
+    await splToken.Token.getAssociatedTokenAddress(
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      splToken.TOKEN_PROGRAM_ID,
+      params.certificateMint,
+      namespaceId,
+      true
+    );
 
   const [mintCounterId] = await findMintCounterId(params.mintKeypair.publicKey);
 
@@ -1138,6 +1148,7 @@ export async function withMigrateNameEntryMint(
     transaction,
     wallet,
     namespaceId,
+    params.mintKeypair.publicKey,
     tokenManagerId,
     params.duration && params.duration > 0 ? params.duration : undefined
   );
@@ -1159,7 +1170,7 @@ export async function withMigrateNameEntryMint(
       {
         duration:
           params.duration && params.duration > 0
-            ? new anchor.BN(params.duration)
+            ? new BN(params.duration)
             : null,
       },
       {
@@ -1167,9 +1178,8 @@ export async function withMigrateNameEntryMint(
           namespace: namespaceId,
           nameEntry: nameEntryId,
           namespaceTokenAccount: namespaceTokenAccountId,
-          requestor: params.requestor || provider.wallet.publicKey,
-          recipient: provider.wallet.publicKey,
           payer: provider.wallet.publicKey,
+          namespaceCertificateTokenAccount: namespaceCertificateTokenAccountId,
           mint: params.mintKeypair.publicKey,
           mintMetadata: mintMetadataId,
           masterEdition: mintMasterEditionId,
@@ -1179,7 +1189,7 @@ export async function withMigrateNameEntryMint(
           recipientTokenAccount: recipientTokenAccount,
           claimRequest: claimRequestId,
           tokenMetadataProgram: mplTokenMetadata.MetadataProgram.PUBKEY,
-          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenProgram: splToken.TOKEN_PROGRAM_ID,
           associatedToken: ASSOCIATED_PROGRAM_ID,
           tokenManagerProgram: TOKEN_MANAGER_ADDRESS,
           rent: SYSVAR_RENT_PUBKEY,
