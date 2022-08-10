@@ -120,17 +120,17 @@ export async function migrate(
   // }
 
   const revokeTransaction = new Transaction();
+  /// Start Approve
+  await withApproveClaimRequest(revokeTransaction, connection, userWallet, {
+    namespaceName: namespaceName,
+    entryName: entryName,
+    user: userWallet.publicKey,
+    approveAuthority: approverAuthority.publicKey,
+  });
+  /// End Approve
+
   const isNameEntryClaimed = nameEntry.parsed.isClaimed;
   if (isNameEntryClaimed) {
-    /// Start Approve
-    await withApproveClaimRequest(revokeTransaction, connection, userWallet, {
-      namespaceName: namespaceName,
-      entryName: entryName,
-      user: userWallet.publicKey,
-      approveAuthority: approverAuthority.publicKey,
-    });
-    /// End Approve
-
     /// Start Unlink
     const [namespaceId] = await findNamespaceId(namespaceName);
     await withRevokeCertificateV2(connection, userWallet, revokeTransaction, {
