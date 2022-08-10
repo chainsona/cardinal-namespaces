@@ -268,5 +268,6 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
             .with_remaining_accounts(remaining_accs.cloned().collect::<Vec<AccountInfo<'info>>>());
         cardinal_time_invalidator::cpi::extend_expiration(cpi_ctx, ix.duration.expect("Duration required").try_into().expect("Duration invalid"))?;
     }
+
     Ok(())
 }

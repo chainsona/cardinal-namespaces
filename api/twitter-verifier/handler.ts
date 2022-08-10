@@ -47,7 +47,6 @@ module.exports.verify = async (event) => {
       ("pass");
     }
 
-    console.log("accessToken", event?.queryStringParameters?.accessToken);
     const { status, message, info } = await twitterVerifier.verifyTweet(
       namespace,
       event?.queryStringParameters?.publicKey,
