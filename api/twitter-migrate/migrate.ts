@@ -9,10 +9,9 @@ import {
   withInvalidateExpiredReverseEntry,
   withMigrateNameEntryMint,
 } from "@cardinal/namespaces";
-import { findAta, tryGetAccount } from "@cardinal/token-manager";
+import { tryGetAccount } from "@cardinal/token-manager";
 import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
-import * as splToken from "@solana/spl-token";
 import {
   Keypair,
   PublicKey,
@@ -84,41 +83,41 @@ export async function migrate(
     ("pass");
   }
 
-  const userCertificateTokenAccountId = await findAta(
-    nameEntry.parsed.mint,
-    userWallet.publicKey,
-    true
-  );
-  const certificateMint = new splToken.Token(
-    connection,
-    nameEntry.parsed.mint,
-    splToken.TOKEN_PROGRAM_ID,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    null
-  );
-  try {
-    const userCertificateTokenAccount = await certificateMint.getAccountInfo(
-      userCertificateTokenAccountId
-    );
-    if (
-      userCertificateTokenAccount.amount.toNumber() !== 1 ||
-      userCertificateTokenAccount.owner.toString() !==
-        userWallet.publicKey.toString() ||
-      userCertificateTokenAccount.mint.toString() !==
-        nameEntry.parsed.mint.toString()
-    ) {
-      return {
-        status: 400,
-        message: "User does not currently own name entry",
-      };
-    }
-  } catch (e) {
-    return {
-      status: 400,
-      message: "User has no token account for certificate mint",
-    };
-  }
+  // const userCertificateTokenAccountId = await findAta(
+  //   nameEntry.parsed.mint,
+  //   userWallet.publicKey,
+  //   true
+  // );
+  // const certificateMint = new splToken.Token(
+  //   connection,
+  //   nameEntry.parsed.mint,
+  //   splToken.TOKEN_PROGRAM_ID,
+  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //   // @ts-ignore
+  //   null
+  // );
+  // try {
+  //   const userCertificateTokenAccount = await certificateMint.getAccountInfo(
+  //     userCertificateTokenAccountId
+  //   );
+  //   if (
+  //     userCertificateTokenAccount.amount.toNumber() !== 1 ||
+  //     userCertificateTokenAccount.owner.toString() !==
+  //       userWallet.publicKey.toString() ||
+  //     userCertificateTokenAccount.mint.toString() !==
+  //       nameEntry.parsed.mint.toString()
+  //   ) {
+  //     return {
+  //       status: 400,
+  //       message: "User does not currently own name entry",
+  //     };
+  //   }
+  // } catch (e) {
+  //   return {
+  //     status: 400,
+  //     message: "User has no token account for certificate mint",
+  //   };
+  // }
 
   /// Start Approve
   const revokeTransaction = new Transaction();

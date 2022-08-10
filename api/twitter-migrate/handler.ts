@@ -12,6 +12,7 @@ module.exports.migrate = async (event) => {
   const data = JSON.parse(event.body);
   const account = data.account as string;
   try {
+    console.log("tessstttt");
     if (
       !account ||
       !tryPublicKey(account) ||
@@ -26,6 +27,7 @@ module.exports.migrate = async (event) => {
         body: JSON.stringify({ error: "Invalid API request" }),
       };
     }
+    console.log("heyyyy");
 
     // account for special characters
     const response = await twitterMigrate.migrate(
