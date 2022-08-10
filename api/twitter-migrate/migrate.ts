@@ -119,28 +119,43 @@ export async function migrate(
   //   };
   // }
 
-  /// Start Approve
   const revokeTransaction = new Transaction();
-  await withApproveClaimRequest(revokeTransaction, connection, userWallet, {
-    namespaceName: namespaceName,
-    entryName: entryName,
-    user: userWallet.publicKey,
-    approveAuthority: approverAuthority.publicKey,
-  });
-  /// End Approve
+  const isNameEntryClaimed = nameEntry.parsed.isClaimed;
+  if (isNameEntryClaimed) {
+    /// Start Approve
+    await withApproveClaimRequest(revokeTransaction, connection, userWallet, {
+      namespaceName: namespaceName,
+      entryName: entryName,
+      user: userWallet.publicKey,
+      approveAuthority: approverAuthority.publicKey,
+    });
+    /// End Approve
 
-  /// Start Unlink
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  await withRevokeCertificateV2(connection, userWallet, revokeTransaction, {
-    certificateMint: nameEntry.parsed.mint,
-    revokeRecipient: namespaceId,
-  });
+    /// Start Unlink
+    const [namespaceId] = await findNamespaceId(namespaceName);
+    await withRevokeCertificateV2(connection, userWallet, revokeTransaction, {
+      certificateMint: nameEntry.parsed.mint,
+      revokeRecipient: namespaceId,
+    });
 
-  const globalReverseEntry = await tryGetAccount(() =>
-    getGlobalReverseNameEntry(connection, userWallet.publicKey)
-  );
-  if (globalReverseEntry) {
-    await withInvalidateExpiredReverseEntry(
+    const globalReverseEntry = await tryGetAccount(() =>
+      getGlobalReverseNameEntry(connection, userWallet.publicKey)
+    );
+    if (globalReverseEntry) {
+      await withInvalidateExpiredReverseEntry(
+        revokeTransaction,
+        connection,
+        userWallet,
+        {
+          namespaceName: namespaceName,
+          mintId: nameEntry.parsed.mint,
+          entryName: nameEntry.parsed.name,
+          reverseEntryId: globalReverseEntry.pubkey,
+        }
+      );
+    }
+
+    await withInvalidateExpiredNameEntry(
       revokeTransaction,
       connection,
       userWallet,
@@ -148,22 +163,10 @@ export async function migrate(
         namespaceName: namespaceName,
         mintId: nameEntry.parsed.mint,
         entryName: nameEntry.parsed.name,
-        reverseEntryId: globalReverseEntry.pubkey,
       }
     );
+    /// End Unlink
   }
-
-  await withInvalidateExpiredNameEntry(
-    revokeTransaction,
-    connection,
-    userWallet,
-    {
-      namespaceName: namespaceName,
-      mintId: nameEntry.parsed.mint,
-      entryName: nameEntry.parsed.name,
-    }
-  );
-  /// End Unlink
 
   /// Start Migrate
   const migrateTransaction = new Transaction();
@@ -194,16 +197,10 @@ export async function migrate(
   revokeTransaction.recentBlockhash = (
     await connection.getRecentBlockhash("max")
   ).blockhash;
-  revokeTransaction.partialSign(approverAuthority);
-  const revokeTx = Transaction.from(
-    revokeTransaction.serialize({
-      verifySignatures: false,
-      requireAllSignatures: false,
-    })
-  );
+  isNameEntryClaimed && revokeTransaction.partialSign(mintKeypair);
 
   // Serialize and return the unsigned transaction.
-  const revokeSerialized = revokeTx.serialize({
+  const revokeSerialized = revokeTransaction.serialize({
     verifySignatures: false,
     requireAllSignatures: false,
   });
@@ -214,15 +211,9 @@ export async function migrate(
     await connection.getRecentBlockhash("max")
   ).blockhash;
   migrateTransaction.partialSign(mintKeypair);
-  const migrateTx = Transaction.from(
-    migrateTransaction.serialize({
-      verifySignatures: false,
-      requireAllSignatures: false,
-    })
-  );
 
   // Serialize and return the unsigned transaction.
-  const migrateSerialized = migrateTx.serialize({
+  const migrateSerialized = migrateTransaction.serialize({
     verifySignatures: false,
     requireAllSignatures: false,
   });

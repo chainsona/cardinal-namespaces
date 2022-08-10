@@ -1137,7 +1137,7 @@ export async function withMigrateNameEntryMint(
   );
   const namespaceCertificateTokenAccountId =
     checkNameEntry?.parsed && !checkNameEntry.parsed.isClaimed
-      ? PublicKey.default
+      ? provider.wallet.publicKey
       : await splToken.Token.getAssociatedTokenAddress(
           splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
           splToken.TOKEN_PROGRAM_ID,
