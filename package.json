@@ -1,6 +1,6 @@
 {
   "name": "@cardinal/namespaces",
-  "version": "4.1.38",
+  "version": "4.1.39",
   "description": "Cardinal namespaces SDK",
   "keywords": [
     "solana",
@@ -24,7 +24,8 @@
   "resolutions": {
     "bn.js": "^5.2.0",
     "@types/bn.js": "^5.1.0",
-    "@solana/web3.js": "1.46.0"
+    "@solana/web3.js": "1.46.0",
+    "@cardinal/certificates": "=2.0.1"
   },
   "publishConfig": {
     "access": "public"
