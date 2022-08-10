@@ -37,13 +37,9 @@ pub struct MigrateNameEntryMintCtx<'info> {
     #[account(mut)]
     payer: Signer<'info>,
 
-    #[account(mut, constraint =
-        namespace_certificate_token_account.mint == name_entry.mint
-        && namespace_certificate_token_account.owner == namespace.key()
-        && namespace_certificate_token_account.amount == 1
-        @ ErrorCode::NamespaceRequiresToken
-    )]
-    namespace_certificate_token_account: Box<Account<'info, TokenAccount>>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(mut)]
+    namespace_certificate_token_account: AccountInfo<'info>,
 
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
@@ -91,6 +87,16 @@ pub struct MigrateNameEntryMintCtx<'info> {
 }
 
 pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts, 'remaining, 'info, MigrateNameEntryMintCtx<'info>>, ix: MigrateNameEntryMintIx) -> Result<()> {
+    if ctx.accounts.name_entry.is_claimed {
+        let namespace_certificate_token_account = Account::<TokenAccount>::try_from(&ctx.accounts.namespace_certificate_token_account)?;
+
+        if namespace_certificate_token_account.mint != ctx.accounts.name_entry.mint
+            || namespace_certificate_token_account.owner != ctx.accounts.namespace.key()
+            || namespace_certificate_token_account.amount != 1
+        {
+            return Err(error!(ErrorCode::NamespaceRequiresToken));
+        }
+    }
     handle_init_name_entry_mint_and_claim(ctx, ix.duration)?;
     Ok(())
 }
