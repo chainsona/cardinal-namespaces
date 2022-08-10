@@ -1,4 +1,7 @@
 {
+  "resolutions": {
+    "@solana/web3.js": "1.46.0"
+  },
   "devDependencies": {
     "serverless": "^2.72.0",
     "serverless-api-gateway-caching": "^1.8.0",
@@ -11,14 +14,14 @@
   },
   "dependencies": {
     "@cardinal/common": "^2.0.4",
-    "@cardinal/namespaces": "4.1.38",
+    "@cardinal/namespaces": "4.1.39",
     "@metaplex/js": "^4.2.1",
     "@project-serum/anchor": "^0.24.2",
     "@saberhq/anchor-contrib": "^1.12.65",
     "@saberhq/solana-contrib": "^1.11",
     "@saberhq/token-utils": "^1.12.36",
     "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.39.1",
+    "@solana/web3.js": "=1.46.0",
     "@types/node-fetch": "^2.6.1",
     "aws-lambda": "^1.0.7",
     "crypto-js": "^4.1.1",

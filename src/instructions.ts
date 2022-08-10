@@ -1048,15 +1048,11 @@ export async function withSetGlobalReverseEntry(
 
   const [tokenManagerId] = await findTokenManagerAddress(params.mintId);
 
-  const userNameEntryMintTokenAccount =
-    await withFindOrInitAssociatedTokenAccount(
-      transaction,
-      connection,
-      params.mintId,
-      wallet.publicKey,
-      wallet.publicKey,
-      true
-    );
+  const userNameEntryMintTokenAccount = await findAta(
+    params.mintId,
+    wallet.publicKey,
+    true
+  );
 
   transaction.add(
     namespacesProgram.instruction.setGlobalReverseEntry({

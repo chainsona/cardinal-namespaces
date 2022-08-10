@@ -98,7 +98,7 @@ If you are developing using Cardinal namespaces contracts and libraries, feel fr
 
 For issues please, file a GitHub issue.
 
-> https://discord.gg/bz2SxDQ8
+> https://discord.gg/cardinallabs
 
 ## License
 
