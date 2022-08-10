@@ -6,9 +6,11 @@ import {
   findNamespaceId,
   shortenAddress,
   withCreateClaimRequest,
+  withRevokeNameEntry,
   withRevokeReverseEntry,
   withUpdateClaimRequest,
 } from "@cardinal/namespaces";
+import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
 import * as web3 from "@solana/web3.js";
@@ -184,16 +186,35 @@ export async function revokeHolder(
   );
 
   if (owner.toString() !== namespaceId.toString()) {
-    await deprecated.withRevokeEntry(
-      connection,
-      new SignerWallet(wallet),
-      namespace,
-      entryName,
-      nameEntry.parsed.mint,
-      owner,
-      claimRequestId,
-      transaction
-    );
+    let isMasterEdition = true;
+    const masterEditionId = await MasterEdition.getPDA(nameEntry.parsed.mint);
+    try {
+      await MasterEdition.getInfo(connection, masterEditionId);
+    } catch (e) {
+      isMasterEdition = false;
+    }
+    if (!isMasterEdition) {
+      await deprecated.withRevokeEntry(
+        connection,
+        new SignerWallet(wallet),
+        namespace,
+        entryName,
+        nameEntry.parsed.mint,
+        owner,
+        claimRequestId,
+        transaction
+      );
+    } else {
+      await withRevokeNameEntry(
+        transaction,
+        connection,
+        new SignerWallet(wallet),
+        namespace,
+        entryName,
+        nameEntry.parsed.mint,
+        claimRequestId
+      );
+    }
   }
 
   let txid = "";
