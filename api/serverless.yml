@@ -65,6 +65,15 @@ functions:
           path: /twitter/approve
           method: get
           cors: true
+  twitter-unlinker:
+    handler: twitter/unlinker/handler.unlink
+    environment:
+      TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+    events:
+      - http:
+          path: /twitter/unlink
+          method: post
+          cors: true
   twitter-verifier:
     handler: twitter/verifier/handler.verify
     environment:
