@@ -235,3 +235,4 @@ plugins:
   - serverless-offline
   - serverless-plugin-include-dependencies
   - serverless-dotenv-plugin 
+  # - serverless-prune-plugin
