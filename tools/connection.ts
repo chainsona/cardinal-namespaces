@@ -2,9 +2,8 @@ import { Connection } from "@solana/web3.js";
 
 const networkURLs: { [key: string]: string } = {
   ["mainnet-beta"]:
-    "https://solana-api.syndica.io/access-token/Bqlwv84AfB8bCeqXyVLrelIGuwgV8yR0HngGPk4x5ZaUuAIdk02w4ohPeOmV4sM1/rpc",
-  mainnet:
-    "https://solana-api.syndica.io/access-token/Bqlwv84AfB8bCeqXyVLrelIGuwgV8yR0HngGPk4x5ZaUuAIdk02w4ohPeOmV4sM1/rpc",
+    process.env.MAINNET_PRIMARY || "https://ssc-dao.genesysgo.net/",
+  mainnet: process.env.MAINNET_PRIMARY || "https://ssc-dao.genesysgo.net/",
   devnet: "https://api.devnet.solana.com/",
   testnet: "https://api.testnet.solana.com/",
   localnet: "http://localhost:8899/",
