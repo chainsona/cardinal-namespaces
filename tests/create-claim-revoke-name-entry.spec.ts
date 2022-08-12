@@ -338,6 +338,7 @@ describe("create-claim-revoke-name-entry", () => {
       provider.wallet,
       namespaceName,
       entryName,
+      provider.wallet.publicKey,
       mintId,
       claimRequestId
     );

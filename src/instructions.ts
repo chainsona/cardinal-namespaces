@@ -448,6 +448,7 @@ export async function withRevokeNameEntry(
   wallet: Wallet,
   namespaceName: string,
   entryName: string,
+  owner: PublicKey,
   mintId: PublicKey,
   claimRequestId: PublicKey
 ): Promise<Transaction> {
@@ -475,7 +476,7 @@ export async function withRevokeNameEntry(
 
   const recipientTokenAccount = await findAta(
     nameEntry.parsed.mint,
-    provider.wallet.publicKey,
+    owner,
     true
   );
 
