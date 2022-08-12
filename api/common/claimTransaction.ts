@@ -1,32 +1,29 @@
-import { emptyWallet, getOwner } from "@cardinal/common";
+import { emptyWallet } from "@cardinal/common";
 import {
-  deprecated,
   findClaimRequestId,
   findNamespaceId,
-  tryGetAta,
   tryGetNameEntry,
   withApproveClaimRequest,
-  withClaimNameEntry,
-  withInitNameEntry,
-  withInitNameEntryMint,
-  withRevokeNameEntry,
-  withRevokeReverseEntry,
-  withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
-import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import type { Connection } from "@solana/web3.js";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 
-import { secondaryConnectionFor } from "../common/connection";
+import {
+  shouldMigrate,
+  shouldRevoke,
+  withClaim,
+  withInitAndClaim,
+  withMigrateAndClaim,
+  withRevoke,
+} from "./claimUtils";
 
 export async function claimTransaction(
   connection: Connection,
   namespaceName: string,
   publicKey: string,
   entryName: string,
-  approverAuthority: Keypair,
-  cluster = "mainnet"
-): Promise<string> {
+  approverAuthority: Keypair
+): Promise<string[]> {
   const userWallet = emptyWallet(new PublicKey(publicKey));
   const [namespaceId] = await findNamespaceId(namespaceName);
   const [claimRequestId] = await findClaimRequestId(
@@ -40,219 +37,140 @@ export async function claimTransaction(
     entryName
   );
 
-  let tx = new Transaction();
+  const approveTransaction = new Transaction();
+  const revokeTransaction = new Transaction();
+  const migrateAndClaimTransaction = new Transaction();
+  const claimTransaction = new Transaction();
   let mintKeypair: Keypair | undefined;
 
   console.log("Approve claim request");
-  await withApproveClaimRequest(tx, connection, userWallet, {
+  await withApproveClaimRequest(approveTransaction, connection, userWallet, {
     namespaceName: namespaceName,
     entryName: entryName,
     user: userWallet.publicKey,
     approveAuthority: approverAuthority.publicKey,
   });
 
+  const shouldMigrateBool =
+    checkNameEntry && namespaceName === "twitter"
+      ? await shouldMigrate(connection, checkNameEntry.parsed.mint)
+      : false;
+
   if (!checkNameEntry) {
     ////////////////////// Init and claim //////////////////////
-    console.log("---> Initializing and claiming entry:", entryName);
     mintKeypair = Keypair.generate();
-    await withInitNameEntry(
-      tx,
+    await withInitAndClaim(
       connection,
       userWallet,
-      namespaceName,
-      entryName
-    );
-    await withInitNameEntryMint(
-      tx,
-      connection,
-      userWallet,
+      claimTransaction,
       namespaceName,
       entryName,
       mintKeypair
     );
-    await withClaimNameEntry(
-      tx,
-      connection,
-      userWallet,
-      namespaceName,
-      entryName,
-      mintKeypair.publicKey,
-      0
-    );
-    // set namespace reverse entry
-    await withSetNamespaceReverseEntry(
-      tx,
-      connection,
-      userWallet,
-      namespaceName,
-      entryName,
-      mintKeypair.publicKey,
-      userWallet.publicKey
-    );
-    // set global reverse entry
-    // await withSetGlobalReverseEntry(tx, connection, userWallet, {
-    //   namespaceName: namespace,
-    //   entryName: entryName,
-    //   mintId: mintKeypair.publicKey,
-    // });
   } else if (checkNameEntry && !checkNameEntry.parsed.isClaimed) {
-    ////////////////////// Invalidated claim //////////////////////
-    console.log("---> Claiming invalidated entry:", entryName);
-    await withClaimNameEntry(
-      tx,
-      connection,
-      userWallet,
-      namespaceName,
-      entryName,
-      checkNameEntry.parsed.mint,
-      0
-    );
-    // set namespace reverse entry
-    await withSetNamespaceReverseEntry(
-      tx,
-      connection,
-      userWallet,
-      namespaceName,
-      entryName,
-      checkNameEntry.parsed.mint,
-      userWallet.publicKey
-    );
+    ////////////////////// Claim already initialized //////////////////////
+    if (shouldMigrateBool) {
+      mintKeypair = Keypair.generate();
+      await withMigrateAndClaim(
+        connection,
+        userWallet,
+        migrateAndClaimTransaction,
+        namespaceName,
+        entryName,
+        checkNameEntry.parsed.mint,
+        mintKeypair
+      );
+    } else {
+      await withClaim(
+        connection,
+        userWallet,
+        claimTransaction,
+        namespaceName,
+        entryName,
+        checkNameEntry.parsed.mint
+      );
+    }
   } else {
-    const namespaceTokenAccount = await tryGetAta(
+    ////////////////////// Potentially revoke and claim //////////////////////
+    const shouldRevokeBool = await shouldRevoke(
       connection,
       checkNameEntry.parsed.mint,
       namespaceId
     );
-
-    if (
-      namespaceTokenAccount?.amount &&
-      namespaceTokenAccount?.amount.toNumber() > 0
-    ) {
-      ////////////////////// Expired claim //////////////////////
-      console.log("---> Claiming expired entry:", entryName);
-      await withClaimNameEntry(
-        tx,
+    if (shouldRevokeBool) {
+      await withRevoke(
         connection,
         userWallet,
+        revokeTransaction,
         namespaceName,
         entryName,
         checkNameEntry.parsed.mint,
-        0
+        claimRequestId,
+        checkNameEntry.parsed.reverseEntry || undefined,
+        shouldMigrateBool
       );
-      // set namespace reverse entry
-      await withSetNamespaceReverseEntry(
-        tx,
+    }
+    if (shouldMigrateBool) {
+      mintKeypair = Keypair.generate();
+      await withMigrateAndClaim(
         connection,
         userWallet,
+        migrateAndClaimTransaction,
         namespaceName,
         entryName,
         checkNameEntry.parsed.mint,
-        userWallet.publicKey
+        mintKeypair
       );
-      // set global reverse entry
-      // await withSetGlobalReverseEntry(tx, connection, userWallet, {
-      //   namespaceName: namespace,
-      //   entryName: entryName,
-      //   mintId: checkNameEntry.parsed.mint,
-      // });
     } else {
-      ////////////////////// Revoke and claim //////////////////////
-      console.log("---> and claiming entry:", entryName);
-      if (checkNameEntry.parsed.reverseEntry) {
-        await withRevokeReverseEntry(
-          tx,
-          connection,
-          userWallet,
-          namespaceName,
-          entryName,
-          checkNameEntry.parsed.reverseEntry,
-          claimRequestId
-        );
-      }
-
-      const owner = await getOwner(
-        secondaryConnectionFor(cluster),
-        checkNameEntry.parsed.mint.toString()
-      );
-      if (!owner) {
-        throw Error("No owner found for name entry");
-      }
-      let isMasterEdition = true;
-      const masterEditionId = await MasterEdition.getPDA(
+      await withClaim(
+        connection,
+        userWallet,
+        claimTransaction,
+        namespaceName,
+        entryName,
         checkNameEntry.parsed.mint
       );
-      try {
-        await MasterEdition.getInfo(connection, masterEditionId);
-      } catch (e) {
-        isMasterEdition = false;
-      }
-      if (!isMasterEdition) {
-        await deprecated.withRevokeEntry(
-          connection,
-          userWallet,
-          namespaceName,
-          entryName,
-          checkNameEntry.parsed.mint,
-          owner,
-          claimRequestId,
-          tx
-        );
-      } else {
-        await withRevokeNameEntry(
-          tx,
-          connection,
-          userWallet,
-          namespaceName,
-          entryName,
-          owner,
-          checkNameEntry.parsed.mint,
-          claimRequestId
-        );
-      }
-
-      await withClaimNameEntry(
-        tx,
-        connection,
-        userWallet,
-        namespaceName,
-        entryName,
-        checkNameEntry.parsed.mint,
-        0
-      );
-      // set namespace reverse entry
-      await withSetNamespaceReverseEntry(
-        tx,
-        connection,
-        userWallet,
-        namespaceName,
-        entryName,
-        checkNameEntry.parsed.mint,
-        userWallet.publicKey
-      );
-      // set global reverse entry
-      // await withSetGlobalReverseEntry(tx, connection, userWallet, {
-      //   namespaceName: namespace,
-      //   entryName: entryName,
-      //   mintId: checkNameEntry.parsed.mint,
-      // });
     }
   }
 
-  tx.feePayer = userWallet.publicKey;
-  tx.recentBlockhash = (await connection.getRecentBlockhash("max")).blockhash;
-  tx.partialSign(approverAuthority);
-  mintKeypair && tx.partialSign(mintKeypair);
-  tx = Transaction.from(
-    tx.serialize({
-      verifySignatures: false,
-      requireAllSignatures: false,
-    })
-  );
+  const transactions = [
+    revokeTransaction,
+    migrateAndClaimTransaction,
+    claimTransaction,
+  ].filter((tx) => tx.instructions.length > 0);
+  const recentBlockhash = await connection.getRecentBlockhash("max");
+  const base64SerializedTransactions = transactions.map((tx, i) => {
+    tx.feePayer = userWallet.publicKey;
+    tx.recentBlockhash = recentBlockhash.blockhash;
 
-  // Serialize and return the unsigned transaction.
-  const serialized = tx.serialize({
-    verifySignatures: false,
-    requireAllSignatures: false,
+    // add approve to first transaction
+    if (i === 0) {
+      tx.instructions = [
+        ...approveTransaction.instructions,
+        ...tx.instructions,
+      ];
+      tx.partialSign(approverAuthority);
+    }
+    // sign claim transaction
+    if (i === transactions.length - 1) {
+      mintKeypair && tx.partialSign(mintKeypair);
+    }
+
+    // serialized to maintain order
+    const copiedTx = Transaction.from(
+      tx.serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
+    );
+
+    return copiedTx
+      .serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
+      .toString("base64");
   });
-  return serialized.toString("base64");
+
+  return base64SerializedTransactions;
 }

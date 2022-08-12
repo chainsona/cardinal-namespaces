@@ -55,7 +55,7 @@ module.exports.claim = async (event) => {
       statusCode: response.status,
       body: JSON.stringify({
         result: "done",
-        transaction: response.transaction || "",
+        transaction: response.transactions || "",
         message: response.message || "",
       }),
     };

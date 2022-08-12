@@ -18,7 +18,7 @@ export async function claim(
   entryName: string,
   accessToken?: string,
   cluster = "mainnet"
-): Promise<{ status: number; transaction?: string; message?: string }> {
+): Promise<{ status: number; transactions?: string[]; message?: string }> {
   const connection = connectionFor(cluster);
   let approverAuthority: Keypair | undefined;
   try {
@@ -58,19 +58,18 @@ export async function claim(
     };
   }
 
-  const base64Tx = await claimTransaction(
+  const transactions = await claimTransaction(
     connection,
     NAMESPACE_NAME,
     publicKey,
     entryName,
-    approverAuthority,
-    cluster
+    approverAuthority
   );
 
   console.log(`Approving ${publicKey} for ${entryName}`);
   return {
     status: 200,
-    transaction: base64Tx,
+    transactions: transactions,
     message: `Returned succesfull transaction for ${publicKey} to claim handle (${entryName})`,
   };
 }

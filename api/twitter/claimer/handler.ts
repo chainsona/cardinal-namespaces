@@ -52,6 +52,7 @@ module.exports.claim = async (event) => {
       body: JSON.stringify({
         result: "done",
         transaction: response.transaction || "",
+        transactions: response.transactions || [],
         message: response.message || "",
       }),
     };
