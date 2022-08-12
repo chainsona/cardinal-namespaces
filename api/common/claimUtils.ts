@@ -12,18 +12,23 @@ import {
 } from "@cardinal/namespaces";
 import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import type { Wallet } from "@saberhq/solana-contrib";
-import type { Connection, PublicKey, Transaction } from "@solana/web3.js";
-import { ComputeBudgetProgram, Keypair } from "@solana/web3.js";
+import type {
+  Connection,
+  Keypair,
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
+import { ComputeBudgetProgram } from "@solana/web3.js";
 
 export async function withInitAndClaim(
   connection: Connection,
   wallet: Wallet,
   transaction: Transaction,
   namespaceName: string,
-  entryName: string
+  entryName: string,
+  mintKeypair: Keypair
 ): Promise<Transaction> {
   console.log("---> withInitAndClaim");
-  const mintKeypair = Keypair.generate();
   await withInitNameEntry(
     transaction,
     connection,

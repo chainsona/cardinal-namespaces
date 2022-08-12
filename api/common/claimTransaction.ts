@@ -58,12 +58,14 @@ export async function claimTransaction(
 
   if (!checkNameEntry) {
     ////////////////////// Init and claim //////////////////////
+    mintKeypair = Keypair.generate();
     await withInitAndClaim(
       connection,
       userWallet,
       claimTransaction,
       namespaceName,
-      entryName
+      entryName,
+      mintKeypair
     );
   } else if (checkNameEntry && !checkNameEntry.parsed.isClaimed) {
     ////////////////////// Claim already initialized //////////////////////
@@ -135,40 +137,40 @@ export async function claimTransaction(
     revokeTransaction,
     migrateAndClaimTransaction,
     claimTransaction,
-  ];
+  ].filter((tx) => tx.instructions.length > 0);
   const recentBlockhash = await connection.getRecentBlockhash("max");
-  const base64SerializedTransactions = transactions
-    .filter((tx) => tx.instructions.length > 0)
-    .map((tx, i) => {
-      // add approve to first transaction
-      if (i === 0) {
-        tx.instructions = [
-          ...approveTransaction.instructions,
-          ...tx.instructions,
-        ];
-      }
-      tx.feePayer = userWallet.publicKey;
-      tx.recentBlockhash = recentBlockhash.blockhash;
+  const base64SerializedTransactions = transactions.map((tx, i) => {
+    tx.feePayer = userWallet.publicKey;
+    tx.recentBlockhash = recentBlockhash.blockhash;
 
-      // sign claim transaction
-      if (i === transactions.length - 1) {
-        mintKeypair && claimTransaction.partialSign(mintKeypair);
-      }
+    // add approve to first transaction
+    if (i === 0) {
+      tx.instructions = [
+        ...approveTransaction.instructions,
+        ...tx.instructions,
+      ];
+      tx.partialSign(approverAuthority);
+    }
+    // sign claim transaction
+    if (i === transactions.length - 1) {
+      mintKeypair && tx.partialSign(mintKeypair);
+    }
 
-      // serialized to maintain order
-      const copiedTx = Transaction.from(
-        tx.serialize({
-          verifySignatures: false,
-          requireAllSignatures: false,
-        })
-      );
-      return copiedTx
-        .serialize({
-          verifySignatures: false,
-          requireAllSignatures: false,
-        })
-        .toString("base64");
-    });
+    // serialized to maintain order
+    const copiedTx = Transaction.from(
+      tx.serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
+    );
+
+    return copiedTx
+      .serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
+      .toString("base64");
+  });
 
   return base64SerializedTransactions;
 }
