@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import { emptyWallet } from "@cardinal/common";
 import {
+  deprecated,
   findClaimRequestId,
   findNamespaceId,
   shortenAddress,
@@ -12,11 +13,13 @@ import {
   withRevokeReverseEntry,
   withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
+import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import fetch from "node-fetch";
 
-import { connectionFor } from "../common/connection";
+import { connectionFor, secondaryConnectionFor } from "../common/connection";
+import { getOwner } from "../twitter-revoker/api";
 import { tryGetAta, tryGetNameEntry, tweetContainsPublicKey } from "./utils";
 
 type UserInfoParams = {
@@ -253,15 +256,44 @@ export async function claimTransaction(
           claimRequestId
         );
       }
-      await withRevokeNameEntry(
-        tx,
-        connection,
-        userWallet,
-        namespace,
-        entryName,
-        checkNameEntry.parsed.mint,
-        claimRequestId
+
+      const owner = await getOwner(
+        secondaryConnectionFor(cluster),
+        checkNameEntry.parsed.mint
       );
+      let isMasterEdition = true;
+      const masterEditionId = await MasterEdition.getPDA(
+        checkNameEntry.parsed.mint
+      );
+      try {
+        await MasterEdition.getInfo(connection, masterEditionId);
+      } catch (e) {
+        isMasterEdition = false;
+      }
+      if (!isMasterEdition) {
+        await deprecated.withRevokeEntry(
+          connection,
+          userWallet,
+          namespace,
+          entryName,
+          checkNameEntry.parsed.mint,
+          owner,
+          claimRequestId,
+          tx
+        );
+      } else {
+        await withRevokeNameEntry(
+          tx,
+          connection,
+          userWallet,
+          namespace,
+          entryName,
+          owner,
+          checkNameEntry.parsed.mint,
+          claimRequestId
+        );
+      }
+
       await withClaimNameEntry(
         tx,
         connection,
