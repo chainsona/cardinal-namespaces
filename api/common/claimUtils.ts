@@ -176,6 +176,18 @@ export async function withMigrateAndClaim(
     certificateMint: mint,
     mintKeypair: mintKeypair,
   });
+
+  // set namespace reverse entry
+  await withSetNamespaceReverseEntry(
+    transaction,
+    connection,
+    wallet,
+    namespaceName,
+    entryName,
+    mint,
+    wallet.publicKey
+  );
+
   return transaction;
 }
 
