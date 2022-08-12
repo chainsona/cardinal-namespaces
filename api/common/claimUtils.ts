@@ -108,7 +108,9 @@ export async function withRevoke(
   shouldMigrate = false
 ): Promise<Transaction> {
   console.log("---> withRevoke");
-  if (reverseEntryId) {
+  const reverseEntry =
+    reverseEntryId && (await connection.getAccountInfo(reverseEntryId));
+  if (reverseEntry) {
     await withRevokeReverseEntry(
       transaction,
       connection,
