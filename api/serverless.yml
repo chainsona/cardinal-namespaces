@@ -160,7 +160,7 @@ functions:
       PASSBASE_SECRET_KEY: ${ssm:/PASSBASE_SECRET_KEY~true}
       KYC_SECRET_KEY: ${ssm:/KYC_SECRET_KEY~true}
       SES_ACCESS_KEY_ID: ${ssm:/SES_ACCESS_KEY_ID~true}
-      SES_SECRET_ACCESS_KEY: ${ssm:/SES_SECRET_ACCESS_KEY~true}
+      SES_SECRET_ACCESS_KEY: ${srsm:/SES_SECRET_ACCESS_KEY~true}
   passbase-data:
     handler: passbase/passbase-data/handler.data
     events:
@@ -235,3 +235,4 @@ plugins:
   - serverless-offline
   - serverless-plugin-include-dependencies
   - serverless-dotenv-plugin 
+  - serverless-prune-plugin

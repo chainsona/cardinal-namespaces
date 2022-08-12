@@ -5510,6 +5510,13 @@ serverless-plugin-typescript@^2.1.0:
     globby "^10.0.2"
     lodash "^4.17.21"
 
+serverless-prune-plugin@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/serverless-prune-plugin/-/serverless-prune-plugin-2.0.1.tgz#c50d408a2e6f89ce1e72e0bb8ea3c914be1e67d9"
+  integrity sha512-fWttDV5TD3K6g9NRDJUuA/cq0AzAI0ya1FZXQKtCnWFfaGP7CzZHZWzlvnNofqvKdpY8vXtaAiswc6gdHXaTUw==
+  dependencies:
+    bluebird "^3.7.2"
+
 serverless@^2.72.0:
   version "2.72.3"
   resolved "https://registry.yarnpkg.com/serverless/-/serverless-2.72.3.tgz#de01203633ef7192c069b5a015aaf46e965cfa96"
