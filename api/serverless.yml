@@ -19,29 +19,27 @@ package:
 functions:
   ################################ V1 Twitter ################################
   v1-twitter-approver:
-    handler: twitter-approver/handler.approve
+    handler: twitter/approver/handler.approve
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
     events:
       - http:
           path: /approve
           method: get
           cors: true
   v1-twitter-revoker:
-    handler: twitter-revoker/handler.revoke
+    handler: twitter/revoker/handler.revoke
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
     events:
       - http:
           path: /revoke
           method: get
           cors: true
   v1-twitter-proxy:
-    handler: twitter-proxy/handler.proxy
+    handler: twitter/proxy/handler.proxy
     events:
       - http:
           path: /proxy
@@ -58,59 +56,54 @@ functions:
 
   ################################ Twitter ################################
   twitter-migrate:
-    handler: twitter-migrate/handler.migrate
+    handler: twitter/migrate/handler.migrate
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
     events:
       - http:
           path: /twitter/migrate
           method: post
           cors: true
   twitter-approver:
-    handler: twitter-approver/handler.approve
+    handler: twitter/approver/handler.approve
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
     events:
       - http:
           path: /twitter/approve
           method: get
           cors: true
   twitter-verifier:
-    handler: twitter-verifier/handler.verify
+    handler: twitter/verifier/handler.verify
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
     events:
       - http:
           path: /twitter/verify
           method: get
           cors: true
   twitter-claimer:
-    handler: twitter-claimer/handler.claim
+    handler: twitter/claimer/handler.claim
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      DISCORD_SOLANA_KEY_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
     events:
       - http:
           path: /twitter/claim
           method: post
           cors: true
   twitter-revoker:
-    handler: twitter-revoker/handler.revoke
+    handler: twitter/revoker/handler.revoke
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
     events:
       - http:
           path: /twitter/revoke
           method: get
           cors: true
   twitter-proxy:
-    handler: twitter-proxy/handler.proxy
+    handler: twitter/proxy/handler.proxy
     events:
       - http:
           path: /twitter/proxy
@@ -125,9 +118,39 @@ functions:
               - name: request.path.url
               - name: request.path.usernames
 
+  ################################ Discord ################################
+  discord-verifier:
+      handler: discord/verifier/handler.verify
+      environment:
+        DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
+      events:
+        - http:
+            path: /discord/verify
+            method: get
+            cors: true
+  discord-claimer:
+    handler: discord/claimer/handler.claim
+    environment:
+      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
+    events:
+      - http:
+          path: /discord/claim
+          method: post
+          cors: true
+  discord-revoker:
+    handler: discord/revoker/handler.revoke
+    timeout: 30
+    environment:
+      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
+    events:
+      - http:
+          path: /discord/revoke
+          method: get
+          cors: true
+
   ################################ Passbase ################################
   passbase-webhook:
-    handler: passbase-webhook/handler.webhook
+    handler: passbase/passbase-webhook/handler.webhook
     events:
       - http:
           path: /passbase/webhook
@@ -139,7 +162,7 @@ functions:
       SES_ACCESS_KEY_ID: ${ssm:/SES_ACCESS_KEY_ID~true}
       SES_SECRET_ACCESS_KEY: ${ssm:/SES_SECRET_ACCESS_KEY~true}
   passbase-data:
-    handler: passbase-data/handler.data
+    handler: passbase/passbase-data/handler.data
     events:
       - http:
           path: /passbase/data
@@ -147,7 +170,7 @@ functions:
 
   ################################ Typeform ################################
   typeform-approver:
-    handler: typeform-approver/handler.approve
+    handler: typeform/typeform-approver/handler.approve
     timeout: 60
     events:
       - http:
@@ -161,7 +184,7 @@ functions:
       SES_SECRET_ACCESS_KEY: ${ssm:/SES_SECRET_ACCESS_KEY~true}
       SLACK_SECRET_KEY: ${ssm:/SLACK_SECRET_KEY~true}
   typeform-data-offline:
-    handler: typeform-data/offline.data
+    handler: typeform/typeform-data/offline.data
     timeout: 30
     environment:
       TYPEFORM_ID: ${ssm:/TYPEFORM_ID~true}
@@ -172,7 +195,7 @@ functions:
           method: post
           cors: true
   typeform-data-online:
-    handler: typeform-data/online.data
+    handler: typeform/typeform-data/online.data
     timeout: 30
     environment:
       TYPEFORM_ID: ${ssm:/TYPEFORM_ID~true}
@@ -211,3 +234,4 @@ plugins:
   - serverless-plugin-typescript
   - serverless-offline
   - serverless-plugin-include-dependencies
+  - serverless-dotenv-plugin 
