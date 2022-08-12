@@ -1133,19 +1133,14 @@ export async function withMigrateNameEntryMint(
     true
   );
 
-  const checkNameEntry = await tryGetAccount(() =>
-    getNameEntry(connection, params.namespaceName, params.entryName)
-  );
   const namespaceCertificateTokenAccountId =
-    checkNameEntry?.parsed && !checkNameEntry.parsed.isClaimed
-      ? provider.wallet.publicKey
-      : await splToken.Token.getAssociatedTokenAddress(
-          splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-          splToken.TOKEN_PROGRAM_ID,
-          params.certificateMint,
-          namespaceId,
-          true
-        );
+    await splToken.Token.getAssociatedTokenAddress(
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      splToken.TOKEN_PROGRAM_ID,
+      params.certificateMint,
+      namespaceId,
+      true
+    );
 
   const [mintCounterId] = await findMintCounterId(params.mintKeypair.publicKey);
 
