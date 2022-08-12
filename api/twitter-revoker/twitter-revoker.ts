@@ -211,6 +211,7 @@ export async function revokeHolder(
         new SignerWallet(wallet),
         namespace,
         entryName,
+        owner,
         nameEntry.parsed.mint,
         claimRequestId
       );
