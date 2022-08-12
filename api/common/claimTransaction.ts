@@ -169,6 +169,7 @@ export async function claimTransaction(
           claimRequestId
         );
       }
+
       const owner = await getOwner(
         secondaryConnectionFor(cluster),
         checkNameEntry.parsed.mint.toString()

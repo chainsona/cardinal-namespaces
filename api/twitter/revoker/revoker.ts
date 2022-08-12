@@ -178,6 +178,7 @@ export async function revokeHolder(
         emptyWallet(owner),
         NAMESPACE_NAME,
         entryName,
+        owner,
         nameEntry.parsed.mint,
         claimRequestId
       );
