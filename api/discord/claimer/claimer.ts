@@ -21,10 +21,9 @@ export async function claim(
 ): Promise<{ status: number; transactions?: string[]; message?: string }> {
   const connection = connectionFor(cluster);
   let approverAuthority: Keypair | undefined;
-  console.log(process.env.DISCORD_SOLANA_KEY);
   try {
     approverAuthority = Keypair.fromSecretKey(
-      anchor.utils.bytes.bs58.decode("" || process.env.DISCORD_SOLANA_KEY)
+      anchor.utils.bytes.bs58.decode(process.env.DISCORD_SOLANA_KEY || "")
     );
   } catch {
     throw new Error(`${NAMESPACE_NAME} pk incorrect or not found`);

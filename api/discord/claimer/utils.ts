@@ -74,8 +74,14 @@ export const verifyDiscord = async (
 ): Promise<DiscordVerificationResponse> => {
   // get access token
   const params = new URLSearchParams();
-  params.append("client_id", "992004845101916191");
-  params.append("client_secret", "D5ZJTxmYUxerC5zubMk4fHSx9veuD8RG");
+  params.append(
+    "client_id",
+    process.env.DISCORD_CLIENT_ID || "992004845101916191"
+  );
+  params.append(
+    "client_secret",
+    process.env.DISCORD_CLIENT_SECRET || "D5ZJTxmYUxerC5zubMk4fHSx9veuD8RG"
+  );
   params.append("grant_type", "authorization_code");
   params.append("code", code.toString());
   params.append(
