@@ -80,7 +80,7 @@ export const verifyDiscord = async (
   params.append("code", code.toString());
   params.append(
     "redirect_uri",
-    "http://localhost:3000/verification?linkingFlow=discord"
+    "http://localhost:3000/verification?identity=discord"
   );
   params.append("scope", "identify");
 

@@ -7,7 +7,7 @@ export async function verifyTweet(
   entryName?: string,
   tweetId?: string,
   cluster = "mainnet"
-): Promise<{ status: number; message?: string; info?: any }> {
+): Promise<{ status: number; handle?: string; message?: string; info?: any }> {
   console.log(
     `Attempting to verify handle for tweet (${tweetId!}) publicKey ${publicKey} entryName ${entryName!} cluster ${cluster} `
   );
@@ -40,6 +40,7 @@ export async function verifyTweet(
   }
   return {
     status: 200,
+    handle: entryName,
     message: `Succesfully verified claim publicKey (${publicKey}) for (${
       entryName ? "handle " + entryName : "discord"
     })`,
