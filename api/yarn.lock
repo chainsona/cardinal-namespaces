@@ -71,10 +71,10 @@
     tiny-invariant "^1.2.0"
     tslib "^2.3.1"
 
-"@cardinal/namespaces@4.1.44":
-  version "4.1.44"
-  resolved "https://registry.yarnpkg.com/@cardinal/namespaces/-/namespaces-4.1.44.tgz#432121d5a1118b5dfc161624bd1d699c86b88bac"
-  integrity sha512-GxNg0ZEgFTcwsmeZvjE2XDTRTYtvuGeea3Wzt0BNVjSb+r7WGG8LnmkCqYzAW8QRwVCvNbgCRGe7lPhIxLulYQ==
+"@cardinal/namespaces@4.1.47":
+  version "4.1.47"
+  resolved "https://registry.yarnpkg.com/@cardinal/namespaces/-/namespaces-4.1.47.tgz#77194ccffe1feccc20df9356fb3498d4da31d82b"
+  integrity sha512-KxTELr5ddplKe8QN2nfwu4S2iaTYcNg5ilMfhs54Ori01yPIxdikffv1R6ucMVHXmGMJxqMiRByBxxqwYOfYsQ==
   dependencies:
     "@cardinal/certificates" "^2.0.1"
     "@cardinal/common" "^2.0.1"
