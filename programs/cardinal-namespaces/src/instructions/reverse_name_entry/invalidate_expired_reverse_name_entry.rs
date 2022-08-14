@@ -16,7 +16,7 @@ pub struct InvalidateExpiredReverseNameEntryCtx<'info> {
     #[account(
         mut,
         close = invalidator,
-        constraint = reverse_name_entry.key() == name_entry.reverse_entry.unwrap() @ ErrorCode::InvalidReverseEntry,
+        constraint = reverse_name_entry.entry_name == name_entry.name && reverse_name_entry.namespace_name == namespace.name @ ErrorCode::InvalidReverseEntry,
     )]
     pub reverse_name_entry: Account<'info, ReverseEntry>,
     #[account(mut, constraint =

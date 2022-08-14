@@ -39,14 +39,9 @@ module.exports.claim = async (event) => {
       ("pass");
     }
 
-    // account for special characters
-    let handle = String(event?.queryStringParameters?.handle);
-    const temp = handle.split(">");
-    handle = temp.slice(0, -1).join() + "#" + String(temp.pop());
-
     const response = await claimer.claim(
       account,
-      handle,
+      event?.queryStringParameters?.handle,
       event?.queryStringParameters?.accessToken,
       event?.queryStringParameters?.cluster
     );
@@ -55,7 +50,7 @@ module.exports.claim = async (event) => {
       statusCode: response.status,
       body: JSON.stringify({
         result: "done",
-        transaction: response.transactions || "",
+        transactions: response.transactions || "",
         message: response.message || "",
       }),
     };

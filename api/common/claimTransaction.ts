@@ -51,10 +51,9 @@ export async function claimTransaction(
     approveAuthority: approverAuthority.publicKey,
   });
 
-  const shouldMigrateBool =
-    checkNameEntry && namespaceName === "twitter"
-      ? await shouldMigrate(connection, checkNameEntry.parsed.mint)
-      : false;
+  const shouldMigrateBool = checkNameEntry
+    ? await shouldMigrate(connection, checkNameEntry.parsed.mint)
+    : false;
 
   if (!checkNameEntry) {
     ////////////////////// Init and claim //////////////////////
