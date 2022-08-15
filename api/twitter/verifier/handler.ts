@@ -35,7 +35,7 @@ module.exports.verify = async (event) => {
       ("pass");
     }
 
-    const { status, message, info } = await verifier.verifyTweet(
+    const { status, handle, message } = await verifier.verifyTweet(
       event?.queryStringParameters?.publicKey,
       event?.queryStringParameters?.handle,
       event?.queryStringParameters?.tweetId,
@@ -44,14 +44,24 @@ module.exports.verify = async (event) => {
     return {
       headers: headers,
       statusCode: status,
-      body: JSON.stringify({ result: "done", message, info: info }),
+      body: JSON.stringify({
+        result: "done",
+        message,
+        handle: handle,
+      }),
     };
   } catch (e) {
-    console.log("Error approving claim request: ", e);
+    console.log(
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      `Error verifying handle ${event?.queryStringParameters?.handle}`
+    );
     return {
       headers: headers,
       statusCode: 500,
-      body: JSON.stringify({ error: (e as string).toString() }),
+      body: JSON.stringify({
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        error: `Error verifying handle ${event?.queryStringParameters?.handle}`,
+      }),
     };
   }
 };

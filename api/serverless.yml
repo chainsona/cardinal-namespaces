@@ -120,14 +120,16 @@ functions:
 
   ################################ Discord ################################
   discord-verifier:
-      handler: discord/verifier/handler.verify
-      environment:
-        DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
-      events:
-        - http:
-            path: /discord/verify
-            method: get
-            cors: true
+    handler: discord/verifier/handler.verify
+    environment:
+      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
+      DISCORD_CLIENT_ID: ${ssm:/DISCORD_CLIENT_ID~true}
+      DISCORD_CLIENT_SECRET: ${ssm:/DISCORD_CLIENT_SECRET~true}
+    events:
+      - http:
+          path: /discord/verify
+          method: get
+          cors: true
   discord-claimer:
     handler: discord/claimer/handler.claim
     environment:
@@ -234,5 +236,5 @@ plugins:
   - serverless-plugin-typescript
   - serverless-offline
   - serverless-plugin-include-dependencies
-  - serverless-dotenv-plugin 
+  - serverless-dotenv-plugin
   - serverless-prune-plugin

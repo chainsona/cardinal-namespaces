@@ -26,11 +26,7 @@ export async function claim(
       anchor.utils.bytes.bs58.decode(process.env.DISCORD_SOLANA_KEY || "")
     );
   } catch {
-    throw new Error(
-      `${NAMESPACE_NAME} pk incorrect or not found ${
-        process.env.DISCORD_SOLANA_KEY || ""
-      }`
-    );
+    throw new Error(`${NAMESPACE_NAME} pk incorrect or not found`);
   }
 
   console.log(

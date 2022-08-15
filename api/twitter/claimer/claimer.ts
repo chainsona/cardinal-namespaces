@@ -27,11 +27,7 @@ export async function claim(
       anchor.utils.bytes.bs58.decode(process.env.TWITTER_SOLANA_KEY || "")
     );
   } catch {
-    throw new Error(
-      `Twitter pk incorrect or not found ${
-        process.env.DISCORD_SOLANA_KEY || ""
-      }`
-    );
+    throw new Error(`Twitter pk incorrect or not found`);
   }
 
   console.log(
