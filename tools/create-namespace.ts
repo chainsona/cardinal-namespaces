@@ -10,11 +10,13 @@ import {
 import { withCreateNamespace } from "../src";
 import { connectionFor } from "./connection";
 
-export const createNamespace = async (name: string, clusterName: string) => {
+export const createNamespace = async (
+  namespaceName: string,
+  clusterName: string
+) => {
   const connection = connectionFor(clusterName);
   let transaction = new Transaction();
 
-  // escnhPr3QjTijhRPh7EMfcrnX1R5Ek5ceyMXjg8ZsZb
   const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
 
   transaction = await withCreateNamespace(
@@ -22,7 +24,7 @@ export const createNamespace = async (name: string, clusterName: string) => {
     connection,
     new SignerWallet(wallet),
     {
-      namespaceName: name,
+      namespaceName: namespaceName,
       updateAuthority: wallet.publicKey,
       rentAuthority: wallet.publicKey,
       approveAuthority: wallet.publicKey,
@@ -35,15 +37,16 @@ export const createNamespace = async (name: string, clusterName: string) => {
     await connection.getRecentBlockhash("max")
   ).blockhash;
   transaction.sign(wallet);
-  await sendAndConfirmRawTransaction(connection, transaction.serialize(), {
-    commitment: "confirmed",
-  });
+  const txid = await sendAndConfirmRawTransaction(
+    connection,
+    transaction.serialize(),
+    {
+      commitment: "confirmed",
+    }
+  );
+  console.log(`Successful namespace creation, txid ${txid}`);
 };
 
-createNamespace("EmpireDAO", "mainnet-beta")
-  .then(() => {
-    console.log("success");
-  })
-  .catch((e) => {
-    console.log("Error:", e);
-  });
+createNamespace("discord", "devnet").catch((e) => {
+  console.log("Error:", e);
+});
