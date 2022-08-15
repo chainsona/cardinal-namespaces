@@ -53,15 +53,6 @@ export async function withInitAndClaim(
     0
   );
 
-  // await withSetNamespaceReverseEntry(
-  //   transaction,
-  //   connection,
-  //   wallet,
-  //   namespaceName,
-  //   entryName,
-  //   mintKeypair.publicKey,
-  //   wallet.publicKey
-  // );
   return transaction;
 }
 
@@ -84,15 +75,6 @@ export async function withClaim(
     0
   );
 
-  // await withSetNamespaceReverseEntry(
-  //   transaction,
-  //   connection,
-  //   wallet,
-  //   namespaceName,
-  //   entryName,
-  //   mint,
-  //   wallet.publicKey
-  // );
   return transaction;
 }
 
@@ -176,16 +158,6 @@ export async function withMigrateAndClaim(
     certificateMint: mint,
     mintKeypair: mintKeypair,
   });
-
-  // await withSetNamespaceReverseEntry(
-  //   transaction,
-  //   connection,
-  //   wallet,
-  //   namespaceName,
-  //   entryName,
-  //   mint,
-  //   wallet.publicKey
-  // );
 
   return transaction;
 }
