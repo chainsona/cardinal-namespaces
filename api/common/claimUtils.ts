@@ -8,7 +8,6 @@ import {
   withMigrateNameEntryMint,
   withRevokeNameEntry,
   withRevokeReverseEntry,
-  withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
 import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
 import type { Wallet } from "@saberhq/solana-contrib";
@@ -53,15 +52,16 @@ export async function withInitAndClaim(
     mintKeypair.publicKey,
     0
   );
-  await withSetNamespaceReverseEntry(
-    transaction,
-    connection,
-    wallet,
-    namespaceName,
-    entryName,
-    mintKeypair.publicKey,
-    wallet.publicKey
-  );
+
+  // await withSetNamespaceReverseEntry(
+  //   transaction,
+  //   connection,
+  //   wallet,
+  //   namespaceName,
+  //   entryName,
+  //   mintKeypair.publicKey,
+  //   wallet.publicKey
+  // );
   return transaction;
 }
 
@@ -83,16 +83,16 @@ export async function withClaim(
     mint,
     0
   );
-  // set namespace reverse entry
-  await withSetNamespaceReverseEntry(
-    transaction,
-    connection,
-    wallet,
-    namespaceName,
-    entryName,
-    mint,
-    wallet.publicKey
-  );
+
+  // await withSetNamespaceReverseEntry(
+  //   transaction,
+  //   connection,
+  //   wallet,
+  //   namespaceName,
+  //   entryName,
+  //   mint,
+  //   wallet.publicKey
+  // );
   return transaction;
 }
 
@@ -177,16 +177,15 @@ export async function withMigrateAndClaim(
     mintKeypair: mintKeypair,
   });
 
-  // set namespace reverse entry
-  await withSetNamespaceReverseEntry(
-    transaction,
-    connection,
-    wallet,
-    namespaceName,
-    entryName,
-    mint,
-    wallet.publicKey
-  );
+  // await withSetNamespaceReverseEntry(
+  //   transaction,
+  //   connection,
+  //   wallet,
+  //   namespaceName,
+  //   entryName,
+  //   mint,
+  //   wallet.publicKey
+  // );
 
   return transaction;
 }

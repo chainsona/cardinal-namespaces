@@ -1,9 +1,12 @@
-import { emptyWallet } from "@cardinal/common";
+import { emptyWallet, tryGetAccount } from "@cardinal/common";
 import {
   findClaimRequestId,
   findNamespaceId,
+  getGlobalReverseNameEntry,
   tryGetNameEntry,
   withApproveClaimRequest,
+  withSetGlobalReverseEntry,
+  withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
 import type { Connection } from "@solana/web3.js";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
@@ -131,6 +134,42 @@ export async function claimTransaction(
         checkNameEntry.parsed.mint
       );
     }
+  }
+
+  // set namespace reverse entry
+  await withSetNamespaceReverseEntry(
+    migrateAndClaimTransaction.instructions.length > 0
+      ? migrateAndClaimTransaction
+      : claimTransaction,
+    connection,
+    userWallet,
+    namespaceName,
+    entryName,
+    mintKeypair?.publicKey ?? checkNameEntry!.parsed.mint,
+    userWallet.publicKey
+  );
+
+  const checkGlobalNameEntry = await tryGetAccount(() =>
+    getGlobalReverseNameEntry(connection, userWallet.publicKey)
+  );
+
+  if (
+    !checkGlobalNameEntry ||
+    (checkGlobalNameEntry &&
+      checkGlobalNameEntry.parsed.namespaceName === namespaceName)
+  ) {
+    await withSetGlobalReverseEntry(
+      migrateAndClaimTransaction.instructions.length > 0
+        ? migrateAndClaimTransaction
+        : claimTransaction,
+      connection,
+      userWallet,
+      {
+        namespaceName: namespaceName,
+        entryName: entryName,
+        mintId: mintKeypair?.publicKey ?? checkNameEntry!.parsed.mint,
+      }
+    );
   }
 
   const transactions = [
