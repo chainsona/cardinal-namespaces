@@ -33,16 +33,20 @@ module.exports.verify = async (event) => {
       ("pass");
     }
 
-    const { status, error, info } = await verifier.verify(
+    const { status, ...result } = await verifier.verify(
       event?.queryStringParameters?.publicKey,
       event?.queryStringParameters?.code,
-      event?.queryStringParameters?.accessToken,
+      event?.queryStringParameters?.accessToken !== "undefined"
+        ? event?.queryStringParameters?.accessToken
+        : undefined,
       event?.queryStringParameters?.cluster
     );
     return {
       headers: headers,
       statusCode: status,
-      body: JSON.stringify({ result: "done", error, info: info }),
+      body: JSON.stringify({
+        ...result,
+      }),
     };
   } catch (e) {
     console.log("Error approving claim request: ", e);
