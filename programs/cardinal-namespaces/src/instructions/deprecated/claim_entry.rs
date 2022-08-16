@@ -99,14 +99,14 @@ pub fn handler(ctx: Context<ClaimEntry>, ix: ClaimEntryIx) -> Result<()> {
     }
 
     // duration checks
-    if ix.duration != None {
+    if ix.duration.is_some() {
         if ix.duration.unwrap() <= ctx.accounts.namespace.min_rental_seconds {
             return Err(error!(ErrorCode::RentalDurationTooSmall));
         }
-        if ctx.accounts.namespace.max_rental_seconds != None && ix.duration.unwrap() >= ctx.accounts.namespace.max_rental_seconds.unwrap() {
+        if ctx.accounts.namespace.max_rental_seconds.is_some() && ix.duration.unwrap() >= ctx.accounts.namespace.max_rental_seconds.unwrap() {
             return Err(error!(ErrorCode::RentalDurationTooLarge));
         }
-    } else if ctx.accounts.namespace.max_rental_seconds != None {
+    } else if ctx.accounts.namespace.max_rental_seconds.is_some() {
         return Err(error!(ErrorCode::NamespaceRequiresDuration));
     }
 
@@ -143,7 +143,7 @@ pub fn handler(ctx: Context<ClaimEntry>, ix: ClaimEntryIx) -> Result<()> {
         system_program: ctx.accounts.system_program.to_account_info(),
     };
     let mut payment_amount: Option<u64> = None;
-    if ix.duration != None {
+    if ix.duration.is_some() {
         payment_amount = Some((ctx.accounts.namespace.payment_amount_daily as f64 * (ix.duration.unwrap() as f64) / (60 * 60 * 24) as f64) as u64);
     }
     let create_certificate_ix = IssueCertificateIx {

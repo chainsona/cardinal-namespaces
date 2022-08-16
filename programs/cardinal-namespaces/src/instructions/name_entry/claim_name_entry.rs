@@ -88,14 +88,14 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
     name_entry.is_claimed = true;
 
     // duration checks
-    if ix.duration != None {
+    if ix.duration.is_some() {
         if ix.duration.unwrap() <= ctx.accounts.namespace.min_rental_seconds {
             return Err(error!(ErrorCode::RentalDurationTooSmall));
         }
-        if ctx.accounts.namespace.max_rental_seconds != None && ix.duration.unwrap() >= ctx.accounts.namespace.max_rental_seconds.unwrap() {
+        if ctx.accounts.namespace.max_rental_seconds.is_some() && ix.duration.unwrap() >= ctx.accounts.namespace.max_rental_seconds.unwrap() {
             return Err(error!(ErrorCode::RentalDurationTooLarge));
         }
-    } else if ctx.accounts.namespace.max_rental_seconds != None {
+    } else if ctx.accounts.namespace.max_rental_seconds.is_some() {
         return Err(error!(ErrorCode::NamespaceRequiresDuration));
     }
 
