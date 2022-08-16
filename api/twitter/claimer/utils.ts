@@ -37,6 +37,7 @@ export const tweetContainsPublicKey = async (
             },
           }
         );
+        console.log(tweetResponse);
         tweetJson = (await tweetResponse.json()) as TweetJson;
         userHandle = tweetJson.includes.users[0].username;
       } catch (e) {
