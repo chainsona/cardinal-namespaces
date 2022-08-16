@@ -19,6 +19,7 @@ export async function claim(
   transactions?: string[];
   transaction?: string;
   message?: string;
+  error?: string;
 }> {
   const connection = connectionFor(cluster);
   let approverAuthority: Keypair | undefined;
@@ -48,7 +49,7 @@ export async function claim(
       console.log("Failed twitter check: ", e);
       return {
         status: 401,
-        message: e.message,
+        error: e.message,
       };
     }
   }
@@ -56,7 +57,7 @@ export async function claim(
   if (!tweetApproved) {
     return {
       status: 404,
-      message: `Public key ${shortenAddress(
+      error: `Public key ${shortenAddress(
         publicKey
       )} not found in tweet ${tweetId!}`,
     };

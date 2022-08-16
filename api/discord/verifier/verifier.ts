@@ -10,7 +10,13 @@ export async function verify(
   code?: string,
   accessToken?: string,
   cluster = "mainnet"
-): Promise<{ status: number; error?: string; info?: any }> {
+): Promise<{
+  status: number;
+  error?: string;
+  accessToken?: string;
+  handle?: string;
+  profileUrl?: string;
+}> {
   if (!code) {
     return {
       status: 401,
@@ -81,16 +87,14 @@ export async function verify(
     };
   }
 
-  const username = `${parsedUserResponse?.username}#${parsedUserResponse?.discriminator}`;
+  const handle = `${parsedUserResponse?.username}#${parsedUserResponse?.discriminator}`;
 
-  const imageURI = `https://cdn.discordapp.com/avatars/${parsedUserResponse?.id}/${parsedUserResponse?.avatar}.png`;
-  console.log(`Verified username ${username} with image ${imageURI}`);
+  const profileUrl = `https://cdn.discordapp.com/avatars/${parsedUserResponse?.id}/${parsedUserResponse?.avatar}.png`;
+  console.log(`Verified username ${handle} with image ${profileUrl}`);
   return {
     status: 200,
-    info: {
-      username: username,
-      imageURI: imageURI,
-      accessToken: accessToken,
-    },
+    accessToken,
+    handle,
+    profileUrl,
   };
 }
