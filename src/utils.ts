@@ -158,10 +158,7 @@ export const withRemainingAccountsForClaim = async (
       mintId,
       namespace.parsed.paymentMint,
       namespaceId,
-      paymentManagerId,
-      null,
-      wallet.publicKey,
-      [namespaceId.toString()]
+      paymentManagerId
     );
     const payerTokenAccountId = await findAta(
       namespace.parsed.paymentMint,
