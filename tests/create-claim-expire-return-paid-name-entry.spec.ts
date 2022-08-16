@@ -37,6 +37,7 @@ describe("create-claim-expire-name-entry", () => {
   const invalidator = web3.Keypair.generate();
   const paymentAmountDaily = new anchor.BN(100);
   const PAYMENT_MINT_START = 10000;
+  const duration = 864;
 
   // global
   let paymentMint: splToken.Token;
@@ -70,6 +71,7 @@ describe("create-claim-expire-name-entry", () => {
         paymentAmountDaily,
         paymentMint: paymentMint.publicKey,
         transferableEntries: false,
+        maxExpiration: new anchor.BN(Date.now() / 1000 + 2 * 86400),
       }
     );
     await expectTXTable(
@@ -204,7 +206,7 @@ describe("create-claim-expire-name-entry", () => {
       namespaceName,
       entryName,
       nameEntryMint,
-      86400
+      duration
     );
     await withSetNamespaceReverseEntry(
       transaction,

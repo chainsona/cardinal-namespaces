@@ -1,8 +1,5 @@
 import { findAta, tryGetAccount } from "@cardinal/common";
 import { withInvalidate } from "@cardinal/token-manager";
-import { getTimeInvalidator } from "@cardinal/token-manager/dist/cjs/programs/timeInvalidator/accounts";
-import { findTimeInvalidatorAddress } from "@cardinal/token-manager/dist/cjs/programs/timeInvalidator/pda";
-import { findTokenManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/tokenManager/pda";
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import { expectTXTable } from "@saberhq/chai-solana";
@@ -308,13 +305,6 @@ describe("create-claim-expire-name-entry", () => {
       entryName
     );
     const mintId = nameEntry.parsed.mint;
-
-    const [tokenManagerId] = await findTokenManagerAddress(mintId);
-    const [timeInvalidatorId] = await findTimeInvalidatorAddress(
-      tokenManagerId
-    );
-    const ti = await getTimeInvalidator(provider.connection, timeInvalidatorId);
-    console.log(ti, ti.parsed.maxExpiration?.toString());
 
     const transaction = new web3.Transaction();
     await withInvalidate(
