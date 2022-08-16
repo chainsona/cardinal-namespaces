@@ -262,11 +262,11 @@ fn claim<'info>(ctx: Context<'_, '_, '_, 'info, MigrateNameEntryMintCtx<'info>>,
     // name_entry.is_claimed = true;
 
     // duration checks
-    if duration.is_some() {
-        if duration.unwrap() <= ctx.accounts.namespace.min_rental_seconds {
+    if let Some(duration) = duration {
+        if duration <= ctx.accounts.namespace.min_rental_seconds {
             return Err(error!(ErrorCode::RentalDurationTooSmall));
         }
-        if ctx.accounts.namespace.max_rental_seconds.is_some() && duration.unwrap() >= ctx.accounts.namespace.max_rental_seconds.unwrap() {
+        if ctx.accounts.namespace.max_rental_seconds.is_some() && duration >= ctx.accounts.namespace.max_rental_seconds.unwrap() {
             return Err(error!(ErrorCode::RentalDurationTooLarge));
         }
     } else if ctx.accounts.namespace.max_rental_seconds.is_some() {

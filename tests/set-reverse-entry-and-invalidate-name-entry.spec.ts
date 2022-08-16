@@ -12,9 +12,10 @@ import {
   findNamespaceId,
   findReverseNameEntryForNamespaceId,
   getClaimRequest,
+  getGlobalReverseNameEntry,
   getNameEntry,
   getNamespaceByName,
-  getReverseEntry,
+  getReverseNameEntryForNamespace,
   withClaimNameEntry,
   withCreateClaimRequest,
   withCreateNamespace,
@@ -32,8 +33,8 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
 
   // test params
   const namespaceName = `ns-${Math.random()}`;
-  const entryName1 = "testname1";
-  const entryName2 = "testname2";
+  const entryName1 = `testname-${Math.random()}`;
+  const entryName2 = `testname-${Math.random()}`;
 
   it("Creates a namespace", async () => {
     const transaction = new web3.Transaction();
@@ -261,7 +262,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       }
     ).to.be.fulfilled;
 
-    const checkReverseEntry = await getReverseEntry(
+    const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
       (
@@ -464,7 +465,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       }
     ).to.be.fulfilled;
 
-    const checkReverseEntry = await getReverseEntry(
+    const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
       (
@@ -521,20 +522,26 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     );
     const mintId = checkNameEntry.parsed.mint;
     const [namespaceId] = await findNamespaceId(namespaceName);
-    const reverseEntryData = await tryGetAccount(() =>
-      getReverseEntry(
+    const namespaceReverseEntryData = await tryGetAccount(() =>
+      getReverseNameEntryForNamespace(
         provider.connection,
         provider.wallet.publicKey,
         namespaceId
       )
+    );
+
+    const globalReverseEntryData = await tryGetAccount(() =>
+      getGlobalReverseNameEntry(provider.connection, provider.wallet.publicKey)
     );
     const namespaceDataBefore = await getNamespaceByName(
       provider.connection,
       namespaceName
     );
 
-    // only do if names match
-    if (reverseEntryData && reverseEntryData.parsed.entryName === entryName1) {
+    if (
+      namespaceReverseEntryData &&
+      namespaceReverseEntryData.parsed.entryName === entryName1
+    ) {
       await withInvalidateExpiredReverseEntry(
         transaction,
         provider.connection,
@@ -543,11 +550,30 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
           namespaceName,
           entryName: entryName1,
           mintId: mintId,
-          reverseEntryId: reverseEntryData.pubkey,
+          reverseEntryId: namespaceReverseEntryData.pubkey,
         }
       );
     } else {
-      console.log("Skipping invalidating expired reverse entry");
+      console.log("Skipping invalidating expired namespace reverse entry");
+    }
+
+    if (
+      globalReverseEntryData &&
+      globalReverseEntryData.parsed.entryName === entryName1
+    ) {
+      await withInvalidateExpiredReverseEntry(
+        transaction,
+        provider.connection,
+        provider.wallet,
+        {
+          namespaceName,
+          entryName: entryName1,
+          mintId: mintId,
+          reverseEntryId: globalReverseEntryData.pubkey,
+        }
+      );
+    } else {
+      console.log("Skipping invalidating expired global reverse entry");
     }
 
     await withInvalidateExpiredNameEntry(

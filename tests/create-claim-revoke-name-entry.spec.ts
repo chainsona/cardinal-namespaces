@@ -15,7 +15,7 @@ import {
   getClaimRequest,
   getNameEntry,
   getNamespaceByName,
-  getReverseEntry,
+  getReverseNameEntryForNamespace,
   withClaimNameEntry,
   withCreateClaimRequest,
   withCreateNamespace,
@@ -34,7 +34,7 @@ describe("create-claim-revoke-name-entry", () => {
 
   // test params
   const namespaceName = `ns-${Math.random()}`;
-  const entryName = "testname";
+  const entryName = `testname-${Math.random()}`;
   const mintAuthority = web3.Keypair.generate();
   const paymentAmountDaily = new anchor.BN(0);
   const PAYMENT_MINT_START = 10000;
@@ -280,7 +280,7 @@ describe("create-claim-revoke-name-entry", () => {
       }
     ).to.be.fulfilled;
 
-    const checkReverseEntry = await getReverseEntry(
+    const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
       (
@@ -364,7 +364,7 @@ describe("create-claim-revoke-name-entry", () => {
       reverseEntryId.toString()
     );
     const checkReverseEntry = await tryGetAccount(async () =>
-      getReverseEntry(
+      getReverseNameEntryForNamespace(
         provider.connection,
         provider.wallet.publicKey,
         (

@@ -22,7 +22,7 @@ import {
   getClaimRequest,
   getNameEntry,
   getNamespaceByName,
-  getReverseEntry,
+  getReverseNameEntryForNamespace,
   withClaimNameEntry,
   withCreateClaimRequest,
   withCreateNamespace,
@@ -41,7 +41,7 @@ describe("create-claim-expire-transferable-name-entry", () => {
 
   // test params
   const namespaceName = `ns-${Math.random()}`;
-  const entryName = "testname";
+  const entryName = `testname-${Math.random()}`;
   const mintKeypair = web3.Keypair.generate();
   const nameEntryMint = mintKeypair.publicKey;
   const mintAuthority = web3.Keypair.generate();
@@ -272,7 +272,7 @@ describe("create-claim-expire-transferable-name-entry", () => {
     expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
     expect(checkRecipientTokenAccount.isFrozen).to.eq(false);
 
-    const checkReverseEntry = await getReverseEntry(
+    const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
       (
@@ -416,7 +416,7 @@ describe("create-claim-expire-transferable-name-entry", () => {
       reverseEntryId.toString()
     );
     const checkReverseEntry = await tryGetAccount(async () =>
-      getReverseEntry(
+      getReverseNameEntryForNamespace(
         provider.connection,
         provider.wallet.publicKey,
         (

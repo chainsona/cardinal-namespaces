@@ -6,11 +6,10 @@ import assert from "assert";
 import { BN } from "bn.js";
 
 import {
-  findNamespaceId,
   getClaimRequest,
+  getGlobalReverseNameEntry,
   getNameEntry,
   getNamespaceByName,
-  getReverseEntry,
   withCreateClaimRequest,
   withCreateNamespace,
   withUpdateClaimRequest,
@@ -28,7 +27,7 @@ describe("namespace-create-rent", () => {
 
   // test params
   const namespaceName = `ns-${Math.random()}`;
-  const entryName = "testname";
+  const entryName = `testname-${Math.random()}`;
   const mintAuthority = web3.Keypair.generate();
   const paymentAmountDaily = new anchor.BN(864000);
   const rentDuration = 500;
@@ -282,12 +281,9 @@ describe("namespace-create-rent", () => {
       transaction.serialize()
     );
 
-    const checkReverseEntry = await getReverseEntry(
+    const checkReverseEntry = await getGlobalReverseNameEntry(
       provider.connection,
-      provider.wallet.publicKey,
-      (
-        await findNamespaceId(namespaceName)
-      )[0]
+      provider.wallet.publicKey
     );
     assert.equal(checkReverseEntry.parsed.entryName, entryName);
   });

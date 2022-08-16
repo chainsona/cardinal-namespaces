@@ -14,7 +14,7 @@ import {
   getClaimRequest,
   getNameEntry,
   getNamespaceByName,
-  getReverseEntry,
+  getReverseNameEntryForNamespace,
   withClaimNameEntry,
   withCreateClaimRequest,
   withCreateNamespace,
@@ -32,7 +32,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
 
   // test params
   const namespaceName = `ns-${Math.random()}`;
-  const entryName = "testname";
+  const entryName = `testname-${Math.random()}`;
   const mintKeypair = web3.Keypair.generate();
   const nameEntryMint = mintKeypair.publicKey;
   const mintAuthority = web3.Keypair.generate();
@@ -263,7 +263,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
     expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
     expect(checkRecipientTokenAccount.isFrozen).to.eq(true);
 
-    const checkReverseEntry = await getReverseEntry(
+    const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
       (
