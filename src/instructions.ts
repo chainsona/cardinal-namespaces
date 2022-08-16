@@ -1,16 +1,10 @@
 import { withFindOrInitAssociatedTokenAccount } from "@cardinal/certificates";
 import { findAta, tryGetAccount } from "@cardinal/common";
 import {
-  DEFAULT_PAYMENT_MANAGER_NAME,
-  PAYMENT_MANAGER_ADDRESS,
-} from "@cardinal/token-manager/dist/cjs/programs/paymentManager";
-import { findPaymentManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/pda";
-import {
   getRemainingAccountsForKind,
   InvalidationType,
   TOKEN_MANAGER_ADDRESS,
   TokenManagerKind,
-  withRemainingAccountsForPayment,
   withRemainingAccountsForReturn,
 } from "@cardinal/token-manager/dist/cjs/programs/tokenManager";
 import { getTokenManager } from "@cardinal/token-manager/dist/cjs/programs/tokenManager/accounts";
@@ -27,12 +21,7 @@ import * as anchor from "@project-serum/anchor";
 import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import type { Wallet } from "@saberhq/solana-contrib";
 import * as splToken from "@solana/spl-token";
-import type {
-  AccountMeta,
-  Connection,
-  Keypair,
-  Transaction,
-} from "@solana/web3.js";
+import type { Connection, Keypair, Transaction } from "@solana/web3.js";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { BN } from "bn.js";
 
@@ -223,8 +212,6 @@ export async function withClaimNameEntry(
   );
   const [tokenManagerId] = await findTokenManagerAddress(mintId);
 
-  const namespace = await getNamespace(connection, namespaceId);
-
   const namespaceTokenAccountId =
     await splToken.Token.getAssociatedTokenAddress(
       splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -264,63 +251,6 @@ export async function withClaimNameEntry(
     duration
   );
 
-  const remainingAccountsForKind = await getRemainingAccountsForKind(
-    mintId,
-    namespace.parsed.transferableEntries
-      ? TokenManagerKind.Unmanaged
-      : TokenManagerKind.Edition
-  );
-
-  let remainingAccountsForPayment: AccountMeta[] = [];
-  if (namespace.parsed.paymentAmountDaily && duration && duration > 0) {
-    const [paymentManagerId] = await findPaymentManagerAddress(
-      DEFAULT_PAYMENT_MANAGER_NAME
-    );
-    const [
-      paymentTokenAccountId,
-      feeCollectorTokenAccountId,
-      remainingAccounts,
-    ] = await withRemainingAccountsForPayment(
-      transaction,
-      connection,
-      wallet,
-      mintId,
-      namespace.parsed.paymentMint,
-      namespaceId,
-      paymentManagerId,
-      undefined,
-      undefined,
-      [namespaceId.toString()]
-    );
-    const payerTokenAccountId = await findAta(
-      namespace.parsed.paymentMint,
-      wallet.publicKey
-    );
-    remainingAccountsForPayment = [
-      {
-        pubkey: payerTokenAccountId,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
-        pubkey: paymentTokenAccountId,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
-        pubkey: feeCollectorTokenAccountId,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
-        pubkey: PAYMENT_MANAGER_ADDRESS,
-        isSigner: false,
-        isWritable: false,
-      },
-      ...remainingAccounts,
-    ];
-  }
-
   transaction.add(
     namespacesProgram.instruction.claimNameEntry(
       {
@@ -346,11 +276,7 @@ export async function withClaimNameEntry(
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
-        remainingAccounts: [
-          ...remainingAccountsForClaim,
-          ...remainingAccountsForKind,
-          ...remainingAccountsForPayment,
-        ],
+        remainingAccounts: [...remainingAccountsForClaim],
       }
     )
   );
