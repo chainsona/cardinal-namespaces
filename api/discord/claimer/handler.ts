@@ -52,6 +52,7 @@ module.exports.claim = async (event) => {
         result: "done",
         transactions: response.transactions || "",
         message: response.message || "",
+        error: response.error,
       }),
     };
   } catch (e) {

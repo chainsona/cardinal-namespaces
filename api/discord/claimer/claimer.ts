@@ -18,7 +18,12 @@ export async function claim(
   entryName: string,
   accessToken?: string,
   cluster = "mainnet"
-): Promise<{ status: number; transactions?: string[]; message?: string }> {
+): Promise<{
+  status: number;
+  transactions?: string[];
+  message?: string;
+  error?: string;
+}> {
   const connection = connectionFor(cluster);
   let approverAuthority: Keypair | undefined;
   try {
@@ -44,13 +49,13 @@ export async function claim(
     if (encodeURIComponent(parsedUserResponse.username) === entryName) {
       return {
         status: 401,
-        message: "Could not verify entry name",
+        error: "Could not verify entry name",
       };
     }
   } catch (e) {
     return {
       status: 401,
-      message: "Error parsing server response",
+      error: "Error parsing server response",
     };
   }
 
