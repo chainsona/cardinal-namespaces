@@ -8,6 +8,8 @@ import {
   withInvalidateExpiredNameEntry,
   withInvalidateExpiredReverseEntry,
   withMigrateNameEntryMint,
+  withSetGlobalReverseEntry,
+  withSetNamespaceReverseEntry,
 } from "@cardinal/namespaces";
 import { tryGetAccount } from "@cardinal/token-manager";
 import { MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
@@ -150,6 +152,38 @@ export async function migrate(
     certificateMint: nameEntry.parsed.mint,
     mintKeypair: mintKeypair,
   });
+
+  // set namespace reverse entry
+  await withSetNamespaceReverseEntry(
+    migrateTransaction,
+    connection,
+    userWallet,
+    NAMESPACE_NAME,
+    entryName,
+    mintKeypair.publicKey,
+    userWallet.publicKey
+  );
+
+  const checkGlobalNameEntry = await tryGetAccount(() =>
+    getGlobalReverseNameEntry(connection, userWallet.publicKey)
+  );
+
+  if (
+    !checkGlobalNameEntry ||
+    (checkGlobalNameEntry &&
+      checkGlobalNameEntry.parsed.namespaceName === NAMESPACE_NAME)
+  ) {
+    await withSetGlobalReverseEntry(
+      migrateTransaction,
+      connection,
+      userWallet,
+      {
+        namespaceName: NAMESPACE_NAME,
+        entryName: entryName,
+        mintId: mintKeypair.publicKey,
+      }
+    );
+  }
   /// End Migrate
 
   revokeTransaction.feePayer = userWallet.publicKey;
