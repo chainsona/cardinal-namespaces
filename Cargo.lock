@@ -839,7 +839,7 @@ dependencies = [
 
 [[package]]
 name = "namespaces"
-version = "4.1.49"
+version = "4.1.50"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
