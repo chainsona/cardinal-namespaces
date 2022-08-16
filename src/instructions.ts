@@ -561,7 +561,7 @@ export async function withInvalidateExpiredNameEntry(
             {
               pubkey: checkNameEntry.parsed.reverseEntry,
               isSigner: false,
-              isWritable: false,
+              isWritable: true,
             },
           ]
         : [],
