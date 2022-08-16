@@ -18,7 +18,7 @@ pub struct InvalidateTransferableReverseNameEntryCtx<'info> {
     #[account(
         mut,
         close = invalidator,
-        constraint = reverse_name_entry.key() == name_entry.reverse_entry.unwrap() @ ErrorCode::InvalidReverseEntry,
+        constraint = reverse_name_entry.entry_name == name_entry.name && reverse_name_entry.namespace_name == namespace.name @ ErrorCode::InvalidReverseEntry,
     )]
     reverse_name_entry: Account<'info, ReverseEntry>,
     /// CHECK: This is not dangerous because we don't read or write from this account

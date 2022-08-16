@@ -110,7 +110,7 @@ export const withRemainingAccountsForClaim = async (
     DEFAULT_PAYMENT_MANAGER
   );
 
-  let accounts: AccountMeta[] = [];
+  const accounts: AccountMeta[] = [];
   if (
     namespace.parsed.paymentAmountDaily.gt(new BN(0)) ||
     namespace.parsed.maxExpiration
@@ -118,34 +118,36 @@ export const withRemainingAccountsForClaim = async (
     const [timeInvalidatorId] = await findTimeInvalidatorAddress(
       tokenManagerId
     );
-    accounts = [
-      {
-        pubkey: namespace.parsed.paymentMint,
-        isSigner: false,
-        isWritable: false,
-      },
-      {
-        pubkey: paymentManagerId,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
-        pubkey: timeInvalidatorId,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
-        pubkey: TIME_INVALIDATOR_ADDRESS,
-        isSigner: false,
-        isWritable: false,
-      },
-    ];
+    accounts.push(
+      ...[
+        {
+          pubkey: namespace.parsed.paymentMint,
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: paymentManagerId,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: timeInvalidatorId,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: TIME_INVALIDATOR_ADDRESS,
+          isSigner: false,
+          isWritable: false,
+        },
+      ]
+    );
   }
   const remainingAccountsForKind = await getRemainingAccountsForKind(
     mintId,
     TokenManagerKind.Edition
   );
-  accounts = [...accounts, ...remainingAccountsForKind];
+  accounts.push(...remainingAccountsForKind);
   if (
     namespace.parsed.paymentAmountDaily.gt(new BN(0)) &&
     duration &&
@@ -178,31 +180,30 @@ export const withRemainingAccountsForClaim = async (
         wallet.publicKey,
         true
       );
-    accounts = accounts.concat([
-      {
-        pubkey: payerTokenAccountId,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
-        pubkey: paymentTokenAccountId,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
-        pubkey: feeCollectorTokenAccountId,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
-        pubkey: PAYMENT_MANAGER_ADDRESS,
-        isSigner: false,
-        isWritable: false,
-      },
-    ]);
-
-    return accounts;
-  } else {
-    return [];
+    accounts.push(
+      ...[
+        {
+          pubkey: payerTokenAccountId,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: paymentTokenAccountId,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: feeCollectorTokenAccountId,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: PAYMENT_MANAGER_ADDRESS,
+          isSigner: false,
+          isWritable: false,
+        },
+      ]
+    );
   }
+  return accounts;
 };

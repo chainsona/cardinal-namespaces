@@ -18,9 +18,11 @@ import {
   findNamespaceId,
   findReverseNameEntryForNamespaceId,
   getClaimRequest,
+  getGlobalReverseNameEntry,
   getNameEntry,
   getNamespaceByName,
   getReverseEntry,
+  getReverseNameEntryForNamespace,
   withClaimNameEntry,
   withCreateClaimRequest,
   withCreateNamespace,
@@ -353,17 +355,45 @@ describe("create-claim-expire-released-name-entry", () => {
     );
 
     const transaction = new web3.Transaction();
-    await withInvalidateTransferableReverseEntry(
-      transaction,
-      provider.connection,
-      new SignerWallet(invalidator),
-      {
-        namespaceName,
-        entryName,
-        mintId: nameEntry.parsed.mint,
-        reverseEntryId: nameEntry.parsed.reverseEntry!,
-      }
+
+    const [namespaceId] = await findNamespaceId(namespaceName);
+    const namespaceReverseEntry = await tryGetAccount(() =>
+      getReverseNameEntryForNamespace(
+        provider.connection,
+        provider.wallet.publicKey,
+        namespaceId
+      )
     );
+    if (namespaceReverseEntry) {
+      await withInvalidateTransferableReverseEntry(
+        transaction,
+        provider.connection,
+        new SignerWallet(invalidator),
+        {
+          namespaceName,
+          entryName,
+          mintId: nameEntry.parsed.mint,
+          reverseEntryId: namespaceReverseEntry.pubkey,
+        }
+      );
+    }
+
+    const globalReverseEntry = await tryGetAccount(() =>
+      getGlobalReverseNameEntry(provider.connection, provider.wallet.publicKey)
+    );
+    if (globalReverseEntry) {
+      await withInvalidateTransferableReverseEntry(
+        transaction,
+        provider.connection,
+        new SignerWallet(invalidator),
+        {
+          namespaceName,
+          entryName,
+          mintId: nameEntry.parsed.mint,
+          reverseEntryId: globalReverseEntry.pubkey,
+        }
+      );
+    }
 
     await withInvalidateTransferableNameEntry(
       transaction,
@@ -409,8 +439,8 @@ describe("create-claim-expire-released-name-entry", () => {
     expect(nameEntry.parsed.reverseEntry?.toString()).to.eq(
       reverseEntryId.toString()
     );
-    const checkReverseEntry = await tryGetAccount(async () =>
-      getReverseEntry(
+    const checknNamespaceReverseEntry = await tryGetAccount(async () =>
+      getReverseNameEntryForNamespace(
         provider.connection,
         provider.wallet.publicKey,
         (
@@ -418,7 +448,12 @@ describe("create-claim-expire-released-name-entry", () => {
         )[0]
       )
     );
-    expect(checkReverseEntry).to.eq(null);
+    expect(checknNamespaceReverseEntry).to.eq(null);
+
+    const checkGlobalReverseEntry = await tryGetAccount(async () =>
+      getGlobalReverseNameEntry(provider.connection, provider.wallet.publicKey)
+    );
+    expect(checkGlobalReverseEntry).to.eq(null);
 
     const entryAfter = await tryGetAccount(() =>
       getNameEntry(provider.connection, namespaceName, entryName)
