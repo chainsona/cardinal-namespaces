@@ -23,7 +23,7 @@ pub fn handler(ctx: Context<CreateClaimRequestCtx>, entry_name: String, _claim_r
     claim_request.requestor = user;
     claim_request.namespace = ctx.accounts.namespace.key();
     claim_request.entry_name = entry_name;
-    if ctx.accounts.namespace.approve_authority != None {
+    if ctx.accounts.namespace.approve_authority.is_some() {
         claim_request.is_approved = false;
     } else {
         claim_request.is_approved = true;

@@ -26,7 +26,7 @@ pub fn handler(ctx: Context<InitNameEntryCtx>, ix: InitNameEntryIx) -> Result<()
     let name_entry = &mut ctx.accounts.name_entry;
     name_entry.bump = *ctx.bumps.get("name_entry").unwrap();
     name_entry.namespace = ctx.accounts.namespace.key();
-    name_entry.name = ix.name.clone();
+    name_entry.name = ix.name;
     name_entry.mint = Pubkey::default();
     name_entry.is_claimed = false;
     Ok(())
