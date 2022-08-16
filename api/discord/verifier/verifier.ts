@@ -31,13 +31,10 @@ export async function verify(
   // get access token
   const params = new URLSearchParams();
   params.append("client_id", "992004845101916191");
-  params.append("client_secret", "D5ZJTxmYUxerC5zubMk4fHSx9veuD8RG");
+  params.append("client_secret", process.env.DISCORD_CLIENT_SECRET || "");
   params.append("grant_type", "authorization_code");
   params.append("code", code.toString());
-  params.append(
-    "redirect_uri",
-    "http://localhost:3000/verification?identity=discord"
-  );
+  params.append("redirect_uri", "https://discord.cardinal.so/verification");
   params.append("scope", "identify");
 
   if (!accessToken) {
