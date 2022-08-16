@@ -260,7 +260,8 @@ export async function withClaimNameEntry(
     wallet,
     namespaceId,
     tokenManagerId,
-    mintId
+    mintId,
+    duration
   );
 
   const remainingAccountsForKind = await getRemainingAccountsForKind(
