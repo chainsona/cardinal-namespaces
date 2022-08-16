@@ -65,6 +65,16 @@ functions:
           path: /twitter/approve
           method: get
           cors: true
+  twitter-migrate:
+    handler: twitter/migrate/handler.migrate
+    timeout: 30
+    environment:
+      TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+    events:
+      - http:
+          path: /twitter/migrate
+          method: post
+          cors: true
   twitter-unlinker:
     handler: twitter/unlinker/handler.unlink
     environment:
