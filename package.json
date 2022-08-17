@@ -1,6 +1,6 @@
 {
   "name": "@cardinal/namespaces",
-  "version": "4.1.51",
+  "version": "4.1.52",
   "description": "Cardinal namespaces SDK",
   "keywords": [
     "solana",
@@ -47,18 +47,18 @@
   },
   "dependencies": {
     "@cardinal/certificates": "^2.0.1",
-    "@cardinal/common": "^2.0.1",
+    "@cardinal/common": "^2.0.10",
     "@cardinal/token-manager": "1.5.12",
     "@metaplex-foundation/mpl-token-metadata": "^1.2.5"
   },
   "devDependencies": {
     "@project-serum/anchor": "^0.24.2",
     "@rushstack/eslint-patch": "^1.1.0",
-    "@saberhq/anchor-contrib": "^1.12.44",
-    "@saberhq/chai-solana": "^1.12.44",
+    "@saberhq/anchor-contrib": "^1.14.1",
+    "@saberhq/chai-solana": "^1.14.1",
     "@saberhq/eslint-config": "^1.12.44",
-    "@saberhq/solana-contrib": "^1.12.44",
-    "@saberhq/token-utils": "^1.12.44",
+    "@saberhq/solana-contrib": "^1.14.1",
+    "@saberhq/token-utils": "^1.14.1",
     "@saberhq/tsconfig": "^1.12.44",
     "@solana/web3.js": "=1.46.0",
     "@types/bn.js": "^5.1.0",
@@ -83,10 +83,6 @@
     "typescript": "^4.5.5"
   },
   "peerDependencies": {
-    "@project-serum/anchor": ">=0.19",
-    "@saberhq/anchor-contrib": "^1.11",
-    "@saberhq/solana-contrib": "^1.11",
-    "@saberhq/token-utils": "^1.11",
     "@solana/web3.js": "^1",
     "bn.js": "^5.2.0",
     "jsbi": "^3 || ^4"
