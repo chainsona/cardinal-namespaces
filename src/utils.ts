@@ -1,10 +1,5 @@
-import {
-  findAta,
-  tryGetAccount,
-  withFindOrInitAssociatedTokenAccount,
-} from "@cardinal/common";
+import { findAta } from "@cardinal/common";
 import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/token-manager/dist/cjs/programs/paymentManager";
-import { getPaymentManager } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/accounts";
 import { findPaymentManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/pda";
 import { TIME_INVALIDATOR_ADDRESS } from "@cardinal/token-manager/dist/cjs/programs/timeInvalidator";
 import { findTimeInvalidatorAddress } from "@cardinal/token-manager/dist/cjs/programs/timeInvalidator/pda";
@@ -14,8 +9,12 @@ import {
   withRemainingAccountsForPayment,
 } from "@cardinal/token-manager/dist/cjs/programs/tokenManager";
 import type { Wallet } from "@saberhq/solana-contrib";
-import type { AccountMeta, Connection, Transaction } from "@solana/web3.js";
-import { PublicKey } from "@solana/web3.js";
+import type {
+  AccountMeta,
+  Connection,
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
 import { BN } from "bn.js";
 
 import { getNamespace, getReverseEntry } from "./accounts";
@@ -153,7 +152,11 @@ export const withRemainingAccountsForClaim = async (
     duration &&
     duration > 0
   ) {
-    const [paymentTokenAccountId] = await withRemainingAccountsForPayment(
+    const [
+      paymentTokenAccountId,
+      feeCollectorTokenAccountId,
+      remainingAccountsForPayment,
+    ] = await withRemainingAccountsForPayment(
       transaction,
       connection,
       wallet,
@@ -166,20 +169,6 @@ export const withRemainingAccountsForClaim = async (
       namespace.parsed.paymentMint,
       wallet.publicKey
     );
-    const paymentManagerData = await tryGetAccount(() =>
-      getPaymentManager(connection, paymentManagerId)
-    );
-    const feeCollectorTokenAccountId =
-      await withFindOrInitAssociatedTokenAccount(
-        transaction,
-        connection,
-        namespace.parsed.paymentMint,
-        paymentManagerData
-          ? paymentManagerData.parsed.feeCollector
-          : PublicKey.default,
-        wallet.publicKey,
-        true
-      );
     accounts.push(
       ...[
         {
@@ -202,6 +191,7 @@ export const withRemainingAccountsForClaim = async (
           isSigner: false,
           isWritable: false,
         },
+        ...remainingAccountsForPayment,
       ]
     );
   }

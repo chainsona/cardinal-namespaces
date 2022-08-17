@@ -203,7 +203,7 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
         let cpi_ctx = CpiContext::new(time_invalidator_program.unwrap().to_account_info(), cpi_accounts).with_signer(namespace_signer);
         cardinal_time_invalidator::cpi::init(cpi_ctx, init_ix)?;
 
-        //add time invalidator
+        // add time invalidator
         let cpi_accounts = cardinal_token_manager::cpi::accounts::AddInvalidatorCtx {
             token_manager: ctx.accounts.token_manager.to_account_info(),
             issuer: ctx.accounts.namespace.to_account_info(),

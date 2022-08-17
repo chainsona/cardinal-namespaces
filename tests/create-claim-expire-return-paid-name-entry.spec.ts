@@ -1,4 +1,8 @@
 import { findAta, tryGetAccount } from "@cardinal/common";
+import { DEFAULT_PAYMENT_MANAGER_NAME } from "@cardinal/token-manager/dist/cjs/programs/paymentManager";
+import { getPaymentManager } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/accounts";
+import { init } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/instruction";
+import { findPaymentManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/pda";
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import { expectTXTable } from "@saberhq/chai-solana";
@@ -35,9 +39,13 @@ describe("create-claim-expire-name-entry", () => {
   const nameEntryMint = mintKeypair.publicKey;
   const mintAuthority = web3.Keypair.generate();
   const invalidator = web3.Keypair.generate();
-  const paymentAmountDaily = new anchor.BN(100);
-  const PAYMENT_MINT_START = 10000;
-  const duration = 864;
+  const paymentAmountDaily = new anchor.BN(10000000);
+  const PAYMENT_MINT_START = 100000000;
+  const duration = 86400;
+
+  const MAKER_FEE = 500;
+  const TAKER_FEE = 300;
+  const feeCollector = web3.Keypair.generate();
 
   // global
   let paymentMint: splToken.Token;
@@ -74,6 +82,7 @@ describe("create-claim-expire-name-entry", () => {
         maxExpiration: new anchor.BN(Date.now() / 1000 + 2 * 86400),
       }
     );
+
     await expectTXTable(
       new TransactionEnvelope(
         SolanaProvider.init(provider),
@@ -96,6 +105,47 @@ describe("create-claim-expire-name-entry", () => {
       checkNamespace.parsed.paymentAmountDaily.toNumber(),
       paymentAmountDaily.toNumber()
     );
+  });
+
+  it("Create payment manager", async () => {
+    const provider = getProvider();
+    const transaction = new web3.Transaction();
+
+    const [ix] = await init(
+      provider.connection,
+      provider.wallet,
+      DEFAULT_PAYMENT_MANAGER_NAME,
+      {
+        feeCollector: feeCollector.publicKey,
+        makerFeeBasisPoints: MAKER_FEE,
+        takerFeeBasisPoints: TAKER_FEE,
+      }
+    );
+
+    transaction.add(ix);
+    const txEnvelope = new TransactionEnvelope(
+      SolanaProvider.init({
+        connection: provider.connection,
+        wallet: provider.wallet,
+        opts: provider.opts,
+      }),
+      [...transaction.instructions]
+    );
+    await expectTXTable(txEnvelope, "Create Payment Manager", {
+      verbosity: "error",
+      formatLogs: true,
+    }).to.be.fulfilled;
+
+    const [checkPaymentManagerId] = await findPaymentManagerAddress(
+      DEFAULT_PAYMENT_MANAGER_NAME
+    );
+    const paymentManagerData = await getPaymentManager(
+      provider.connection,
+      checkPaymentManagerId
+    );
+    expect(paymentManagerData.parsed.name).to.eq(DEFAULT_PAYMENT_MANAGER_NAME);
+    expect(paymentManagerData.parsed.makerFeeBasisPoints).to.eq(MAKER_FEE);
+    expect(paymentManagerData.parsed.takerFeeBasisPoints).to.eq(TAKER_FEE);
   });
 
   it("Init entry and mint", async () => {
