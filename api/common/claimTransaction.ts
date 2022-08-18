@@ -70,29 +70,29 @@ export async function claimTransaction(
       entryName,
       mintKeypair
     );
-  } else if (checkNameEntry && !checkNameEntry.parsed.isClaimed) {
-    ////////////////////// Claim already initialized //////////////////////
-    if (shouldMigrateBool) {
-      mintKeypair = Keypair.generate();
-      await withMigrateAndClaim(
-        connection,
-        userWallet,
-        migrateAndClaimTransaction,
-        namespaceName,
-        entryName,
-        checkNameEntry.parsed.mint,
-        mintKeypair
-      );
-    } else {
-      await withClaim(
-        connection,
-        userWallet,
-        claimTransaction,
-        namespaceName,
-        entryName,
-        checkNameEntry.parsed.mint
-      );
-    }
+    // } else if (checkNameEntry && !checkNameEntry.parsed.isClaimed) {
+    //   ////////////////////// Claim already initialized //////////////////////
+    //   if (shouldMigrateBool) {
+    //     mintKeypair = Keypair.generate();
+    //     await withMigrateAndClaim(
+    //       connection,
+    //       userWallet,
+    //       migrateAndClaimTransaction,
+    //       namespaceName,
+    //       entryName,
+    //       checkNameEntry.parsed.mint,
+    //       mintKeypair
+    //     );
+    //   } else {
+    //     await withClaim(
+    //       connection,
+    //       userWallet,
+    //       claimTransaction,
+    //       namespaceName,
+    //       entryName,
+    //       checkNameEntry.parsed.mint
+    //     );
+    //   }
   } else {
     ////////////////////// Potentially revoke and claim //////////////////////
     const shouldRevokeBool = await shouldRevoke(

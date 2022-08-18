@@ -251,15 +251,11 @@ fn claim<'info>(ctx: Context<'_, '_, '_, 'info, MigrateNameEntryMintCtx<'info>>,
     name_entry.data = Some(ctx.accounts.payer.key());
     name_entry.claim_request_counter = name_entry.claim_request_counter.checked_add(1).expect("Add error");
     namespace.count = namespace.count.checked_add(1).expect("Add error");
+    name_entry.is_claimed = true;
 
     if ctx.accounts.namespace.limit.is_some() && ctx.accounts.namespace.count > ctx.accounts.namespace.limit.unwrap() {
         return Err(error!(ErrorCode::NamespaceReachedLimit));
     }
-
-    // if name_entry.is_claimed {
-    //     return Err(error!(ErrorCode::NameEntryAlreadyClaimed));
-    // }
-    // name_entry.is_claimed = true;
 
     // duration checks
     if let Some(duration) = duration {
