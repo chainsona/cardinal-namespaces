@@ -4,14 +4,9 @@ import fetch from "node-fetch";
 
 import { claimTransaction } from "../../common/claimTransaction";
 import { connectionFor } from "../../common/connection";
+import type { GithubUserInfoParams } from "../../tools/types";
 
 const NAMESPACE_NAME = "github";
-
-type UserInfoParams = {
-  id: string;
-  username: string;
-  avatar: string;
-};
 
 export async function claim(
   publicKey: string,
@@ -37,16 +32,13 @@ export async function claim(
   console.log(
     `Attempting to approve github handle publicKey ${publicKey} entryName ${entryName} cluster ${cluster} `
   );
-  const userResponse = await fetch("http://discordapp.com/api/users/@me", {
-    headers: {
-      Authorization: `Bearer ${accessToken!}`,
-    },
-  });
+  const userResponse = await fetch(`https://api.github.com/users/${entryName}`);
   const userJson = await userResponse.json();
-  let parsedUserResponse: UserInfoParams | undefined;
+  let parsedUserResponse: GithubUserInfoParams | undefined;
   try {
-    parsedUserResponse = userJson as UserInfoParams;
-    if (encodeURIComponent(parsedUserResponse.username) === entryName) {
+    parsedUserResponse = userJson as GithubUserInfoParams;
+    console.log(parsedUserResponse.login, entryName);
+    if (encodeURIComponent(parsedUserResponse.login) !== entryName) {
       return {
         status: 401,
         error: "Could not verify entry name",

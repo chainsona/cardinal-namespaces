@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import fetch from "node-fetch";
 
 import type {
@@ -40,7 +41,6 @@ export async function verify(
   );
 
   if (!accessToken) {
-    console.log(params);
     const response = await fetch(
       "https://github.com/login/oauth/access_token",
       {
@@ -52,7 +52,6 @@ export async function verify(
       }
     );
     const json = (await response.json()) as GithubResponseParams;
-    console.log("json", json);
     try {
       accessToken = json.access_token;
     } catch (e) {
@@ -80,7 +79,6 @@ export async function verify(
     };
   }
 
-  console.log("Received user reponse", parsedUserResponse);
   if (!parsedUserResponse?.login) {
     return {
       status: 500,

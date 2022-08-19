@@ -5,7 +5,7 @@ import { SignerWallet } from "@saberhq/solana-contrib";
 import * as splToken from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 
-import { secondaryConnectionFor } from "../../common/connection";
+import { secondaryConnectionFor } from "./connection";
 
 export async function getOwner(
   connection: web3.Connection,

@@ -4,14 +4,9 @@ import fetch from "node-fetch";
 
 import { claimTransaction } from "../../common/claimTransaction";
 import { connectionFor } from "../../common/connection";
+import type { DiscordUserInfoParams } from "../../tools/types";
 
 const NAMESPACE_NAME = "discord";
-
-type UserInfoParams = {
-  id: string;
-  username: string;
-  avatar: string;
-};
 
 export async function claim(
   publicKey: string,
@@ -43,10 +38,14 @@ export async function claim(
     },
   });
   const userJson = await userResponse.json();
-  let parsedUserResponse: UserInfoParams | undefined;
+  let parsedUserResponse: DiscordUserInfoParams | undefined;
   try {
-    parsedUserResponse = userJson as UserInfoParams;
-    if (encodeURIComponent(parsedUserResponse.username) === entryName) {
+    parsedUserResponse = userJson as DiscordUserInfoParams;
+    if (
+      decodeURIComponent(
+        `${parsedUserResponse.username}#${parsedUserResponse.discriminator}`
+      ) !== entryName
+    ) {
       return {
         status: 401,
         error: "Could not verify entry name",
