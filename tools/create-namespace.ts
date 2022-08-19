@@ -17,7 +17,9 @@ export const createNamespace = async (
   const connection = connectionFor(clusterName);
   let transaction = new Transaction();
 
-  const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
+  const wallet = Keypair.fromSecretKey(
+    utils.bytes.bs58.decode(utils.bytes.bs58.encode([]))
+  );
 
   transaction = await withCreateNamespace(
     transaction,
@@ -47,6 +49,6 @@ export const createNamespace = async (
   console.log(`Successful namespace creation, txid ${txid}`);
 };
 
-createNamespace("discord", "devnet").catch((e) => {
+createNamespace("github", "mainnet").catch((e) => {
   console.log("Error:", e);
 });

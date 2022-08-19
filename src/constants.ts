@@ -28,7 +28,13 @@ export type ReverseEntryData = Accounts["reverseEntry"];
 export type ClaimRequestData = Accounts["claimRequest"];
 
 export const DEFAULT_PAYMENT_MANAGER = "cardinal";
-export const IDENTITIES = ["twitter", "discord"];
+export const IDENTITIES = [
+  "twitter",
+  "discord",
+  "github",
+  "spotify",
+  "instagram",
+];
 
 export const GLOBAL_RENTAL_PERCENTAGE = 0.2;
 export const GLOBAL_CONTEXT_SEED = "context";
