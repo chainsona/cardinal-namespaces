@@ -22,3 +22,14 @@ export type DiscordUserInfoParams = {
   avatar: string;
   discriminator: string;
 };
+
+export type GithubResponseParams = {
+  access_token: string;
+  scope: string;
+  token_type: string;
+};
+
+export type GithubUserInfoParams = {
+  login: string;
+  avatar_url: string;
+};

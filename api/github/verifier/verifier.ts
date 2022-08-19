@@ -1,8 +1,8 @@
 import fetch from "node-fetch";
 
 import type {
-  DiscordResponseParams,
-  DiscordUserInfoParams,
+  GithubResponseParams,
+  GithubUserInfoParams,
 } from "../../tools/types";
 
 export async function verify(
@@ -25,28 +25,34 @@ export async function verify(
   }
 
   console.log(
-    `Attempting to verify discord handle publicKey ${publicKey} cluster ${cluster} `
+    `Attempting to verify github handle publicKey ${publicKey} cluster ${cluster} `
   );
 
   // get access token
   const params = new URLSearchParams();
-  params.append("client_id", "992004845101916191");
-  params.append("client_secret", process.env.DISCORD_CLIENT_SECRET || "");
+  params.append("client_id", "46fd12e1745bd062a3b4");
+  params.append("client_secret", process.env.GITHUB_CLIENT_SECRET || "");
   params.append("grant_type", "authorization_code");
   params.append("code", code.toString());
-  params.append("redirect_uri", "https://discord.cardinal.so/verification");
-  params.append("scope", "identify");
+  params.append(
+    "redirect_uri",
+    "http://localhost:3000/verification?identity=github"
+  );
 
   if (!accessToken) {
-    const response = await fetch("https://discord.com/api/v10//oauth2/token", {
-      method: "POST",
-      body: params,
-      headers: {
-        "Content-type": "application/x-www-form-urlencoded",
-      },
-    });
-    const json = (await response.json()) as DiscordResponseParams;
-    console.log("Received response", json);
+    console.log(params);
+    const response = await fetch(
+      "https://github.com/login/oauth/access_token",
+      {
+        method: "POST",
+        body: params,
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+    const json = (await response.json()) as GithubResponseParams;
+    console.log("json", json);
     try {
       accessToken = json.access_token;
     } catch (e) {
@@ -58,13 +64,13 @@ export async function verify(
   }
 
   // get user information
-  const userResponse = await fetch("http://discordapp.com/api/users/@me", {
+  const userResponse = await fetch("https://api.github.com/user", {
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `token ${accessToken}`,
     },
   });
-  const userJson = (await userResponse.json()) as DiscordUserInfoParams;
-  let parsedUserResponse: DiscordUserInfoParams | undefined;
+  const userJson = (await userResponse.json()) as GithubUserInfoParams;
+  let parsedUserResponse: GithubUserInfoParams | undefined;
   try {
     parsedUserResponse = userJson;
   } catch (e) {
@@ -75,16 +81,15 @@ export async function verify(
   }
 
   console.log("Received user reponse", parsedUserResponse);
-  if (!parsedUserResponse?.username) {
+  if (!parsedUserResponse?.login) {
     return {
       status: 500,
       error: "Verification failed",
     };
   }
 
-  const handle = `${parsedUserResponse.username}#${parsedUserResponse.discriminator}`;
-
-  const profileUrl = `https://cdn.discordapp.com/avatars/${parsedUserResponse.id}/${parsedUserResponse.avatar}.png`;
+  const handle = parsedUserResponse.login;
+  const profileUrl = parsedUserResponse.avatar_url;
   console.log(`Verified username ${handle} with image ${profileUrl}`);
   return {
     status: 200,

@@ -160,6 +160,38 @@ functions:
           method: get
           cors: true
 
+  ################################ Discord ################################
+  github-verifier:
+    handler: github/verifier/handler.verify
+    environment:
+      GITHUB_SOLANA_KEY: ${ssm:/GITHUB_SOLANA_KEY~true}
+      GITHUB_CLIENT_ID: ${ssm:/GITHUB_CLIENT_ID~true}
+      GITHUB_CLIENT_SECRET: ${ssm:/GITHUB_CLIENT_SECRET~true}
+    events:
+      - http:
+          path: /github/verify
+          method: get
+          cors: true
+  github-claimer:
+    handler: github/claimer/handler.claim
+    environment:
+      GITHUB_SOLANA_KEY: ${ssm:/GITHUB_SOLANA_KEY~true}
+    events:
+      - http:
+          path: /github/claim
+          method: post
+          cors: true
+  github-revoker:
+    handler: github/revoker/handler.revoke
+    timeout: 30
+    environment:
+      GITHUB_SOLANA_KEY: ${ssm:/GITHUB_SOLANA_KEY~true}
+    events:
+      - http:
+          path: /github/revoke
+          method: get
+          cors: true
+
   ################################ Passbase ################################
   passbase-webhook:
     handler: passbase/passbase-webhook/handler.webhook
