@@ -59,6 +59,10 @@ describe("create-update-namespace", () => {
 
   it("Updates a namespace", async () => {
     const transaction = new web3.Transaction();
+    const namespace = await getNamespaceByName(
+      provider.connection,
+      namespaceName
+    );
     await withUpdateNamespace(
       transaction,
       provider.connection,
@@ -71,6 +75,11 @@ describe("create-update-namespace", () => {
         transferableEntries: false,
         limit: 1,
         maxExpiration: new anchor.BN(10000),
+        schema: namespace.parsed.schema,
+        paymentAmountDaily: namespace.parsed.paymentAmountDaily,
+        paymentMint: namespace.parsed.paymentMint,
+        minRentalSeconds: namespace.parsed.minRentalSeconds,
+        invalidationType: namespace.parsed.invalidationType,
       }
     );
     await expectTXTable(

@@ -7,6 +7,7 @@ import { BN } from "bn.js";
 
 import {
   getNamespace,
+  getNamespaceByName,
   NAMESPACES_PROGRAM_ID,
   withCreateNamespace,
   withUpdateNamespace,
@@ -74,6 +75,10 @@ describe("namespace-create-update", () => {
 
   it("Update a namespace not authority", async () => {
     const transaction = new web3.Transaction();
+    const namespace = await getNamespaceByName(
+      provider.connection,
+      NAMESPACE_NAME
+    );
     await withUpdateNamespace(
       transaction,
       provider.connection,
@@ -88,6 +93,8 @@ describe("namespace-create-update", () => {
         paymentAmountDaily: new BN(1),
         paymentMint: paymentMint.publicKey,
         transferableEntries: true,
+        schema: namespace.parsed.schema,
+        invalidationType: namespace.parsed.invalidationType,
       }
     );
     transaction.feePayer = mintAuthority.publicKey;
@@ -112,6 +119,10 @@ describe("namespace-create-update", () => {
       ],
       NAMESPACES_PROGRAM_ID
     );
+    const namespace = await getNamespaceByName(
+      provider.connection,
+      NAMESPACE_NAME
+    );
 
     const transaction = new web3.Transaction();
     await withUpdateNamespace(
@@ -128,6 +139,8 @@ describe("namespace-create-update", () => {
         paymentAmountDaily: new BN(1),
         paymentMint: paymentMint.publicKey,
         transferableEntries: true,
+        schema: namespace.parsed.schema,
+        invalidationType: namespace.parsed.invalidationType,
       }
     );
     transaction.feePayer = provider.wallet.publicKey;
