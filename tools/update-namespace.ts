@@ -22,19 +22,6 @@ export const updateNamespace = async (
   const newAuthority = new PublicKey(
     "twtXa9zEztzPTvmjqQMQEatUXUfoY3GVsxKLdLZQMi6"
   );
-  console.log(namespace, namespace.pubkey.toString());
-  console.log({
-    updateAuthority: newAuthority,
-    rentAuthority: newAuthority,
-    approveAuthority: newAuthority,
-    paymentAmountDaily: namespace.parsed.paymentAmountDaily,
-    paymentMint: namespace.parsed.paymentMint,
-    minRentalSeconds: namespace.parsed.minRentalSeconds,
-    maxRentalSeconds: namespace.parsed.maxRentalSeconds ?? undefined,
-    transferableEntries: namespace.parsed.transferableEntries,
-    limit: namespace.parsed.limit ?? undefined,
-    maxExpiration: namespace.parsed.maxExpiration ?? undefined,
-  });
   transaction = await withUpdateNamespace(
     transaction,
     connection,
@@ -51,6 +38,8 @@ export const updateNamespace = async (
       transferableEntries: namespace.parsed.transferableEntries,
       limit: namespace.parsed.limit ?? undefined,
       maxExpiration: namespace.parsed.maxExpiration ?? undefined,
+      schema: namespace.parsed.schema,
+      invalidationType: namespace.parsed.invalidationType,
     }
   );
   transaction.feePayer = wallet.publicKey;

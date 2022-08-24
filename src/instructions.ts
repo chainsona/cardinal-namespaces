@@ -141,14 +141,16 @@ export async function withUpdateNamespace(
   wallet: Wallet,
   namespaceName: string,
   params: {
-    updateAuthority?: PublicKey;
-    rentAuthority?: PublicKey;
+    updateAuthority: PublicKey;
+    rentAuthority: PublicKey;
     approveAuthority?: PublicKey;
-    paymentAmountDaily?: anchor.BN;
-    paymentMint?: PublicKey;
-    minRentalSeconds?: anchor.BN;
+    schema: number;
+    paymentAmountDaily: anchor.BN;
+    paymentMint: PublicKey;
+    minRentalSeconds: anchor.BN;
+    transferableEntries: boolean;
+    invalidationType: number;
     maxRentalSeconds?: anchor.BN;
-    transferableEntries?: boolean;
     limit?: number;
     maxExpiration?: anchor.BN;
   }
@@ -164,16 +166,18 @@ export async function withUpdateNamespace(
   transaction.add(
     namespacesProgram.instruction.updateNamespace(
       {
-        updateAuthority: params.updateAuthority ?? null,
-        rentAuthority: params.rentAuthority ?? null,
+        updateAuthority: params.updateAuthority,
+        rentAuthority: params.rentAuthority,
         approveAuthority: params.approveAuthority ?? null,
-        paymentAmountDaily: params.paymentAmountDaily ?? null,
-        paymentMint: params.paymentMint ?? null,
-        minRentalSeconds: params.minRentalSeconds ?? null,
+        schema: params.schema,
+        paymentAmountDaily: params.paymentAmountDaily,
+        paymentMint: params.paymentMint,
+        minRentalSeconds: params.minRentalSeconds,
         maxRentalSeconds: params.maxRentalSeconds ?? null,
-        transferableEntries: params.transferableEntries ?? null,
+        transferableEntries: params.transferableEntries,
         limit: params.limit ?? null,
         maxExpiration: params.maxExpiration ?? null,
+        invalidationType: params.invalidationType ?? null,
       },
       {
         accounts: {
