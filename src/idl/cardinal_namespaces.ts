@@ -1802,15 +1802,11 @@ export type Namespaces = {
         fields: [
           {
             name: "updateAuthority";
-            type: {
-              option: "publicKey";
-            };
+            type: "publicKey";
           },
           {
             name: "rentAuthority";
-            type: {
-              option: "publicKey";
-            };
+            type: "publicKey";
           },
           {
             name: "approveAuthority";
@@ -1819,22 +1815,20 @@ export type Namespaces = {
             };
           },
           {
+            name: "schema";
+            type: "u8";
+          },
+          {
             name: "paymentAmountDaily";
-            type: {
-              option: "u64";
-            };
+            type: "u64";
           },
           {
             name: "paymentMint";
-            type: {
-              option: "publicKey";
-            };
+            type: "publicKey";
           },
           {
             name: "minRentalSeconds";
-            type: {
-              option: "i64";
-            };
+            type: "i64";
           },
           {
             name: "maxRentalSeconds";
@@ -1844,9 +1838,7 @@ export type Namespaces = {
           },
           {
             name: "transferableEntries";
-            type: {
-              option: "bool";
-            };
+            type: "bool";
           },
           {
             name: "limit";
@@ -1859,6 +1851,10 @@ export type Namespaces = {
             type: {
               option: "i64";
             };
+          },
+          {
+            name: "invalidationType";
+            type: "u8";
           }
         ];
       };
@@ -3812,15 +3808,11 @@ export const IDL: Namespaces = {
         fields: [
           {
             name: "updateAuthority",
-            type: {
-              option: "publicKey",
-            },
+            type: "publicKey",
           },
           {
             name: "rentAuthority",
-            type: {
-              option: "publicKey",
-            },
+            type: "publicKey",
           },
           {
             name: "approveAuthority",
@@ -3829,22 +3821,20 @@ export const IDL: Namespaces = {
             },
           },
           {
+            name: "schema",
+            type: "u8",
+          },
+          {
             name: "paymentAmountDaily",
-            type: {
-              option: "u64",
-            },
+            type: "u64",
           },
           {
             name: "paymentMint",
-            type: {
-              option: "publicKey",
-            },
+            type: "publicKey",
           },
           {
             name: "minRentalSeconds",
-            type: {
-              option: "i64",
-            },
+            type: "i64",
           },
           {
             name: "maxRentalSeconds",
@@ -3854,9 +3844,7 @@ export const IDL: Namespaces = {
           },
           {
             name: "transferableEntries",
-            type: {
-              option: "bool",
-            },
+            type: "bool",
           },
           {
             name: "limit",
@@ -3869,6 +3857,10 @@ export const IDL: Namespaces = {
             type: {
               option: "i64",
             },
+          },
+          {
+            name: "invalidationType",
+            type: "u8",
           },
         ],
       },

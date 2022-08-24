@@ -2,18 +2,20 @@ use {crate::state::*, anchor_lang::prelude::*};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct UpdateNamespaceIx {
-    pub update_authority: Option<Pubkey>,
-    pub rent_authority: Option<Pubkey>,
+    pub update_authority: Pubkey,
+    pub rent_authority: Pubkey,
     pub approve_authority: Option<Pubkey>,
+    pub schema: u8,
     // payment
-    pub payment_amount_daily: Option<u64>,
-    pub payment_mint: Option<Pubkey>,
+    pub payment_amount_daily: u64,
+    pub payment_mint: Pubkey,
     // validators
-    pub min_rental_seconds: Option<i64>,
+    pub min_rental_seconds: i64,
     pub max_rental_seconds: Option<i64>,
-    pub transferable_entries: Option<bool>,
+    pub transferable_entries: bool,
     pub limit: Option<u32>,
     pub max_expiration: Option<i64>,
+    pub invalidation_type: u8,
 }
 
 #[derive(Accounts)]
@@ -30,23 +32,20 @@ pub struct UpdateNamepsace<'info> {
 
 pub fn handler(ctx: Context<UpdateNamepsace>, ix: UpdateNamespaceIx) -> Result<()> {
     let namespace = &mut ctx.accounts.namespace;
-    namespace.update_authority = ix.update_authority.unwrap_or(namespace.update_authority);
-    namespace.rent_authority = ix.rent_authority.unwrap_or(namespace.rent_authority);
-    if ix.approve_authority.is_some() {
-        namespace.approve_authority = ix.approve_authority;
-    }
-    namespace.payment_amount_daily = ix.payment_amount_daily.unwrap_or(namespace.payment_amount_daily);
-    namespace.payment_mint = ix.payment_mint.unwrap_or(namespace.payment_mint);
-    namespace.min_rental_seconds = ix.min_rental_seconds.unwrap_or(namespace.min_rental_seconds);
-    if ix.max_rental_seconds.is_some() {
-        namespace.max_rental_seconds = ix.max_rental_seconds;
-    }
-    namespace.transferable_entries = ix.transferable_entries.unwrap_or(namespace.transferable_entries);
-    if ix.limit.is_some() {
-        namespace.limit = ix.limit;
-    }
-    if ix.max_expiration.is_some() {
-        namespace.max_expiration = ix.max_expiration;
-    }
+    namespace.update_authority = ix.update_authority;
+    namespace.rent_authority = ix.rent_authority;
+    namespace.approve_authority = ix.approve_authority;
+    namespace.schema = ix.schema;
+    // payment
+    namespace.payment_amount_daily = ix.payment_amount_daily;
+    namespace.payment_mint = ix.payment_mint;
+    // validators
+    namespace.min_rental_seconds = ix.min_rental_seconds;
+    namespace.max_rental_seconds = ix.max_rental_seconds;
+    namespace.transferable_entries = ix.transferable_entries;
+    namespace.limit = ix.limit;
+    namespace.max_expiration = ix.max_expiration;
+    namespace.invalidation_type = ix.invalidation_type;
+
     Ok(())
 }
