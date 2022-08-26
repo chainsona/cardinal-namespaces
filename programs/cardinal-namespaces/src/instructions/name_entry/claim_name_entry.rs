@@ -126,6 +126,7 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
         } else {
             TokenManagerKind::Edition as u8
         },
+        // for old versions of namespace, field invalidation_type didn't exist and defaults to zero
         invalidation_type: if ctx.accounts.namespace.invalidation_type == 0 {
             if ctx.accounts.namespace.transferable_entries {
                 InvalidationType::Invalidate as u8
