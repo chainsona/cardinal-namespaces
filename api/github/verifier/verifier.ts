@@ -8,8 +8,8 @@ import type {
 
 export async function verify(
   publicKey: string,
-  code?: string,
-  accessToken?: string,
+  code: string,
+  accessToken: string,
   cluster = "mainnet"
 ): Promise<{
   status: number;
@@ -35,10 +35,7 @@ export async function verify(
   params.append("client_secret", process.env.GITHUB_CLIENT_SECRET || "");
   params.append("grant_type", "authorization_code");
   params.append("code", code.toString());
-  params.append(
-    "redirect_uri",
-    "http://localhost:3000/verification?identity=github"
-  );
+  params.append("redirect_uri", "https://github.cardinal.so/verification");
 
   if (!accessToken) {
     const response = await fetch(
