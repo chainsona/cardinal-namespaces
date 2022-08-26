@@ -150,7 +150,7 @@ functions:
           method: post
           cors: true
 
-  ################################ Discord ################################
+  ################################ GitHub ################################
   github-proxy:
     handler: github/proxy/handler.proxy
     events:
