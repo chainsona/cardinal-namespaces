@@ -149,15 +149,41 @@ functions:
           path: /discord/claim
           method: post
           cors: true
-  discord-revoker:
-    handler: discord/revoker/handler.revoke
-    timeout: 30
-    environment:
-      DISCORD_SOLANA_KEY: ${ssm:/DISCORD_SOLANA_KEY~true}
+
+  ################################ GitHub ################################
+  github-proxy:
+    handler: github/proxy/handler.proxy
     events:
       - http:
-          path: /discord/revoke
+          path: /github/proxy
           method: get
+          cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            perKeyInvalidation:
+              requireAuthorization: false # default is true
+            cacheKeyParameters:
+              - name: request.path.username
+  github-verifier:
+    handler: github/verifier/handler.verify
+    environment:
+      GITHUB_SOLANA_KEY: ${ssm:/GITHUB_SOLANA_KEY~true}
+      GITHUB_CLIENT_ID: ${ssm:/GITHUB_CLIENT_ID~true}
+      GITHUB_CLIENT_SECRET: ${ssm:/GITHUB_CLIENT_SECRET~true}
+    events:
+      - http:
+          path: /github/verify
+          method: get
+          cors: true
+  github-claimer:
+    handler: github/claimer/handler.claim
+    environment:
+      GITHUB_SOLANA_KEY: ${ssm:/GITHUB_SOLANA_KEY~true}
+    events:
+      - http:
+          path: /github/claim
+          method: post
           cors: true
 
   ################################ Passbase ################################

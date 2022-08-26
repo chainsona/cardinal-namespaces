@@ -46,11 +46,9 @@ export async function verify(
       },
     });
     const json = (await response.json()) as DiscordResponseParams;
-    let parsedResponse: DiscordResponseParams | undefined;
     console.log("Received response", json);
     try {
-      parsedResponse = json;
-      accessToken = parsedResponse?.access_token;
+      accessToken = json.access_token;
     } catch (e) {
       return {
         status: 500,
@@ -84,9 +82,9 @@ export async function verify(
     };
   }
 
-  const handle = `${parsedUserResponse?.username}#${parsedUserResponse?.discriminator}`;
+  const handle = `${parsedUserResponse.username}#${parsedUserResponse.discriminator}`;
 
-  const profileUrl = `https://cdn.discordapp.com/avatars/${parsedUserResponse?.id}/${parsedUserResponse?.avatar}.png`;
+  const profileUrl = `https://cdn.discordapp.com/avatars/${parsedUserResponse.id}/${parsedUserResponse.avatar}.png`;
   console.log(`Verified username ${handle} with image ${profileUrl}`);
   return {
     status: 200,

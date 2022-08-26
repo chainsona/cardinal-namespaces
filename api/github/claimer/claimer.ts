@@ -4,9 +4,9 @@ import fetch from "node-fetch";
 
 import { claimTransaction } from "../../common/claimTransaction";
 import { connectionFor } from "../../common/connection";
-import type { DiscordUserInfoParams } from "../../tools/types";
+import type { GithubUserInfoParams } from "../../tools/types";
 
-const NAMESPACE_NAME = "discord";
+const NAMESPACE_NAME = "github";
 
 export async function claim(
   publicKey: string,
@@ -23,29 +23,22 @@ export async function claim(
   let approverAuthority: Keypair | undefined;
   try {
     approverAuthority = Keypair.fromSecretKey(
-      anchor.utils.bytes.bs58.decode(process.env.DISCORD_SOLANA_KEY || "")
+      anchor.utils.bytes.bs58.decode(process.env.GITHUB_SOLANA_KEY || "")
     );
   } catch {
     throw new Error(`${NAMESPACE_NAME} pk incorrect or not found`);
   }
 
   console.log(
-    `Attempting to approve discord handle publicKey ${publicKey} entryName ${entryName} cluster ${cluster} `
+    `Attempting to approve github handle publicKey ${publicKey} entryName ${entryName} cluster ${cluster} `
   );
-  const userResponse = await fetch("http://discordapp.com/api/users/@me", {
-    headers: {
-      Authorization: `Bearer ${accessToken!}`,
-    },
-  });
+  const userResponse = await fetch(`https://api.github.com/users/${entryName}`);
   const userJson = await userResponse.json();
-  let parsedUserResponse: DiscordUserInfoParams | undefined;
+  let parsedUserResponse: GithubUserInfoParams | undefined;
   try {
-    parsedUserResponse = userJson as DiscordUserInfoParams;
-    if (
-      decodeURIComponent(
-        `${parsedUserResponse.username}#${parsedUserResponse.discriminator}`
-      ) !== entryName
-    ) {
+    parsedUserResponse = userJson as GithubUserInfoParams;
+    console.log(parsedUserResponse.login, entryName);
+    if (encodeURIComponent(parsedUserResponse.login) !== entryName) {
       return {
         status: 401,
         error: "Could not verify entry name",
