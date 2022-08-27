@@ -25,7 +25,10 @@ export async function withInitAndClaim(
   transaction: Transaction,
   namespaceName: string,
   entryName: string,
-  mintKeypair: Keypair
+  mintKeypair: Keypair,
+  duration?: number,
+  requestor = wallet.publicKey,
+  payer = wallet.publicKey
 ): Promise<Transaction> {
   console.log("---> withInitAndClaim");
   await withInitNameEntry(
@@ -50,7 +53,9 @@ export async function withInitAndClaim(
     namespaceName,
     entryName,
     mintKeypair.publicKey,
-    0
+    duration,
+    requestor,
+    payer
   );
 
   return transaction;

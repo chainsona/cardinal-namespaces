@@ -28,7 +28,7 @@ export async function claim(
       anchor.utils.bytes.bs58.decode(process.env.TWITTER_SOLANA_KEY || "")
     );
   } catch {
-    throw new Error(`Twitter pk incorrect or not found`);
+    throw new Error(`Twitter publickey incorrect or not found`);
   }
 
   console.log(

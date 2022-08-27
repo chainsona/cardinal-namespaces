@@ -186,6 +186,49 @@ functions:
           method: post
           cors: true
 
+  ################################ Events ################################
+  events-event-manager:
+    handler: events/eventManager/handler.manage
+    events:
+      - http:
+          path: /events/createOrUpdateEvent
+          method: post
+          cors: true
+  events-tickets-manager:
+    handler: events/ticketsManager/handler.manage
+    events:
+      - http:
+          path: /events/createOrUpdateTickets
+          method: post
+          cors: true
+  events-tickets-claimer:
+    handler: events/ticketsClaimer/handler.claim
+    environment:
+      DISCORD_SOLANA_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
+    events:
+      - http:
+          path: /tickets/{ticketId}/claim
+          method: post
+          cors: true
+  events-ticket-otp-claimer:
+    handler: events/ticketClaimerFromOtp/handler.otpClaim
+    environment:
+      DISCORD_SOLANA_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
+    events:
+      - http:
+          path: /tickets/{ticketId}/approve/claim
+          method: post
+          cors: true
+  events-tickets-approver:
+    handler: events/ticketsApprover/handler.approve
+    environment:
+      DISCORD_SOLANA_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
+    events:
+      - http:
+          path: /tickets/{ticketId}/approve
+          method: post
+          cors: true
+
   ################################ Passbase ################################
   passbase-webhook:
     handler: passbase/passbase-webhook/handler.webhook

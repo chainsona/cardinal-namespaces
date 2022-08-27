@@ -25,6 +25,7 @@
     "@types/node-fetch": "^2.6.1",
     "aws-lambda": "^1.0.7",
     "crypto-js": "^4.1.1",
+    "firebase": "^9.9.3",
     "jsbi": "^4.1.0",
     "node-fetch": "^2.6.6",
     "serverless-dotenv-plugin": "^4.0.2",
