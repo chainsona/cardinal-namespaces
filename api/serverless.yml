@@ -197,27 +197,38 @@ functions:
           cors: true
 
   ################################ Events ################################
-  events-event-manager:
-    handler: events/eventManager/handler.manage
-    environment:
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+  event-create:
+    handler: events/eventManager/handler.create
     events:
       - http:
-          path: /events/createOrUpdateEvent
+          path: /events/create
           method: post
           cors: true
-  events-tickets-manager:
+  event-update:
+    handler: events/eventManager/handler.update
+    events:
+      - http:
+          path: /events/{eventId}/update
+          method: put
+          cors: true
+  ticket-create:
+    handler: events/ticketsManager/handler.manage
+    events:
+      - http:
+          path: /tickets/create
+          method: post
+          cors: true
+  ticket-update:
     handler: events/ticketsManager/handler.manage
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
-          path: /events/createOrUpdateTickets
+          path: /tickets/{ticketId}/update
           method: post
           cors: true
-  events-tickets-claimer:
+  tickets-claimer:
     handler: events/ticketsClaimer/handler.claim
     environment:
       EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
@@ -229,14 +240,14 @@ functions:
           path: /tickets/{ticketId}/claim
           method: post
           cors: true
-  events-ticket-otp-claimer:
+  ticket-otp-claimer:
     handler: events/ticketClaimerFromOtp/handler.otpClaim
     events:
       - http:
           path: /tickets/{ticketId}/approve/claim
           method: post
           cors: true
-  events-tickets-approver:
+  tickets-approver:
     handler: events/ticketsApprover/handler.approve
     environment:
       EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
