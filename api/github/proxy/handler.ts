@@ -24,7 +24,7 @@ module.exports.proxy = async (event) => {
     timeout: 20000,
     headers: {
       ...headers,
-      Authorization: `token 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`,
+      Authorization: `token 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`,
       Accept: "application/vnd.github+json",
     },
   });
