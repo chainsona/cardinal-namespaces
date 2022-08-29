@@ -201,21 +201,21 @@ functions:
     handler: events/eventManager/handler.create
     events:
       - http:
-          path: /events/create
+          path: /events
           method: post
           cors: true
   event-update:
     handler: events/eventManager/handler.update
     events:
       - http:
-          path: /events/{eventId}/update
+          path: /events/{eventId}
           method: put
           cors: true
   ticket-create:
     handler: events/ticketsManager/handler.manage
     events:
       - http:
-          path: /tickets/create
+          path: /tickets
           method: post
           cors: true
   ticket-update:
@@ -225,8 +225,8 @@ functions:
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
-          path: /tickets/{ticketId}/update
-          method: post
+          path: /tickets/{ticketId}
+          method: put
           cors: true
   tickets-claimer:
     handler: events/ticketsClaimer/handler.claim
