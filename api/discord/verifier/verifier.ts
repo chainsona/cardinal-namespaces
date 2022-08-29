@@ -30,7 +30,7 @@ export async function verify(
 
   // get access token
   const params = new URLSearchParams();
-  params.append("client_id", "992004845101916191");
+  params.append("client_id", process.env.DISCORD_CLIENT_ID || "");
   params.append("client_secret", process.env.DISCORD_CLIENT_SECRET || "");
   params.append("grant_type", "authorization_code");
   params.append("code", code.toString());

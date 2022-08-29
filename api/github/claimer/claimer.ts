@@ -11,7 +11,7 @@ const NAMESPACE_NAME = "github";
 export async function claim(
   publicKey: string,
   entryName: string,
-  accessToken?: string,
+  accessToken: string,
   cluster = "mainnet"
 ): Promise<{
   status: number;
@@ -32,12 +32,15 @@ export async function claim(
   console.log(
     `Attempting to approve github handle publicKey ${publicKey} entryName ${entryName} cluster ${cluster} `
   );
-  const userResponse = await fetch(`https://api.github.com/users/${entryName}`);
+  const userResponse = await fetch(`https://api.github.com/user`, {
+    headers: {
+      Authorization: `token ${accessToken}`,
+    },
+  });
   const userJson = await userResponse.json();
   let parsedUserResponse: GithubUserInfoParams | undefined;
   try {
     parsedUserResponse = userJson as GithubUserInfoParams;
-    console.log(parsedUserResponse.login, entryName);
     if (encodeURIComponent(parsedUserResponse.login) !== entryName) {
       return {
         status: 401,

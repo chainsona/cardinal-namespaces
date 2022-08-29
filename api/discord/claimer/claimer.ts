@@ -11,7 +11,7 @@ const NAMESPACE_NAME = "discord";
 export async function claim(
   publicKey: string,
   entryName: string,
-  accessToken?: string,
+  accessToken: string,
   cluster = "mainnet"
 ): Promise<{
   status: number;
@@ -34,7 +34,7 @@ export async function claim(
   );
   const userResponse = await fetch("http://discordapp.com/api/users/@me", {
     headers: {
-      Authorization: `Bearer ${accessToken!}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
   const userJson = await userResponse.json();

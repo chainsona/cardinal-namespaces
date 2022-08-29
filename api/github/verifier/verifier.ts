@@ -29,15 +29,15 @@ export async function verify(
     `Attempting to verify github handle publicKey ${publicKey} cluster ${cluster} `
   );
 
-  // get access token
-  const params = new URLSearchParams();
-  params.append("client_id", "46fd12e1745bd062a3b4");
-  params.append("client_secret", process.env.GITHUB_CLIENT_SECRET || "");
-  params.append("grant_type", "authorization_code");
-  params.append("code", code.toString());
-  params.append("redirect_uri", "https://github.cardinal.so/verification");
-
   if (!accessToken) {
+    // get access token
+    const params = new URLSearchParams();
+    params.append("client_id", process.env.GITHUB_CLIENT_ID || "");
+    params.append("client_secret", process.env.GITHUB_CLIENT_SECRET || "");
+    params.append("grant_type", "authorization_code");
+    params.append("code", code.toString());
+    params.append("redirect_uri", "https://github.cardinal.so/verification");
+
     const response = await fetch(
       "https://github.com/login/oauth/access_token",
       {
