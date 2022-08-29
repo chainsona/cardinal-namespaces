@@ -24,7 +24,7 @@ module.exports.proxy = async (event) => {
     timeout: 20000,
     headers: {
       ...headers,
-      Authorization: `token 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`,
+      Authorization: `token ${process.env.GITHUB_API_KEY || ""}`,
       Accept: "application/vnd.github+json",
     },
   });

@@ -153,6 +153,8 @@ functions:
   ################################ GitHub ################################
   github-proxy:
     handler: github/proxy/handler.proxy
+    environment:
+      GITHUB_API_KEY: ${ssm:/GITHUB_API_KEY~true}
     events:
       - http:
           path: /github/proxy
