@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { findAta } from "@cardinal/common";
 import * as namespaces from "@cardinal/namespaces";
 import * as splToken from "@solana/spl-token";
@@ -6,13 +5,9 @@ import type { Connection, PublicKey } from "@solana/web3.js";
 import { Keypair } from "@solana/web3.js";
 import fetch from "node-fetch";
 
-export const TWITTER_API_KEYS = [
-  "AAAAAAAAAAAAAAAAAAAAAC7iXgEAAAAAH%2BlE4oemN1y5aLOsCimsV32G9Cs%3DKgaXQRuggNA5UzuJmN1X9twXNARy7qxSiBxNf4oCc6CxKwIhxa",
-  "AAAAAAAAAAAAAAAAAAAAAIeiYAEAAAAA0xfvS2Oonb3ijLTis8MmrSsRWm0%3DotAZj0h9Aq6qEa7VKLckzfeRH3eDxj2Gp69rxD4B7pJlf7kdQy",
-  "AAAAAAAAAAAAAAAAAAAAAOz4ZgEAAAAAYQ%2F6yZsduzzRyIDsGuUlvbSM4nE%3DFzVAxwlczyaSn8tD2VqJN7AcgR97zcDXBLYZDrAwV8VLdrSKJM",
-  "AAAAAAAAAAAAAAAAAAAAANcAbQEAAAAA6jd7gLquooPwcvc%2B%2F%2FNz62cp3Og%3DFNeW1ZQd6vunLwPZBS8mN65Sa7nn0mVc6sXTs7PhxXWt0VBOXA",
-  "AAAAAAAAAAAAAAAAAAAAAAuSfAEAAAAA%2B0N%2Bz14VMyAYgtn3a7jn%2F3yJDZw%3D9u5GCWG9s2G7iZmfBAbAWZlVObA3N9Tehlfx0B1tHN4aWbFOhr",
-];
+export const TWITTER_API_KEYS = process.env.TWITTER_API_KEYS
+  ? process.env.TWITTER_API_KEYS.split(",")
+  : [];
 
 export type TweetJson = {
   data: { text: string };
