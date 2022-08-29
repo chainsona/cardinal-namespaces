@@ -44,10 +44,8 @@ export const sendEmail = async (
   const ses = new SES({
     apiVersion: "2010-12-01",
     region: "us-west-2",
-    accessKeyId: process.env.SES_ACCESS_KEY_ID || "AKIAVZF53PXU5JPP4WP5",
-    secretAccessKey:
-      process.env.SES_SECRET_ACCESS_KEY ||
-      "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",
+    accessKeyId: process.env.SES_ACCESS_KEY_ID,
+    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
   });
 
   console.log("destination", destination);
