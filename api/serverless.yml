@@ -209,7 +209,7 @@ functions:
   events-tickets-claimer:
     handler: events/ticketsClaimer/handler.claim
     environment:
-      DISCORD_SOLANA_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
+      EVENT_APPROVER_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
     events:
       - http:
           path: /tickets/{ticketId}/claim
@@ -218,7 +218,7 @@ functions:
   events-ticket-otp-claimer:
     handler: events/ticketClaimerFromOtp/handler.otpClaim
     environment:
-      DISCORD_SOLANA_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
+      EVENT_APPROVER_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve/claim
@@ -227,7 +227,7 @@ functions:
   events-tickets-approver:
     handler: events/ticketsApprover/handler.approve
     environment:
-      DISCORD_SOLANA_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
+      EVENT_APPROVER_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve
