@@ -116,6 +116,22 @@ export async function claim(data: ClaimData): Promise<{
       mintKeypair
     );
 
+    const firstInstruction = transaction.instructions[0];
+    transaction.instructions = [
+      {
+        ...firstInstruction,
+        keys: [
+          ...firstInstruction.keys,
+          ...checkTicket.additionalSigners.map((s) => ({
+            pubkey: new PublicKey(s),
+            isSigner: true,
+            isWritable: false,
+          })),
+        ],
+      },
+      ...transaction.instructions.slice(1),
+    ];
+
     transaction.feePayer = claimerWallet.publicKey;
     transaction.recentBlockhash = (
       await connection.getRecentBlockhash("max")
