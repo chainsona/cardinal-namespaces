@@ -131,7 +131,7 @@ export async function claim(data: ClaimData): Promise<{
         ...firstInstruction,
         keys: [
           ...firstInstruction.keys,
-          ...checkTicket.additionalSigners.map((s) => ({
+          ...(checkTicket.additionalSigners || []).map((s) => ({
             pubkey: new PublicKey(s),
             isSigner: true,
             isWritable: false,
