@@ -5,6 +5,7 @@ import {
   withUpdateNamespace,
 } from "@cardinal/namespaces";
 import { Transaction } from "@solana/web3.js";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { setDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadString } from "firebase/storage";
 
@@ -33,6 +34,11 @@ export async function createOrUpdate(
       message: `No tickets provided`,
     };
   }
+
+  const auth = getAuth();
+  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
+  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
+  await signInWithEmailAndPassword(auth, email, password);
 
   for (const ticket of ticketCreationDatas) {
     const connection = connectionFor(ticket.environment);

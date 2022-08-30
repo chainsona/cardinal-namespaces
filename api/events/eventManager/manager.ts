@@ -1,3 +1,4 @@
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import type { DocumentData, DocumentReference } from "firebase/firestore";
 import { setDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadString } from "firebase/storage";
@@ -17,12 +18,17 @@ export async function createOrUpdate(eventData: EventData): Promise<{
 }> {
   const checkEvent = await tryGetEventFromShortlink(eventData.shortLink);
   if (!!checkEvent && checkEvent.creatorId !== eventData.creatorId) {
-    throw "Either event shor link is not unique or invalid event authority";
+    throw "Either event short link is not unique or invalid event authority";
   }
 
   if (!eventData.eventBannerImage && !checkEvent) {
     throw "Need a banner image for event creation";
   }
+
+  const auth = getAuth();
+  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
+  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
+  await signInWithEmailAndPassword(auth, email, password);
 
   let eventRef: DocumentReference<DocumentData> | undefined;
   if (!checkEvent) {
