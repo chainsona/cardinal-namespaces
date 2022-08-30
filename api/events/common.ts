@@ -48,9 +48,8 @@ export const sendEmail = async (
     secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
   });
 
-  console.log("destination", destination);
   const params: SendEmailRequest = {
-    Source: "info@cardinal.so",
+    Source: "team@cardinal.so",
     Destination: {
       ToAddresses: [destination],
     },

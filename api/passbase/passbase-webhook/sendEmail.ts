@@ -24,7 +24,7 @@ export const sendEmail = (destination: string, firstName: string) => {
   });
 
   const params: SendEmailRequest = {
-    Source: "info@cardinal.so",
+    Source: "team@cardinal.so",
     Destination: {
       ToAddresses: [destination],
     },
