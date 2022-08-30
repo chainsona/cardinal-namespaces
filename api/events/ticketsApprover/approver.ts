@@ -141,7 +141,7 @@ export async function approve(data: ApproveData): Promise<{
       console.log(`Successfully executed transaction ${txid}`);
       transaction = new Transaction();
     }
-    const claimURL = `https://events-v2.cardinal.so/${data.companyId}/${
+    const claimURL = `https://events.cardinal.so/${data.companyId}/${
       checkEvent.shortLink
     }/claim?otp=${utils.bytes.bs58.encode(keypair.secretKey)}&ticketId=${
       data.ticketId
