@@ -43,14 +43,14 @@ export const sendEmail = async (
 ) => {
   const ses = new SES({
     apiVersion: "2010-12-01",
-    region: "us-west-2",
+    region: "us-east-1",
     accessKeyId: process.env.SES_ACCESS_KEY_ID,
     secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
   });
 
   console.log("destination", destination);
   const params: SendEmailRequest = {
-    Source: "info@cardinal.so",
+    Source: "events@cardinal.so",
     Destination: {
       ToAddresses: [destination],
     },
