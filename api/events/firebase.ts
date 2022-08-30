@@ -13,6 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import admin from "firebase-admin";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJgPBVSp2TokeX_UpydLf4M7yamYA0nhs",
@@ -23,6 +24,14 @@ const firebaseConfig = {
   appId: "1:453139651235:web:67443d5b218b600e7f3d16",
   measurementId: "G-R9SVMD5CRT",
 };
+
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: "cardinal-events",
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  }),
+});
 
 export const firebaseEventApp = initializeApp(firebaseConfig);
 export const eventFirestore = getFirestore(firebaseEventApp);
