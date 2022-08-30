@@ -146,6 +146,7 @@ export type FirebaseTicket = {
   ticketQuantity: string;
   ticketShortLink: string;
   ticketPrice: string;
+  additionalSigners: string[];
 };
 
 export type EventData = {
