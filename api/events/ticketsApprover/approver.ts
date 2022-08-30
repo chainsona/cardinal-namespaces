@@ -20,15 +20,9 @@ import {
   withHandlePayment,
 } from "../../common/payments";
 import { sendEmail } from "../common";
+import { eventApproverKeys } from "../constants";
 import type { ApproveData } from "../firebase";
 import { tryGetEvent, tryGetEventTicket } from "../firebase";
-
-const wallet = Keypair.fromSecretKey(
-  utils.bytes.bs58.decode(
-    process.env.EVENT_APPROVER_KEY ||
-      "2NfHThV9r3qS4YfmroLrwAJQG1XbjFwsunt8jDMykreieojVnyUcSuBqStcUy2kaAguYR27Myi4dHfMkasWFHVKA"
-  )
-);
 
 const BATCH_SIZE = 8;
 
@@ -75,6 +69,26 @@ export async function approve(data: ApproveData): Promise<{
     };
   }
 
+  let approverAuthority: Keypair | undefined;
+  try {
+    if (checkNamespace.parsed.approveAuthority) {
+      const eventApprover = Object.values(eventApproverKeys).find((v) =>
+        v.publicKey.equals(checkNamespace.parsed.approveAuthority!)
+      );
+      if (eventApprover?.secretKey) {
+        approverAuthority = Keypair.fromSecretKey(
+          utils.bytes.bs58.decode(process.env[eventApprover?.secretKey] ?? "")
+        );
+      }
+    }
+  } catch {
+    throw `Events pk incorrect or not found`;
+  }
+
+  if (!approverAuthority) {
+    throw "No approve authority found";
+  }
+
   let transaction = new Transaction();
   for (let i = 0; i < claimAmount; i++) {
     if (checkEvent.eventPaymentMint) {
@@ -102,12 +116,12 @@ export async function approve(data: ApproveData): Promise<{
     await withApproveClaimRequest(
       transaction,
       connection,
-      new SignerWallet(wallet),
+      new SignerWallet(approverAuthority),
       {
         namespaceName: data.ticketId,
         entryName: entryName,
         user: keypair.publicKey,
-        approveAuthority: wallet.publicKey,
+        approveAuthority: approverAuthority.publicKey,
       }
     );
     if (
@@ -117,12 +131,12 @@ export async function approve(data: ApproveData): Promise<{
       console.log(
         `Executing approve claim request transaction for ${transaction.instructions.length} tickets`
       );
-      transaction.feePayer = wallet.publicKey;
+      transaction.feePayer = approverAuthority.publicKey;
       transaction.recentBlockhash = (
         await connection.getRecentBlockhash("max")
       ).blockhash;
       const txid = await sendAndConfirmTransaction(connection, transaction, [
-        wallet,
+        approverAuthority,
       ]);
       console.log(`Successfully executed transaction ${txid}`);
       transaction = new Transaction();

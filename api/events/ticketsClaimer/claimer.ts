@@ -14,7 +14,7 @@ import {
   PAYMENT_MINTS_DECIMALS_MAPPING,
   withHandlePayment,
 } from "../../common/payments";
-import { EventApproverKeys, EventApproverKind } from "../constants";
+import { eventApproverKeys } from "../constants";
 import type { ClaimData } from "../firebase";
 import { tryGetEvent, tryGetEventTicket } from "../firebase";
 
@@ -39,17 +39,6 @@ export async function claim(data: ClaimData): Promise<{
     };
   }
   const connection = connectionFor(checkEvent.environment);
-  let approverAuthority: Keypair | undefined;
-  try {
-    approverAuthority = Keypair.fromSecretKey(
-      utils.bytes.bs58.decode(
-        process.env.EVENT_APPROVER_KEY ||
-          "2NfHThV9r3qS4YfmroLrwAJQG1XbjFwsunt8jDMykreieojVnyUcSuBqStcUy2kaAguYR27Myi4dHfMkasWFHVKA"
-      )
-    );
-  } catch {
-    throw new Error(`Events pk incorrect or not found`);
-  }
   const claimerPublicKey = tryPublicKey(data.account);
   if (!claimerPublicKey) {
     return {
@@ -67,6 +56,26 @@ export async function claim(data: ClaimData): Promise<{
       status: 400,
       message: `No ticket namespace found`,
     };
+  }
+
+  let approverAuthority: Keypair | undefined;
+  try {
+    if (checkNamespace.parsed.approveAuthority) {
+      const eventApprover = Object.values(eventApproverKeys).find((v) =>
+        v.publicKey.equals(checkNamespace.parsed.approveAuthority!)
+      );
+      if (eventApprover?.secretKey) {
+        approverAuthority = Keypair.fromSecretKey(
+          utils.bytes.bs58.decode(process.env[eventApprover?.secretKey] ?? "")
+        );
+      }
+    }
+  } catch {
+    throw new Error(`Events pk incorrect or not found`);
+  }
+
+  if (!approverAuthority) {
+    throw "No approve authority found";
   }
 
   const amount = Number(data.amount);
@@ -103,7 +112,7 @@ export async function claim(data: ClaimData): Promise<{
       namespaceName: data.ticketId,
       entryName: entryName,
       user: claimerWallet.publicKey,
-      approveAuthority: EventApproverKeys[EventApproverKind.Wallet],
+      approveAuthority: approverAuthority?.publicKey,
     });
 
     const mintKeypair = Keypair.generate();
@@ -120,7 +129,7 @@ export async function claim(data: ClaimData): Promise<{
     transaction.recentBlockhash = (
       await connection.getRecentBlockhash("max")
     ).blockhash;
-    transaction.partialSign(approverAuthority);
+    approverAuthority && transaction.partialSign(approverAuthority);
     transaction.partialSign(mintKeypair);
     const copiedClaimTx = Transaction.from(
       transaction.serialize({

@@ -30,17 +30,6 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   }
 
   const connection = connectionFor(checkEvent.environment);
-  let approverAuthority: Keypair | undefined;
-  try {
-    approverAuthority = Keypair.fromSecretKey(
-      utils.bytes.bs58.decode(
-        process.env.EVENT_APPROVER_KEY ||
-          "2NfHThV9r3qS4YfmroLrwAJQG1XbjFwsunt8jDMykreieojVnyUcSuBqStcUy2kaAguYR27Myi4dHfMkasWFHVKA"
-      )
-    );
-  } catch {
-    throw new Error(`Events pk incorrect or not found`);
-  }
   const claimerPublicKey = tryPublicKey(data.account);
   if (!claimerPublicKey) {
     return {

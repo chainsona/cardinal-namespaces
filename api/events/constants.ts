@@ -1,10 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
 
 export enum EventApproverKind {
-  Wallet = 1,
-  Collection = 2,
-  Typeform = 3,
-  None = 4,
+  Wallet = "WALLET",
+  Collection = "COLLECTION",
+  Typeform = "TYPEFORM",
+  None = "NONE",
 }
 
 export const EventApproverDescription: Record<EventApproverKind, string> = {
@@ -14,17 +14,24 @@ export const EventApproverDescription: Record<EventApproverKind, string> = {
   [EventApproverKind.None]: "1 NFT per any request",
 };
 
-export const EventApproverKeys: Record<EventApproverKind, PublicKey> = {
-  [EventApproverKind.Wallet]: new PublicKey(
-    "eap1dVePRmyBxhYp8sJUm62SxbfQN8dEHFNnRkN3t2g"
-  ),
-  [EventApproverKind.Collection]: new PublicKey(
-    "eap2BwtSbGnNK9HtKUBCQAMhmv5Dw9qgY4trLNjjmMB"
-  ),
-  [EventApproverKind.Typeform]: new PublicKey(
-    "eap3ydCVxs2QTyFpkfUyTWuhod3WC4XbovcLMhN3c3w"
-  ),
-  [EventApproverKind.None]: new PublicKey(
-    "eap4pH6heQa5qM4bKYPi7YnbhdmJXWbYmYLZWcnVPv9"
-  ),
+export const eventApproverKeys: Record<
+  EventApproverKind,
+  { publicKey: PublicKey; secretKey: string }
+> = {
+  [EventApproverKind.Wallet]: {
+    publicKey: new PublicKey("ek1QPLkV1iEYwJxM6xcu7gniemL5xbAGKZRECxcg5Tb"),
+    secretKey: `EVENT_APPROVER_${EventApproverKind.Wallet}`,
+  },
+  [EventApproverKind.Collection]: {
+    publicKey: new PublicKey("ek2Y2SQ9Rvvn69Cberhv9Kg6PHqEkGq8xEjw32k9A16"),
+    secretKey: `EVENT_APPROVER_${EventApproverKind.Collection}`,
+  },
+  [EventApproverKind.Typeform]: {
+    publicKey: new PublicKey("ek31sTZHeAdWYzJWLsT1XufLvRnYVTACwuPt5HaAUu8"),
+    secretKey: `EVENT_APPROVER_${EventApproverKind.Typeform}`,
+  },
+  [EventApproverKind.None]: {
+    publicKey: new PublicKey("ek45HWhMg6szkrsB3va3JvU6Ki4rUvwtTZVUQUQdaaX"),
+    secretKey: `EVENT_APPROVER_${EventApproverKind.None}`,
+  },
 };
