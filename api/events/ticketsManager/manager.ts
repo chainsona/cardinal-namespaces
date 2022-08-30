@@ -169,7 +169,7 @@ export async function createOrUpdate(
     if (ticket.ticketMetadata && ticket.ticketMetadata.length !== 0) {
       const ticketMetadataRef = ref(
         eventStorage,
-        `tickets/${ticketRef.id}/metadata.png`
+        `tickets/${ticketRef.id}/metadata.json`
       );
       await uploadString(ticketMetadataRef, ticket.ticketMetadata, "data_url");
     }
