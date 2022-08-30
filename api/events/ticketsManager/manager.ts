@@ -9,7 +9,7 @@ import { setDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadString } from "firebase/storage";
 
 import { connectionFor } from "../../common/connection";
-import { EventApproverKeys, EventApproverKind } from "../constants";
+import { eventApproverKeys, EventApproverKind } from "../constants";
 import type { TicketCreationData } from "../firebase";
 import {
   eventStorage,
@@ -92,7 +92,7 @@ export async function createOrUpdate(
         namespaceName: ticketRef.id,
         updateAuthority: creatorWallet.publicKey,
         rentAuthority: creatorWallet.publicKey,
-        approveAuthority: EventApproverKeys[EventApproverKind.Wallet],
+        approveAuthority: eventApproverKeys[EventApproverKind.None].publicKey,
         transferableEntries: false,
         limit: supply,
         maxExpiration: undefined,
@@ -106,7 +106,7 @@ export async function createOrUpdate(
         {
           updateAuthority: creatorWallet.publicKey,
           rentAuthority: creatorWallet.publicKey,
-          approveAuthority: EventApproverKeys[EventApproverKind.Wallet],
+          approveAuthority: eventApproverKeys[EventApproverKind.None].publicKey,
           schema: checkNamespace.parsed.schema,
           paymentAmountDaily: checkNamespace.parsed.paymentAmountDaily,
           paymentMint: checkNamespace.parsed.paymentMint,

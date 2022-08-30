@@ -209,7 +209,10 @@ functions:
   events-tickets-claimer:
     handler: events/ticketsClaimer/handler.claim
     environment:
-      EVENT_APPROVER_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
+      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
+      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
+      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
+      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
     events:
       - http:
           path: /tickets/{ticketId}/claim
@@ -217,8 +220,6 @@ functions:
           cors: true
   events-ticket-otp-claimer:
     handler: events/ticketClaimerFromOtp/handler.otpClaim
-    environment:
-      EVENT_APPROVER_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve/claim
@@ -227,7 +228,10 @@ functions:
   events-tickets-approver:
     handler: events/ticketsApprover/handler.approve
     environment:
-      EVENT_APPROVER_KEY: ${ssm:/EVENT_APPROVER_KEY~true}
+      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
+      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
+      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
+      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve
