@@ -152,6 +152,7 @@ export async function createOrUpdate(
         ticketName: ticket.ticketName,
         ticketQuantity: supply,
         ticketPrice: price,
+        additionalSigners: ticket.additionalSigners,
       });
     } else {
       await updateDoc(ticketRef, {
@@ -161,6 +162,7 @@ export async function createOrUpdate(
         ticketName: ticket.ticketName,
         ticketQuantity: supply,
         ticketPrice: price,
+        additionalSigners: ticket.additionalSigners,
       });
     }
 
@@ -171,6 +173,7 @@ export async function createOrUpdate(
       );
       console.log("uploading ticket image");
       await uploadString(ticketImageRef, ticket.ticketImage, "data_url");
+      console.log("uploaded ticket image");
     }
 
     if (ticket.ticketMetadata && ticket.ticketMetadata.length !== 0) {

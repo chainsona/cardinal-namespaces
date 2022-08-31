@@ -173,6 +173,7 @@ export type TicketCreationData = {
   creator: string;
   ticketImage: string;
   ticketMetadata: string;
+  additionalSigners?: string[];
 };
 
 export type ApproveData = {
