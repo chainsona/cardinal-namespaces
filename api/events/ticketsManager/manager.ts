@@ -152,7 +152,7 @@ export async function createOrUpdate(
         ticketName: ticket.ticketName,
         ticketQuantity: supply,
         ticketPrice: price,
-        additionalSigners: ticket.additionalSigners,
+        additionalSigners: ticket.additionalSigners ?? null,
       });
     } else {
       await updateDoc(ticketRef, {
@@ -162,7 +162,7 @@ export async function createOrUpdate(
         ticketName: ticket.ticketName,
         ticketQuantity: supply,
         ticketPrice: price,
-        additionalSigners: ticket.additionalSigners,
+        additionalSigners: ticket.additionalSigners ?? null,
       });
     }
 
