@@ -1,8 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+import { tryPublicKey } from "@cardinal/common";
+
+import { checkUserToken } from "../auth";
 import type { EventData } from "../firebase";
 import { updateEvent } from "./update";
 
-module.exports.handle = async (event) => {
+module.exports.handle = async (event: {
+  body: string;
+  pathParameters: { [k: string]: string };
+  headers: { [k: string]: string };
+}) => {
   const headers = {
     "Access-Control-Allow-Methods": "*",
     "Access-Control-Allow-Origin": "*", // Required for CORS support to work
@@ -10,10 +17,14 @@ module.exports.handle = async (event) => {
   };
   try {
     const eventCreationData = JSON.parse(event.body) as EventData;
-
+    checkUserToken(
+      "event-update",
+      event.headers["Authorization"],
+      tryPublicKey(eventCreationData.creatorId) ?? undefined
+    );
     // TODO simplify schema validation
     // assertJson(eventCreationData, EventData)
-    const eventId = event.pathParameters.eventId as string;
+    const eventId = event.pathParameters.eventId;
     if (
       !eventId ||
       !eventCreationData.shortLink ||

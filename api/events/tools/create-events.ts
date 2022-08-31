@@ -4,6 +4,7 @@ import fs from "fs";
 import fetch from "node-fetch";
 
 import { tryGetEventFromShortlink } from "../firebase";
+import { getAuthToken } from "./auth";
 import type { TicketConfig } from "./ticketConfig";
 import { ticketConfig } from "./ticketConfig";
 
@@ -28,8 +29,9 @@ export const eventIdFromTicket = (t: TicketConfig) =>
       .replace(" ", "-") ?? ""
   }-${t.date ?? ""}`;
 
+const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
+
 export const eventsFromTickets = (tickets: TicketConfig[]) => {
-  const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
   return tickets.reduce((acc, t) => {
     const eventId = eventIdFromTicket(t);
     if (eventId in acc) {
@@ -89,6 +91,9 @@ export const updateEvents = async () => {
         {
           method: "PUT",
           body: JSON.stringify(event),
+          headers: {
+            Authorization: `${getAuthToken(wallet, "event-update")}`,
+          },
         }
       );
       const json = (await response.json()) as { message?: string };

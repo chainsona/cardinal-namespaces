@@ -10,6 +10,7 @@ import fs from "fs";
 import fetch from "node-fetch";
 
 import { tryGetEventFromShortlink } from "../firebase";
+import { getAuthToken } from "./auth";
 import { eventIdFromTicket } from "./create-events";
 import { ticketConfig } from "./ticketConfig";
 
@@ -84,7 +85,7 @@ export const createTickets = async () => {
     }, [] as TicketCreationData[])
   );
 
-  const connection = new Connection("https://ssc-dao.genesysgo.net");
+  const connection = new Connection("https://api.devnet.solana.com");
   const ticketDataChunks = chunkArray(ticketDatas, BATCH_SIZE);
   // for (let i = 0; i < ticketDataChunks.length; i++) {
   //   const chunks = ticketDataChunks[i];
@@ -135,6 +136,9 @@ export const createTickets = async () => {
       fetch(`https://dev-api.cardinal.so/namespaces/tickets`, {
         method: "POST",
         body: JSON.stringify(d),
+        headers: {
+          Authorization: `${getAuthToken(wallet, "tickets-update")}`,
+        },
       })
     )
   );

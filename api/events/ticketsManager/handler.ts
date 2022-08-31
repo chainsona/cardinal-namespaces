@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+import { tryPublicKey } from "@cardinal/common";
+
+import { checkUserToken } from "../auth";
 import type { TicketCreationData } from "../firebase";
 import * as manager from "./manager";
 
@@ -10,6 +13,49 @@ module.exports.handle = async (event) => {
   };
   const ticketCreationDatas = JSON.parse(event.body) as TicketCreationData[];
 
+  for (const tix of ticketCreationDatas) {
+    if (
+      !tix.eventId ||
+      !tix.ticketName ||
+      !tix.ticketQuantity ||
+      !tix.ticketPrice ||
+      !tix.environment ||
+      !tix.creator
+    ) {
+      return {
+        headers: headers,
+        statusCode: 412,
+        body: JSON.stringify({ error: "Missing event creation parameters" }),
+      };
+    }
+    const supply = Number(tix.ticketQuantity);
+    if (isNaN(supply)) {
+      return {
+        headers: headers,
+        statusCode: 412,
+        body: JSON.stringify({
+          error: `Invalid ticket quantity format for ${tix.ticketName}`,
+        }),
+      };
+    }
+    const ticketPrice = Number(tix.ticketPrice);
+    if (isNaN(ticketPrice)) {
+      return {
+        headers: headers,
+        statusCode: 412,
+        body: JSON.stringify({
+          error: `Invalid ticket quantity format for ${tix.ticketName}`,
+        }),
+      };
+    }
+
+    checkUserToken(
+      "tickets-update",
+      event.headers["Authorization"],
+      tryPublicKey(tix.creator) ?? undefined
+    );
+  }
+
   try {
     if (ticketCreationDatas.length === 0) {
       return {
@@ -18,43 +64,6 @@ module.exports.handle = async (event) => {
         body: JSON.stringify({ error: "No tickets to be created" }),
       };
     }
-    for (const tix of ticketCreationDatas) {
-      if (
-        !tix.eventId ||
-        !tix.ticketName ||
-        !tix.ticketQuantity ||
-        !tix.ticketPrice ||
-        !tix.environment ||
-        !tix.creator
-      ) {
-        return {
-          headers: headers,
-          statusCode: 412,
-          body: JSON.stringify({ error: "Missing event creation parameters" }),
-        };
-      }
-      const supply = Number(tix.ticketQuantity);
-      if (isNaN(supply)) {
-        return {
-          headers: headers,
-          statusCode: 412,
-          body: JSON.stringify({
-            error: `Invalid ticket quantity format for ${tix.ticketName}`,
-          }),
-        };
-      }
-      const ticketPrice = Number(tix.ticketPrice);
-      if (isNaN(ticketPrice)) {
-        return {
-          headers: headers,
-          statusCode: 412,
-          body: JSON.stringify({
-            error: `Invalid ticket quantity format for ${tix.ticketName}`,
-          }),
-        };
-      }
-    }
-
     const response = await manager.createOrUpdate(ticketCreationDatas);
     return {
       headers: headers,
