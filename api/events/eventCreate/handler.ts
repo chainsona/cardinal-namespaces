@@ -9,7 +9,7 @@ module.exports.handle = async (event) => {
     "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
   };
   try {
-    const eventCreationDatas = JSON.parse(event.body).data as EventData[];
+    const eventCreationDatas = JSON.parse(event.body) as EventData[];
     if (eventCreationDatas.length > 1) {
       throw "Cannot create more than one event at a time";
     }

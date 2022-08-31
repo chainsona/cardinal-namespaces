@@ -1,5 +1,11 @@
 import { utils } from "@project-serum/anchor";
-import { Keypair } from "@solana/web3.js";
+import { SignerWallet } from "@saberhq/solana-contrib";
+import {
+  Connection,
+  Keypair,
+  sendAndConfirmRawTransaction,
+  Transaction,
+} from "@solana/web3.js";
 import fs from "fs";
 import fetch from "node-fetch";
 
@@ -18,9 +24,8 @@ export type TicketCreationData = {
   creator: string;
   ticketImage: string;
   ticketMetadata: string;
+  additionalSigners?: string[];
 };
-
-const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
 
 export function chunkArray<T>(arr: T[], size: number): T[][] {
   return arr.length > size
@@ -28,14 +33,12 @@ export function chunkArray<T>(arr: T[], size: number): T[][] {
     : [arr];
 }
 
-const BATCH_SIZE = 1;
+const BATCH_SIZE = 4;
 
 export const createTickets = async () => {
+  const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
   const buffer = fs.readFileSync("./events/tools/image.png");
   const image = buffer.toString("base64");
-
-  const mdbuffer = fs.readFileSync("./events/tools/metadata.json");
-  const metadata = mdbuffer.toString("base64");
 
   const ticketDatas = await Promise.all(
     ticketConfig.map(async (t) => {
@@ -49,6 +52,7 @@ export const createTickets = async () => {
         ticketPrice: "0",
         environment: "mainnet-beta",
         creator: wallet.publicKey.toString(),
+        additionalSigners: ["ozuJAEJtCLPPTYNicqSvj8hgQEDvy8xyEK2txG5UW3G"],
         ticketImage: `data:image/png;base64,${image}`,
         ticketMetadata: `data:application/json;base64,${Buffer.from(
           JSON.stringify({
@@ -80,29 +84,100 @@ export const createTickets = async () => {
     }, [] as TicketCreationData[])
   );
 
+  const connection = new Connection("https://ssc-dao.genesysgo.net");
   const ticketDataChunks = chunkArray(ticketDatas, BATCH_SIZE);
-  for (const chunks of ticketDataChunks) {
-    console.log(chunks[0].eventId);
-    const response = await fetch(`http://localhost:8080/dev/tickets`, {
-      method: "POST",
-      body: JSON.stringify({ data: chunks }),
-    });
-    console.log(response);
-    const json = (await response.json()) as { message?: string };
-    console.log(json);
-  }
-
-  // const responses = await Promise.all(
-  //   ticketDataChunks.map((d) =>
-  //     fetch(`https://dev-api.cardinal.so/namespaces/tickets`, {
+  // for (let i = 0; i < ticketDataChunks.length; i++) {
+  //   const chunks = ticketDataChunks[i];
+  //   const response = await fetch(
+  //     `https://dev-api.cardinal.so/namespaces/tickets`,
+  //     {
   //       method: "POST",
-  //       body: JSON.stringify({ data: d }),
-  //     })
-  //   )
-  // );
-  // console.log(responses);
-  // const jsons = await Promise.all(responses.map((r) => r.json()));
-  // console.log(jsons);
+  //       body: JSON.stringify({ data: chunks }),
+  //     }
+  //   );
+  //   console.log(`${i}/${ticketDataChunks.length} response`, response);
+  //   const json = (await response.json()) as {
+  //     message?: string;
+  //     transactions: string[];
+  //   };
+  //   const encodedTxs = json.transactions;
+  //   const transactions = encodedTxs.map((tx) =>
+  //     Transaction.from(Buffer.from(decodeURIComponent(tx), "base64"))
+  //   );
+
+  //   if (transactions) {
+  //     await new SignerWallet(wallet).signAllTransactions(transactions);
+  //     await Promise.all(
+  //       transactions.map(async (tx) => {
+  //         try {
+  //           const txid = await sendAndConfirmRawTransaction(
+  //             connection,
+  //             tx.serialize(),
+  //             {
+  //               skipPreflight: true,
+  //             }
+  //           );
+  //           console.log(
+  //             `Succesful transaction for ticket https://explorer.solana.com/tx/${txid} ticket (${chunks
+  //               .map((c) => c.eventId)
+  //               .join(",")})`
+  //           );
+  //         } catch (e) {
+  //           console.log(e);
+  //         }
+  //       })
+  //     );
+  //   }
+  // }
+
+  const responses = await Promise.all(
+    ticketDataChunks.map((d) =>
+      fetch(`https://dev-api.cardinal.so/namespaces/tickets`, {
+        method: "POST",
+        body: JSON.stringify(d),
+      })
+    )
+  );
+  const results = await Promise.all(
+    responses.map(async (response, i) => {
+      const json = (await response.json()) as {
+        message?: string;
+        transactions: string[];
+      };
+      console.log(json);
+      const encodedTxs = json.transactions;
+      const transactions = encodedTxs.map((tx) =>
+        Transaction.from(Buffer.from(decodeURIComponent(tx), "base64"))
+      );
+
+      if (transactions) {
+        await new SignerWallet(wallet).signAllTransactions(transactions);
+        await Promise.all(
+          transactions.map(async (tx) => {
+            try {
+              const txid = await sendAndConfirmRawTransaction(
+                connection,
+                tx.serialize(),
+                {
+                  skipPreflight: true,
+                }
+              );
+              console.log(
+                `Succesful transaction for ticket https://explorer.solana.com/tx/${txid} ticket (${ticketDataChunks[
+                  i
+                ]
+                  .map((c) => c.eventId)
+                  .join(",")})`
+              );
+            } catch (e) {
+              console.log(e);
+            }
+          })
+        );
+      }
+    })
+  );
+  console.log(results);
 };
 
 createTickets()

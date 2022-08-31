@@ -8,8 +8,7 @@ module.exports.handle = async (event) => {
     "Access-Control-Allow-Origin": "*", // Required for CORS support to work
     "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
   };
-  const ticketCreationDatas = JSON.parse(event.body)
-    .data as TicketCreationData[];
+  const ticketCreationDatas = JSON.parse(event.body) as TicketCreationData[];
 
   try {
     if (ticketCreationDatas.length === 0) {

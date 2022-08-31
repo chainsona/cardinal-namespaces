@@ -19,8 +19,6 @@ export type EventData = {
   eventBannerImage?: string;
 };
 
-const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
-
 export const eventIdFromTicket = (t: TicketConfig) =>
   `ozuna-${
     t.location
@@ -31,6 +29,7 @@ export const eventIdFromTicket = (t: TicketConfig) =>
   }-${t.date ?? ""}`;
 
 export const eventsFromTickets = (tickets: TicketConfig[]) => {
+  const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
   return tickets.reduce((acc, t) => {
     const eventId = eventIdFromTicket(t);
     if (eventId in acc) {
@@ -46,8 +45,12 @@ export const eventsFromTickets = (tickets: TicketConfig[]) => {
         eventName: `Ozuna World Tour: ${t.location ?? ""}`,
         eventLocation: t.location ?? "Global",
         eventDescription: `Ozuna World Tour: ${t.location ?? ""}`,
-        eventStartTime: t.date ? new Date(t.date).toISOString() : "",
-        eventEndTime: t.date ? new Date(t.date).toISOString() : "",
+        eventStartTime: t.date
+          ? new Date(t.date).toISOString()
+          : new Date("2022-09-30").toISOString(),
+        eventEndTime: t.date
+          ? new Date(t.date).toISOString()
+          : new Date("2022-12-09").toISOString(),
         creatorId: wallet.publicKey.toString(),
         eventBannerImage: `data:image/png;base64,${banner}`,
         environment: "mainnet-beta",
@@ -58,14 +61,13 @@ export const eventsFromTickets = (tickets: TicketConfig[]) => {
 
 export const createEvents = async () => {
   const eventData = eventsFromTickets(ticketConfig);
-  console.log(eventData);
   const eventDatas = Object.values(eventData);
   for (const event of eventDatas) {
     const response = await fetch(
       `https://dev-api.cardinal.so/namespaces/events`,
       {
         method: "POST",
-        body: JSON.stringify({ data: [event] }),
+        body: JSON.stringify([event]),
       }
     );
     const json = (await response.json()) as string;
