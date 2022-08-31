@@ -60,6 +60,7 @@ functions:
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
     events:
       - http:
           path: /twitter/approve
@@ -70,6 +71,7 @@ functions:
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
     events:
       - http:
           path: /twitter/migrate
@@ -79,6 +81,7 @@ functions:
     handler: twitter/unlinker/handler.unlink
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
     events:
       - http:
           path: /twitter/unlink
@@ -88,6 +91,7 @@ functions:
     handler: twitter/verifier/handler.verify
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
     events:
       - http:
           path: /twitter/verify
@@ -108,6 +112,7 @@ functions:
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
     events:
       - http:
           path: /twitter/revoke
