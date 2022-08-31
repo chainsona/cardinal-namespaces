@@ -9,7 +9,7 @@ module.exports.handle = async (event) => {
     "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
   };
   try {
-    const eventCreationData = JSON.parse(event.body) as EventData;
+    const eventCreationData = JSON.parse(event.body).data as EventData;
 
     // TODO simplify schema validation
     // assertJson(eventCreationData, EventData)

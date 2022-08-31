@@ -48,7 +48,7 @@ export async function createOrUpdate(
     if (!checkEvent) {
       return {
         status: 400,
-        message: `No even found for tickets`,
+        message: `No event found for tickets`,
       };
     }
 
@@ -169,6 +169,7 @@ export async function createOrUpdate(
         eventStorage,
         `tickets/${ticketRef.id}/image.png`
       );
+      console.log("uploading ticket image");
       await uploadString(ticketImageRef, ticket.ticketImage, "data_url");
     }
 
@@ -177,6 +178,7 @@ export async function createOrUpdate(
         eventStorage,
         `tickets/${ticketRef.id}/metadata.json`
       );
+      console.log("uploading ticket metadata");
       await uploadString(ticketMetadataRef, ticket.ticketMetadata, "data_url");
     }
   }
