@@ -20,10 +20,6 @@ export async function createEvent(eventData: EventData): Promise<{
     throw "Event short link already taken";
   }
 
-  if (!eventData.eventBannerImage) {
-    throw "Need a banner image for event creation";
-  }
-
   const auth = getAuth();
   const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
   const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
