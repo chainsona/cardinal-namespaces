@@ -2,13 +2,14 @@
 import type { TicketCreationData } from "../firebase";
 import * as manager from "./manager";
 
-module.exports.manage = async (event) => {
+module.exports.handle = async (event) => {
   const headers = {
     "Access-Control-Allow-Methods": "*",
     "Access-Control-Allow-Origin": "*", // Required for CORS support to work
     "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
   };
-  const ticketCreationDatas = JSON.parse(event.body) as TicketCreationData[];
+  const ticketCreationDatas = JSON.parse(event.body)
+    .data as TicketCreationData[];
 
   try {
     if (ticketCreationDatas.length === 0) {
@@ -43,7 +44,6 @@ module.exports.manage = async (event) => {
           }),
         };
       }
-      console.log("tix.ticketPrice", tix.ticketPrice);
       const ticketPrice = Number(tix.ticketPrice);
       if (isNaN(ticketPrice)) {
         return {

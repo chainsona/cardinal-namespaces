@@ -11,7 +11,6 @@ module.exports.claim = async (event) => {
   const ticketId = event.pathParameters.ticketId;
   const data = JSON.parse(event.body);
 
-  console.log(data, ticketId);
   try {
     if (!ticketId || !data.account || !data.amount) {
       return {

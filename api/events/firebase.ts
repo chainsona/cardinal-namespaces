@@ -101,6 +101,7 @@ export const tryGetEventFromShortlink = async (
   }
   return eventsSnap[0].data() as FirebaseEvent;
 };
+
 export const tryGetEvent = async (
   docId: string
 ): Promise<FirebaseEvent | undefined> => {

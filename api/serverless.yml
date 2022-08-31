@@ -198,14 +198,14 @@ functions:
 
   ################################ Events ################################
   event-create:
-    handler: events/eventManager/handler.create
+    handler: events/eventCreate/handler.handle
     events:
       - http:
           path: /events
           method: post
           cors: true
   event-update:
-    handler: events/eventManager/handler.update
+    handler: events/eventUpdate/handler.handle
     events:
       - http:
           path: /events/{eventId}
@@ -218,18 +218,8 @@ functions:
           path: /tickets
           method: post
           cors: true
-  ticket-update:
-    handler: events/ticketsManager/handler.manage
-    environment:
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
-    events:
-      - http:
-          path: /tickets/{ticketId}
-          method: put
-          cors: true
   tickets-claimer:
-    handler: events/ticketsClaimer/handler.claim
+    handler: events/ticketsClaimer/handler.handle
     environment:
       EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
