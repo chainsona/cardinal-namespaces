@@ -199,6 +199,7 @@ functions:
   ################################ Events ################################
   event-create:
     handler: events/eventCreate/handler.handle
+    timeout: 30
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
@@ -209,6 +210,7 @@ functions:
           cors: true
   event-update:
     handler: events/eventUpdate/handler.handle
+    timeout: 30
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
@@ -219,6 +221,7 @@ functions:
           cors: true
   ticket-create:
     handler: events/ticketsManager/handler.handle
+    timeout: 30
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
@@ -229,6 +232,7 @@ functions:
           cors: true
   tickets-claimer:
     handler: events/ticketsClaimer/handler.handle
+    timeout: 30
     environment:
       EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
@@ -241,6 +245,7 @@ functions:
           cors: true
   ticket-otp-claimer:
     handler: events/ticketClaimerFromOtp/handler.otpClaim
+    timeout: 30
     events:
       - http:
           path: /tickets/{ticketId}/approve/claim
@@ -248,6 +253,7 @@ functions:
           cors: true
   tickets-approver:
     handler: events/ticketsApprover/handler.approve
+    timeout: 30
     environment:
       EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
