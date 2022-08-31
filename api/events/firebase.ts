@@ -163,7 +163,7 @@ export type EventData = {
 };
 
 export type TicketCreationData = {
-  docId: string;
+  docId?: string;
   eventId: string;
   ticketShortLink: string;
   ticketName: string;

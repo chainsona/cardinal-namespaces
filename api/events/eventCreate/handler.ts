@@ -10,7 +10,7 @@ module.exports.handle = async (event) => {
   };
   try {
     const eventCreationDatas = JSON.parse(event.body).data as EventData[];
-    if (eventCreationDatas.length > 0) {
+    if (eventCreationDatas.length > 1) {
       throw "Cannot create more than one event at a time";
     }
     const eventCreationData = eventCreationDatas[0];

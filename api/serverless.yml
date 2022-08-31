@@ -199,6 +199,9 @@ functions:
   ################################ Events ################################
   event-create:
     handler: events/eventCreate/handler.handle
+    environment:
+      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
+      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
           path: /events
@@ -206,6 +209,9 @@ functions:
           cors: true
   event-update:
     handler: events/eventUpdate/handler.handle
+    environment:
+      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
+      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
           path: /events/{eventId}
@@ -213,6 +219,9 @@ functions:
           cors: true
   ticket-create:
     handler: events/ticketsManager/handler.manage
+    environment:
+      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
+      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
           path: /tickets
