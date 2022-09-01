@@ -150,6 +150,7 @@ export async function approve(data: ApproveData): Promise<{
   const eventURL = `ttps://identity.cardinal.so/${data.companyId}/${checkEvent.shortLink}`;
   await sendEmail(
     data.email,
+    checkEvent.docId,
     checkEvent.eventName,
     checkTicket.ticketName,
     eventURL,

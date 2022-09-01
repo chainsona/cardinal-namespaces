@@ -1,20 +1,30 @@
 import { SES } from "aws-sdk";
 import type { SendEmailRequest } from "aws-sdk/clients/ses";
 
+import { getEventBannerImage } from "./firebase";
+
 const approvalSuccessfulEmail = (
   eventName: string,
+  eventId: string,
   ticketName: string,
   eventURL: string,
   claimURLs: string[]
 ) => `
 <div>
-<p>
-Thanks for purchasing ${claimURLs.length} ${ticketName} ${
+<img src=${getEventBannerImage(
+  eventId
+)} alt="event-image" style="width: 100%; max-width: 1000px;">
+<h3>
+Thank you for purchasing ${claimURLs.length} ${ticketName} ${
   claimURLs.length === 1 ? "ticket" : "tickets"
-} to <a href=${eventURL}>${eventName}</a>! <br/><br/>
+} to <a href=${eventURL}>${eventName}</a>!
+</h3>
+<h4>
 Use the ${claimURLs.length === 1 ? "link" : "links"} below to claim your NFT ${
   claimURLs.length === 1 ? "ticket" : "tickets"
-} for the event: <br/><br/><br/>
+} for the event:
+</h4>
+<br />
 ${claimURLs
   .map(
     (url, index) =>
@@ -23,19 +33,20 @@ ${claimURLs
       }: Claim Ticket <a href=${url}>From Laptop</a> or <a href=${url}>From Mobile</a> (Phantom Wallet Required)<br/></br/>`
   )
   .join("")}
+<br />
 ${
   claimURLs.length === 1
-    ? "This is a ONE TIME USE only lin. Feel free to share this link to anyone you want to claim your ticket."
+    ? "This is a ONE TIME USE only link. Feel free to share this link to anyone you want to claim your ticket."
     : "These are ONE TIME USE only links. Feel free to share these links them with your friends or anyone that is coming with you."
 }
 <br/><br/><br/>
 Best,<br/>
-The Cardinal Team
-</p>
+<a href="https://www.cardinal.so/">The Cardinal Team</a>
 </div>`;
 
 export const sendEmail = async (
   destination: string,
+  eventId: string,
   eventName: string,
   ticketName: string,
   eventURL: string,
@@ -48,7 +59,6 @@ export const sendEmail = async (
     secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
   });
 
-  console.log("destination", destination);
   const params: SendEmailRequest = {
     Source: "events@cardinal.so",
     Destination: {
@@ -62,6 +72,7 @@ export const sendEmail = async (
         Html: {
           Data: approvalSuccessfulEmail(
             eventName,
+            eventId,
             ticketName,
             eventURL,
             claimURLs

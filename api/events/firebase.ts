@@ -125,6 +125,10 @@ export const tryGetEventTicket = async (
   }
 };
 
+export const getEventBannerImage = (eventDocumentId: string) => {
+  return `https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/banners%2F${eventDocumentId}.png?alt=media`;
+};
+
 export type FirebaseEvent = {
   creatorId: string;
   docId: string;
