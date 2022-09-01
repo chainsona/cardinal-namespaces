@@ -252,13 +252,15 @@ functions:
           method: post
           cors: true
   tickets-approver:
-    handler: events/ticketsApprover/handler.approve
+    handler: events/ticketsApprover/handler.handle
     timeout: 30
     environment:
       EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
       EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
       EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
+      SES_ACCESS_KEY_ID: ${ssm:/SES_ACCESS_KEY_ID~true}
+      SES_SECRET_ACCESS_KEY: ${ssm:/SES_SECRET_ACCESS_KEY~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve

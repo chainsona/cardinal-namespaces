@@ -3,7 +3,7 @@
 import type { ApproveData } from "../firebase";
 import * as approver from "./approver";
 
-module.exports.approve = async (event) => {
+module.exports.handle = async (event) => {
   const headers = {
     "Access-Control-Allow-Methods": "*",
     "Access-Control-Allow-Origin": "*", // Required for CORS support to work
