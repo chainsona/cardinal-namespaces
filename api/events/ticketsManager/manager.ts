@@ -48,7 +48,7 @@ export async function createOrUpdate(
     if (!checkEvent) {
       return {
         status: 400,
-        message: `No even found for tickets`,
+        message: `No event found for tickets`,
       };
     }
 
@@ -152,6 +152,7 @@ export async function createOrUpdate(
         ticketName: ticket.ticketName,
         ticketQuantity: supply,
         ticketPrice: price,
+        additionalSigners: ticket.additionalSigners ?? null,
       });
     } else {
       await updateDoc(ticketRef, {
@@ -161,6 +162,7 @@ export async function createOrUpdate(
         ticketName: ticket.ticketName,
         ticketQuantity: supply,
         ticketPrice: price,
+        additionalSigners: ticket.additionalSigners ?? null,
       });
     }
 
@@ -169,7 +171,9 @@ export async function createOrUpdate(
         eventStorage,
         `tickets/${ticketRef.id}/image.png`
       );
+      console.log("uploading ticket image");
       await uploadString(ticketImageRef, ticket.ticketImage, "data_url");
+      console.log("uploaded ticket image");
     }
 
     if (ticket.ticketMetadata && ticket.ticketMetadata.length !== 0) {
@@ -177,6 +181,7 @@ export async function createOrUpdate(
         eventStorage,
         `tickets/${ticketRef.id}/metadata.json`
       );
+      console.log("uploading ticket metadata");
       await uploadString(ticketMetadataRef, ticket.ticketMetadata, "data_url");
     }
   }

@@ -101,6 +101,7 @@ export const tryGetEventFromShortlink = async (
   }
   return eventsSnap[0].data() as FirebaseEvent;
 };
+
 export const tryGetEvent = async (
   docId: string
 ): Promise<FirebaseEvent | undefined> => {
@@ -162,7 +163,7 @@ export type EventData = {
 };
 
 export type TicketCreationData = {
-  docId: string;
+  docId?: string;
   eventId: string;
   ticketShortLink: string;
   ticketName: string;
@@ -172,6 +173,7 @@ export type TicketCreationData = {
   creator: string;
   ticketImage: string;
   ticketMetadata: string;
+  additionalSigners?: string[];
 };
 
 export type ApproveData = {

@@ -197,28 +197,42 @@ functions:
           cors: true
 
   ################################ Events ################################
-  events-event-manager:
-    handler: events/eventManager/handler.manage
+  event-create:
+    handler: events/eventCreate/handler.handle
+    timeout: 30
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
-          path: /events/createOrUpdateEvent
+          path: /events
           method: post
           cors: true
-  events-tickets-manager:
-    handler: events/ticketsManager/handler.manage
+  event-update:
+    handler: events/eventUpdate/handler.handle
+    timeout: 30
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
-          path: /events/createOrUpdateTickets
+          path: /events/{eventId}
+          method: put
+          cors: true
+  ticket-create:
+    handler: events/ticketsManager/handler.handle
+    timeout: 30
+    environment:
+      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
+      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+    events:
+      - http:
+          path: /tickets
           method: post
           cors: true
-  events-tickets-claimer:
-    handler: events/ticketsClaimer/handler.claim
+  tickets-claimer:
+    handler: events/ticketsClaimer/handler.handle
+    timeout: 30
     environment:
       EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
@@ -229,15 +243,17 @@ functions:
           path: /tickets/{ticketId}/claim
           method: post
           cors: true
-  events-ticket-otp-claimer:
+  ticket-otp-claimer:
     handler: events/ticketClaimerFromOtp/handler.otpClaim
+    timeout: 30
     events:
       - http:
           path: /tickets/{ticketId}/approve/claim
           method: post
           cors: true
-  events-tickets-approver:
+  tickets-approver:
     handler: events/ticketsApprover/handler.approve
+    timeout: 30
     environment:
       EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
