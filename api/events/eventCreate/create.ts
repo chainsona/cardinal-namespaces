@@ -37,7 +37,7 @@ export async function createEvent(eventData: EventData): Promise<{
     creatorId: eventData.creatorId,
     environment: eventData.environment,
     eventPaymentMint: WRAPPED_SOL_ADDRESS,
-    eventQuestions: eventData.eventQuestions,
+    eventQuestions: eventData.eventQuestions ?? [],
   });
   if (eventData.eventBannerImage && eventData.eventBannerImage.length !== 0) {
     const eventImageRef = ref(eventStorage, `banners/${eventRef.id}.png`);
