@@ -6,13 +6,17 @@ import {
   sendAndConfirmRawTransaction,
   Transaction,
 } from "@solana/web3.js";
+import * as dotenv from "dotenv";
 import fs from "fs";
 import fetch from "node-fetch";
 
 import { tryGetEventFromShortlink } from "../firebase";
+import { apiBase } from "./api";
 import { getAuthToken } from "./auth";
 import { eventIdFromTicket } from "./create-events";
 import { ticketConfig } from "./ticketConfig";
+
+dotenv.config();
 
 export type TicketCreationData = {
   docId?: string;
@@ -37,7 +41,9 @@ export function chunkArray<T>(arr: T[], size: number): T[][] {
 const BATCH_SIZE = 4;
 
 export const createTickets = async () => {
-  const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
+  const wallet = Keypair.fromSecretKey(
+    utils.bytes.bs58.decode(process.env.WALLET || "")
+  );
   const buffer = fs.readFileSync("./events/tools/image.png");
   const image = buffer.toString("base64");
 
@@ -85,12 +91,14 @@ export const createTickets = async () => {
     }, [] as TicketCreationData[])
   );
 
-  const connection = new Connection("https://api.devnet.solana.com");
+  const connection = new Connection(
+    process.env.MAINNET_PRIMARY_URL || "https://api.devnet.solana.com"
+  );
   const ticketDataChunks = chunkArray(ticketDatas, BATCH_SIZE);
   // for (let i = 0; i < ticketDataChunks.length; i++) {
   //   const chunks = ticketDataChunks[i];
   //   const response = await fetch(
-  //     `https://dev-api.cardinal.so/namespaces/tickets`,
+  //     `${apiBase()}/tickets`,
   //     {
   //       method: "POST",
   //       body: JSON.stringify({ data: chunks }),
@@ -133,7 +141,7 @@ export const createTickets = async () => {
 
   const responses = await Promise.all(
     ticketDataChunks.map((d) =>
-      fetch(`https://dev-api.cardinal.so/namespaces/tickets`, {
+      fetch(`${apiBase()}/tickets`, {
         method: "POST",
         body: JSON.stringify(d),
         headers: {

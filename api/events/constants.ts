@@ -1,4 +1,5 @@
-import { PublicKey } from "@solana/web3.js";
+import { utils } from "@project-serum/anchor";
+import { Keypair } from "@solana/web3.js";
 
 export enum EventApproverKind {
   Wallet = "WALLET",
@@ -14,24 +15,25 @@ export const EventApproverDescription: Record<EventApproverKind, string> = {
   [EventApproverKind.None]: "1 NFT per any request",
 };
 
-export const eventApproverKeys: Record<
-  EventApproverKind,
-  { publicKey: PublicKey; secretKey: string }
-> = {
-  [EventApproverKind.Wallet]: {
-    publicKey: new PublicKey("ek1QPLkV1iEYwJxM6xcu7gniemL5xbAGKZRECxcg5Tb"),
-    secretKey: `EVENT_APPROVER_${EventApproverKind.Wallet}`,
-  },
-  [EventApproverKind.Collection]: {
-    publicKey: new PublicKey("ek2Y2SQ9Rvvn69Cberhv9Kg6PHqEkGq8xEjw32k9A16"),
-    secretKey: `EVENT_APPROVER_${EventApproverKind.Collection}`,
-  },
-  [EventApproverKind.Typeform]: {
-    publicKey: new PublicKey("ek31sTZHeAdWYzJWLsT1XufLvRnYVTACwuPt5HaAUu8"),
-    secretKey: `EVENT_APPROVER_${EventApproverKind.Typeform}`,
-  },
-  [EventApproverKind.None]: {
-    publicKey: new PublicKey("ek45HWhMg6szkrsB3va3JvU6Ki4rUvwtTZVUQUQdaaX"),
-    secretKey: `EVENT_APPROVER_${EventApproverKind.None}`,
-  },
+export const eventApproverKeys: Record<EventApproverKind, Keypair> = {
+  [EventApproverKind.Wallet]: Keypair.fromSecretKey(
+    utils.bytes.bs58.decode(
+      process.env[`EVENT_APPROVER_${EventApproverKind.Wallet}`] ?? ""
+    )
+  ),
+  [EventApproverKind.Collection]: Keypair.fromSecretKey(
+    utils.bytes.bs58.decode(
+      process.env[`EVENT_APPROVER_${EventApproverKind.Collection}`] ?? ""
+    )
+  ),
+  [EventApproverKind.Typeform]: Keypair.fromSecretKey(
+    utils.bytes.bs58.decode(
+      process.env[`EVENT_APPROVER_${EventApproverKind.Typeform}`] ?? ""
+    )
+  ),
+  [EventApproverKind.None]: Keypair.fromSecretKey(
+    utils.bytes.bs58.decode(
+      process.env[`EVENT_APPROVER_${EventApproverKind.None}`] ?? ""
+    )
+  ),
 };

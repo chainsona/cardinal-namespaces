@@ -5,7 +5,6 @@ import {
   getNamespaceByName,
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
-import { utils } from "@project-serum/anchor";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 
 import { withInitAndClaim } from "../../common/claimUtils";
@@ -61,14 +60,9 @@ export async function claim(data: ClaimData): Promise<{
   let approverAuthority: Keypair | undefined;
   try {
     if (checkNamespace.parsed.approveAuthority) {
-      const eventApprover = Object.values(eventApproverKeys).find((v) =>
+      approverAuthority = Object.values(eventApproverKeys).find((v) =>
         v.publicKey.equals(checkNamespace.parsed.approveAuthority!)
       );
-      if (eventApprover?.secretKey) {
-        approverAuthority = Keypair.fromSecretKey(
-          utils.bytes.bs58.decode(process.env[eventApprover?.secretKey] ?? "")
-        );
-      }
     }
   } catch {
     throw new Error(`Events pk incorrect or not found`);

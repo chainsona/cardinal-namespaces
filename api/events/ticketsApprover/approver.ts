@@ -72,14 +72,9 @@ export async function approve(data: ApproveData): Promise<{
   let approverAuthority: Keypair | undefined;
   try {
     if (checkNamespace.parsed.approveAuthority) {
-      const eventApprover = Object.values(eventApproverKeys).find((v) =>
+      approverAuthority = Object.values(eventApproverKeys).find((v) =>
         v.publicKey.equals(checkNamespace.parsed.approveAuthority!)
       );
-      if (eventApprover?.secretKey) {
-        approverAuthority = Keypair.fromSecretKey(
-          utils.bytes.bs58.decode(process.env[eventApprover?.secretKey] ?? "")
-        );
-      }
     }
   } catch {
     throw `Events pk incorrect or not found`;

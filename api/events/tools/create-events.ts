@@ -1,12 +1,16 @@
 import { utils } from "@project-serum/anchor";
 import { Keypair } from "@solana/web3.js";
+import * as dotenv from "dotenv";
 import fs from "fs";
 import fetch from "node-fetch";
 
 import { tryGetEventFromShortlink } from "../firebase";
+import { apiBase } from "./api";
 import { getAuthToken } from "./auth";
 import type { TicketConfig } from "./ticketConfig";
 import { ticketConfig } from "./ticketConfig";
+
+dotenv.config();
 
 export type EventData = {
   shortLink: string;
@@ -29,7 +33,9 @@ export const eventIdFromTicket = (t: TicketConfig) =>
       .replace(" ", "-") ?? ""
   }-${t.date ?? ""}`;
 
-const wallet = Keypair.fromSecretKey(utils.bytes.bs58.decode(""));
+const wallet = Keypair.fromSecretKey(
+  utils.bytes.bs58.decode(process.env.WALLET || "")
+);
 
 export const eventsFromTickets = (tickets: TicketConfig[]) => {
   return tickets.reduce((acc, t) => {
@@ -65,13 +71,10 @@ export const createEvents = async () => {
   const eventData = eventsFromTickets(ticketConfig);
   const eventDatas = Object.values(eventData);
   for (const event of eventDatas) {
-    const response = await fetch(
-      `https://dev-api.cardinal.so/namespaces/events`,
-      {
-        method: "POST",
-        body: JSON.stringify([event]),
-      }
-    );
+    const response = await fetch(`${apiBase()}/namespaces/events`, {
+      method: "POST",
+      body: JSON.stringify([event]),
+    });
     const json = (await response.json()) as string;
     console.log(json);
   }
@@ -87,7 +90,7 @@ export const updateEvents = async () => {
       console.log(`Event with link ${event.shortLink} not found`);
     } else {
       const response = await fetch(
-        `https://dev-api.cardinal.so/namespaces/events/${tryEvent.docId}`,
+        `${apiBase()}/namespaces/events/${tryEvent.docId}`,
         {
           method: "PUT",
           body: JSON.stringify(event),
