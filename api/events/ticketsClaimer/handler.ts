@@ -2,7 +2,7 @@
 import type { ClaimData } from "../firebase";
 import * as claimer from "./claimer";
 
-module.exports.claim = async (event) => {
+module.exports.handle = async (event) => {
   const headers = {
     "Access-Control-Allow-Methods": "*",
     "Access-Control-Allow-Origin": "*", // Required for CORS support to work
