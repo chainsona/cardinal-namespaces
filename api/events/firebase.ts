@@ -160,6 +160,7 @@ export type EventData = {
   creatorId: string;
   environment: string;
   eventBannerImage: string;
+  eventQuestions?: string[];
 };
 
 export type TicketCreationData = {
