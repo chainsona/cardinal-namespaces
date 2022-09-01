@@ -225,6 +225,10 @@ functions:
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
+      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
+      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
+      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
     events:
       - http:
           path: /tickets
@@ -246,6 +250,11 @@ functions:
   ticket-otp-claimer:
     handler: events/ticketClaimerFromOtp/handler.otpClaim
     timeout: 30
+    environment:
+      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
+      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
+      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
+      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve/claim
