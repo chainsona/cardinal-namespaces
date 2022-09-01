@@ -141,9 +141,10 @@ export async function claim(data: ClaimData): Promise<{
       ...transaction.instructions.slice(1),
     ];
 
-    transaction.feePayer = checkTicket.additionalSigners
-      ? new PublicKey(checkTicket.additionalSigners[0])
-      : claimerWallet.publicKey;
+    transaction.feePayer =
+      checkTicket.additionalSigners && checkTicket.additionalSigners.length > 0
+        ? new PublicKey(checkTicket.additionalSigners[0])
+        : claimerWallet.publicKey;
     transaction.recentBlockhash = (
       await connection.getRecentBlockhash("max")
     ).blockhash;
