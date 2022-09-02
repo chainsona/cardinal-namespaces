@@ -30,7 +30,9 @@ ${claimURLs
     (url, index) =>
       `Ticket ${
         index + 1
-      }: Claim Ticket <a href=${url}>From Laptop</a> or <a href=${url}>From Mobile</a> (Phantom Wallet Required)<br/></br/>`
+      }: Claim Ticket <a href=${url}>From Laptop</a> or <a href=${`https://phantom.app/ul/browse/${encodeURIComponent(
+        url
+      )}`}>From Mobile</a> (Phantom Wallet Required)<br/></br/>`
   )
   .join("")}
 <br />
