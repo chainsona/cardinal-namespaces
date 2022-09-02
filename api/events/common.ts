@@ -13,7 +13,7 @@ const approvalSuccessfulEmail = (
 <div>
 <img src=${getEventBannerImage(
   eventId
-)} alt="event-image" style="width: 100%; max-width: 1000px;">
+)} alt="event-image" style="width: 100%; max-width: 1000px; margin: auto; border-radius: 3%;">
 <h3>
 Thank you for purchasing ${claimURLs.length} ${ticketName} ${
   claimURLs.length === 1 ? "ticket" : "tickets"
@@ -41,7 +41,7 @@ ${
     ? "This is a ONE TIME USE only link. Feel free to share this link to anyone you want to claim your ticket."
     : "These are ONE TIME USE only links. Feel free to share these links them with your friends or anyone that is coming with you."
 }
-<br/><br/><br/>
+<br/><br/>
 Best,<br/>
 <a href="https://www.cardinal.so/">The Cardinal Team</a>
 </div>`;
