@@ -68,6 +68,12 @@ export const getTicketRef = (
   return doc(eventFirestore, "tickets", generatedTicketId);
 };
 
+export const getEventClaimResponseRef = (
+  eventDocumentId: string
+): DocumentReference => {
+  return doc(collection(eventFirestore, "events", eventDocumentId, "claims"));
+};
+
 export const tryGetEventTicketByName = async (
   eventDocId: string,
   name: string
@@ -202,4 +208,11 @@ export type OtpClaimData = {
   ticketId: string;
   entryName: string;
   otp: string;
+};
+
+export type ClaimResponseData = {
+  account: string;
+  eventId: string;
+  amount: number;
+  formResponse?: { question: string; answer: string }[];
 };

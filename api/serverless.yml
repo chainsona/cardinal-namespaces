@@ -275,6 +275,17 @@ functions:
           path: /tickets/{ticketId}/approve
           method: post
           cors: true
+  responses-claim-create:
+    handler: events/eventClaimResponseCreate/handler.handle
+    timeout: 30
+    environment:
+      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
+      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+    events:
+      - http:
+          path: /events/{eventId}/claim-response
+          method: post
+          cors: true
 
   ################################ Passbase ################################
   passbase-webhook:
