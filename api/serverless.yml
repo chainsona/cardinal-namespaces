@@ -283,7 +283,7 @@ functions:
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
-          path: /events/{eventId}/claimResponse
+          path: /events/{eventId}/claim-response
           method: post
           cors: true
 
