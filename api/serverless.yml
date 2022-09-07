@@ -23,6 +23,7 @@ functions:
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
     events:
       - http:
           path: /approve
@@ -33,6 +34,7 @@ functions:
     timeout: 30
     environment:
       TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
+      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
     events:
       - http:
           path: /revoke
@@ -40,6 +42,8 @@ functions:
           cors: true
   v1-twitter-proxy:
     handler: twitter/proxy/handler.proxy
+    environment:
+      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
     events:
       - http:
           path: /proxy
