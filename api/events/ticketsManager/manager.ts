@@ -163,7 +163,11 @@ export async function createOrUpdate(
       });
     }
 
-    if (ticket.ticketImage && ticket.ticketImage.length !== 0) {
+    if (
+      ticket.ticketImage &&
+      ticket.ticketImage.length !== 0 &&
+      ticket.ticketImage.substring(0, 5) === "data:"
+    ) {
       const ticketImageRef = ref(
         eventStorage,
         `tickets/${ticketRef.id}/image.png`
@@ -173,7 +177,11 @@ export async function createOrUpdate(
       console.log("uploaded ticket image");
     }
 
-    if (ticket.ticketMetadata && ticket.ticketMetadata.length !== 0) {
+    if (
+      ticket.ticketMetadata &&
+      ticket.ticketMetadata.length !== 0 &&
+      ticket.ticketMetadata.substring(0, 5) === "data:"
+    ) {
       const ticketMetadataRef = ref(
         eventStorage,
         `tickets/${ticketRef.id}/metadata.json`
