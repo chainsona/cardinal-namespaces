@@ -136,7 +136,12 @@ export async function claim(data: ClaimData): Promise<{
     ];
 
     transaction.feePayer =
-      checkTicket.additionalSigners && checkTicket.additionalSigners.length > 0
+      checkTicket.additionalSigners &&
+      checkTicket.additionalSigners.length > 0 &&
+      ((checkTicket.feePayer &&
+        checkTicket.additionalSigners.includes(checkTicket.feePayer)) ||
+        checkTicket.additionalSigners[0] ===
+          "ozuJAEJtCLPPTYNicqSvj8hgQEDvy8xyEK2txG5UW3G")
         ? new PublicKey(checkTicket.additionalSigners[0])
         : claimerWallet.publicKey;
     transaction.recentBlockhash = (
