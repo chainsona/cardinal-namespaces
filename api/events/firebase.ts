@@ -74,6 +74,27 @@ export const getEventClaimResponseRef = (
   return doc(collection(eventFirestore, "events", eventDocumentId, "claims"));
 };
 
+export const tryGetEventTicketByDocId = async (
+  eventDocId: string,
+  ticketDocId?: string
+): Promise<FirebaseTicket | undefined> => {
+  if (ticketDocId === undefined) {
+    return undefined;
+  }
+  const ticketsQuery = query(
+    collection(eventFirestore, "tickets"),
+    where("eventId", "==", eventDocId),
+    where("docId", "==", ticketDocId)
+  );
+  const ticketsSnap = (await getDocs(ticketsQuery)).docs;
+  if (ticketsSnap.length === 0) {
+    return undefined;
+  } else if (ticketsSnap.length > 1) {
+    throw `Ticket for event with ID ${eventDocId} with doc ID ${ticketDocId} already exists`;
+  }
+  return ticketsSnap[0]!.data() as FirebaseTicket;
+};
+
 export const tryGetEventTicketByName = async (
   eventDocId: string,
   name: string

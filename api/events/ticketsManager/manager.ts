@@ -16,7 +16,7 @@ import {
   eventStorage,
   getTicketRef,
   tryGetEvent,
-  tryGetEventTicketByName,
+  tryGetEventTicketByDocId,
 } from "../firebase";
 
 export async function createOrUpdate(
@@ -59,10 +59,9 @@ export async function createOrUpdate(
       };
     }
     const creatorWallet = emptyWallet(creatorPublickKey);
-
-    const checkTicket = await tryGetEventTicketByName(
+    const checkTicket = await tryGetEventTicketByDocId(
       ticket.eventId,
-      ticket.ticketName
+      ticket.docId
     );
     const ticketRef = getTicketRef(
       ticket.eventId,
@@ -113,12 +112,10 @@ export async function createOrUpdate(
           updateAuthority: creatorWallet.publicKey,
           rentAuthority: creatorWallet.publicKey,
           approveAuthority: eventApproverKeys[EventApproverKind.None].publicKey,
-          schema: checkNamespace.parsed.schema,
           paymentAmountDaily: checkNamespace.parsed.paymentAmountDaily,
           paymentMint: checkNamespace.parsed.paymentMint,
           minRentalSeconds: checkNamespace.parsed.minRentalSeconds,
           transferableEntries: checkNamespace.parsed.transferableEntries,
-          invalidationType: checkNamespace.parsed.invalidationType,
           maxRentalSeconds: checkNamespace.parsed.maxRentalSeconds ?? undefined,
           limit: supply,
           maxExpiration: checkNamespace.parsed.maxExpiration ?? undefined,
