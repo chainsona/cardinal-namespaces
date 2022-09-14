@@ -9,16 +9,11 @@ import { utils } from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
 import {
   Keypair,
-  PublicKey,
   sendAndConfirmTransaction,
   Transaction,
 } from "@solana/web3.js";
 
 import { connectionFor } from "../../common/connection";
-import {
-  PAYMENT_MINTS_DECIMALS_MAPPING,
-  withHandlePayment,
-} from "../../common/payments";
 import { sendEmail } from "../common";
 import { eventApproverKeys } from "../constants";
 import type { ApproveData } from "../firebase";
@@ -86,25 +81,25 @@ export async function approve(data: ApproveData): Promise<{
 
   let transaction = new Transaction();
   for (let i = 0; i < claimAmount; i++) {
-    if (checkEvent.eventPaymentMint) {
-      const paymentMint = new PublicKey(checkEvent.eventPaymentMint);
-      if (!(paymentMint.toString() in PAYMENT_MINTS_DECIMALS_MAPPING)) {
-        throw "Missing event payment mint decimals";
-      }
-      const mintDecimals =
-        PAYMENT_MINTS_DECIMALS_MAPPING[paymentMint.toString()];
-      const ticketPrice = Number(checkTicket.ticketPrice);
-      const amountToPay = ticketPrice * 10 ** mintDecimals;
-      await withHandlePayment(
-        transaction,
-        connection,
-        new PublicKey(checkEvent.creatorId),
-        approverWallet,
-        new PublicKey(checkEvent.eventPaymentMint),
-        amountToPay,
-        mintDecimals
-      );
-    }
+    // if (checkEvent.eventPaymentMint) {
+    //   const paymentMint = new PublicKey(checkEvent.eventPaymentMint);
+    //   if (!(paymentMint.toString() in PAYMENT_MINTS_DECIMALS_MAPPING)) {
+    //     throw "Missing event payment mint decimals";
+    //   }
+    //   const mintDecimals =
+    //     PAYMENT_MINTS_DECIMALS_MAPPING[paymentMint.toString()];
+    //   const ticketPrice = Number(checkTicket.ticketPrice);
+    //   const amountToPay = ticketPrice * 10 ** mintDecimals;
+    //   await withHandlePayment(
+    //     transaction,
+    //     connection,
+    //     new PublicKey(checkEvent.creatorId),
+    //     approverWallet,
+    //     new PublicKey(checkEvent.eventPaymentMint),
+    //     amountToPay,
+    //     mintDecimals
+    //   );
+    // }
 
     const entryName = `${Math.random().toString(36).slice(2)}`;
     const keypair = new Keypair();
@@ -147,7 +142,7 @@ export async function approve(data: ApproveData): Promise<{
     );
   }
 
-  const eventURL = `ttps://identity.cardinal.so/${data.companyId}/${checkEvent.shortLink}`;
+  const eventURL = `https://events.cardinal.so/${data.companyId}/${checkEvent.shortLink}`;
   await sendEmail(
     data.email,
     checkEvent.docId,

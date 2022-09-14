@@ -1,10 +1,14 @@
 import { emptyWallet, tryGetAccount, tryPublicKey } from "@cardinal/common";
 import { getNamespaceByName } from "@cardinal/namespaces";
 import { utils } from "@project-serum/anchor";
-import { Keypair, Transaction } from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 
 import { withInitAndClaim } from "../../common/claimUtils";
 import { connectionFor } from "../../common/connection";
+import {
+  PAYMENT_MINTS_DECIMALS_MAPPING,
+  withHandlePayment,
+} from "../../common/payments";
 import type { OtpClaimData } from "../firebase";
 import { tryGetEvent, tryGetEventTicket } from "../firebase";
 
@@ -58,6 +62,25 @@ export async function otpClaim(data: OtpClaimData): Promise<{
       status: 400,
       message: `No ticket namespace found`,
     };
+  }
+
+  if (checkEvent.eventPaymentMint) {
+    const paymentMint = new PublicKey(checkEvent.eventPaymentMint);
+    if (!(paymentMint.toString() in PAYMENT_MINTS_DECIMALS_MAPPING)) {
+      throw "Missing event payment mint decimals";
+    }
+    const mintDecimals = PAYMENT_MINTS_DECIMALS_MAPPING[paymentMint.toString()];
+    const ticketPrice = Number(checkTicket.ticketPrice);
+    const amountToPay = ticketPrice * 10 ** mintDecimals;
+    await withHandlePayment(
+      transaction,
+      connection,
+      new PublicKey(checkEvent.creatorId),
+      claimerWallet,
+      new PublicKey(checkEvent.eventPaymentMint),
+      amountToPay,
+      mintDecimals
+    );
   }
 
   const mintKeypair = Keypair.generate();
