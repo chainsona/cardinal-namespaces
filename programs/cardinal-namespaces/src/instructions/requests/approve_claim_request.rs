@@ -36,6 +36,9 @@ pub fn handler(ctx: Context<ApproveClaimRequestCtx>, entry_name: String, user: P
     claim_request.requestor = user;
     claim_request.counter = 0;
 
+    let namespace = &mut ctx.accounts.namespace;
+    namespace.approved_count = namespace.approved_count.checked_add(1).expect("Add error");
+
     if !ctx.accounts.name_entry.data_is_empty() {
         let name_entry = Account::<Entry>::try_from(&ctx.accounts.name_entry)?;
         claim_request.counter = name_entry.claim_request_counter;

@@ -36,6 +36,7 @@ pub struct Namespace {
     pub limit: Option<u32>,
     pub max_expiration: Option<i64>,
     pub invalidation_type: u8,
+    pub approved_count: u32,
 }
 
 pub const CLAIM_REQUEST_SIZE: usize = 8 + std::mem::size_of::<ClaimRequest>() + 24;

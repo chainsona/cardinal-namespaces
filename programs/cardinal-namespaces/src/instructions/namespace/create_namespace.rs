@@ -58,6 +58,7 @@ pub fn handler(ctx: Context<CreateNamespace>, ix: CreateNamespaceIx) -> Result<(
     namespace.max_expiration = ix.max_expiration;
     namespace.invalidation_type = ix.invalidation_type;
     namespace.count = 0;
+    namespace.approved_count = 0;
 
     if ix.invalidation_type != InvalidationType::Return as u8
         && ix.invalidation_type != InvalidationType::Invalidate as u8
