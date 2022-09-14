@@ -223,6 +223,7 @@ export type ClaimData = {
   account: string;
   ticketId: string;
   amount: string;
+  formResponse?: { question: string; answer: string }[];
 };
 
 export type OtpClaimData = {

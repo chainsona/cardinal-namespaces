@@ -6,6 +6,8 @@ import {
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
 
 import { withInitAndClaim } from "../../common/claimUtils";
 import { connectionFor } from "../../common/connection";
@@ -15,7 +17,7 @@ import {
 } from "../../common/payments";
 import { eventApproverKeys } from "../constants";
 import type { ClaimData } from "../firebase";
-import { tryGetEvent, tryGetEventTicket } from "../firebase";
+import { eventFirestore, tryGetEvent, tryGetEventTicket } from "../firebase";
 
 export async function claim(data: ClaimData): Promise<{
   status: number;
@@ -155,6 +157,26 @@ export async function claim(data: ClaimData): Promise<{
         requireAllSignatures: false,
       })
     );
+
+    const responseRef = doc(collection(eventFirestore, "responses"));
+
+    const auth = getAuth();
+    const email = process.env.FIREBASE_ACCOUNT_EMAIL || "avinash@cardinal.so";
+    const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "Cardinal12345";
+    await signInWithEmailAndPassword(auth, email, password);
+
+    await setDoc(responseRef, {
+      walletAddress: claimerWallet.publicKey,
+      timestamp: Timestamp.fromDate(new Date()),
+      ticketAmount: amount,
+      formResponse: data.formResponse,
+      eventId: checkEvent.docId,
+      ticketId: data.ticketId,
+      transactionId: transaction.signature,
+      confirmed: false,
+      claimType: "direct",
+    });
+
     const claimSerialized = copiedClaimTx
       .serialize({
         verifySignatures: false,

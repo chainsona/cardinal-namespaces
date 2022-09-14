@@ -32,6 +32,7 @@ module.exports.handle = async (event) => {
       ticketId: ticketId,
       account: data.account,
       amount: data.amount,
+      formResponse: data.formResponse ?? [],
     } as ClaimData);
     return {
       headers: headers,
