@@ -425,7 +425,6 @@ custom:
     enabled: true
 
 plugins:
-  # - serverless-domain-manager
   - serverless-plugin-common-excludes
   - serverless-api-gateway-caching
   - serverless-plugin-typescript

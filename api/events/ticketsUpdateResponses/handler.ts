@@ -13,7 +13,8 @@ module.exports.handle = async (event) => {
     console.log(updateResponseData);
     if (
       !updateResponseData.transactionIds ||
-      !updateResponseData.transactionDocumentIds
+      !updateResponseData.transactionDocumentIds ||
+      !updateResponseData.updateSignerPrivateKey
     ) {
       return {
         headers: headers,

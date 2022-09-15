@@ -1,5 +1,7 @@
+import { utils } from "@project-serum/anchor";
+import { Keypair } from "@solana/web3.js";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, writeBatch } from "firebase/firestore";
+import { doc, getDoc, writeBatch } from "firebase/firestore";
 
 import type { UpdateResponseData } from "../firebase";
 import { eventFirestore } from "../firebase";
@@ -30,9 +32,20 @@ export async function updateResponse(
 
     const responseRef = doc(eventFirestore, "responses", documentId);
 
-    batch.update(responseRef, {
-      transactionId: transactionId,
-    });
+    const snapshot = await getDoc(responseRef);
+    const data = snapshot.data();
+    if (
+      data &&
+      !data.transactionId &&
+      data.updateSignerPublicKey &&
+      Keypair.fromSecretKey(
+        utils.bytes.bs58.decode(updateResponseData.updateSignerPrivateKey)
+      ).publicKey.toString() === data.updateSignerPublicKey
+    ) {
+      batch.update(responseRef, {
+        transactionId: transactionId,
+      });
+    }
   }
 
   await batch.commit();

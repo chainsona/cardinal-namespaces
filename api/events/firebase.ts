@@ -243,4 +243,5 @@ export type ClaimResponseData = {
 export type UpdateResponseData = {
   transactionDocumentIds: string[];
   transactionIds: string[];
+  updateSignerPrivateKey: string;
 };
