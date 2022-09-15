@@ -22,6 +22,7 @@ import { eventFirestore, tryGetEvent, tryGetEventTicket } from "../firebase";
 export async function claim(data: ClaimData): Promise<{
   status: number;
   transactions?: string[];
+  transactionDocumentIds?: string[];
   message?: string;
   error?: string;
 }> {
@@ -80,6 +81,7 @@ export async function claim(data: ClaimData): Promise<{
   }
 
   const serializedTransactions: string[] = [];
+  const transactionDocumentIds: string[] = [];
   for (let i = 0; i < amount; i++) {
     const transaction = new Transaction();
     const entryName = `${Math.random().toString(36).slice(2)}`;
@@ -166,13 +168,13 @@ export async function claim(data: ClaimData): Promise<{
     await signInWithEmailAndPassword(auth, email, password);
 
     await setDoc(responseRef, {
-      walletAddress: claimerWallet.publicKey,
+      walletAddress: claimerWallet.publicKey.toString(),
       timestamp: Timestamp.fromDate(new Date()),
       ticketAmount: amount,
       formResponse: data.formResponse,
       eventId: checkEvent.docId,
+      environment: checkEvent.environment,
       ticketId: data.ticketId,
-      transactionId: transaction.signature,
       confirmed: false,
       claimType: "direct",
     });
@@ -184,11 +186,13 @@ export async function claim(data: ClaimData): Promise<{
       })
       .toString("base64");
     serializedTransactions.push(claimSerialized);
+    transactionDocumentIds.push(responseRef.id);
   }
 
   return {
     status: 200,
     transactions: serializedTransactions,
+    transactionDocumentIds: transactionDocumentIds,
     message: `Built transaction to create ticket`,
   };
 }

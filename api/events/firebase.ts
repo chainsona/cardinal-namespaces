@@ -239,3 +239,8 @@ export type ClaimResponseData = {
   amount: number;
   formResponse?: { question: string; answer: string }[];
 };
+
+export type UpdateResponseData = {
+  transactionDocumentIds: string[];
+  transactionIds: string[];
+};

@@ -40,6 +40,7 @@ module.exports.handle = async (event) => {
       body: JSON.stringify({
         result: "done",
         transactions: response.transactions || "",
+        transactionDocumentIds: response.transactionDocumentIds || "",
         message: response.message || "",
         error: response.error,
       }),
