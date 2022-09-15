@@ -1,32 +1,42 @@
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { setDoc, Timestamp } from "firebase/firestore";
-
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import type { ClaimResponseData } from "../firebase";
-import { getEventClaimResponseRef } from "../firebase";
+import { createEventClaimResponse } from "./create";
 
-export async function createEventClaimResponse(
-  claimResponseData: ClaimResponseData
-): Promise<{
-  status: number;
-  message: string;
-  error?: string;
-}> {
-  const responseRef = getEventClaimResponseRef(claimResponseData.eventId);
-
-  const auth = getAuth();
-  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
-  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
-  await signInWithEmailAndPassword(auth, email, password);
-
-  await setDoc(responseRef, {
-    walletAddress: claimResponseData.account,
-    timestamp: Timestamp.fromDate(new Date()),
-    ticketAmount: claimResponseData.amount,
-    formResponse: claimResponseData.formResponse ?? [],
-  });
-
-  return {
-    status: 200,
-    message: `Successfully created event claim response`,
+module.exports.handle = async (event) => {
+  const headers = {
+    "Access-Control-Allow-Methods": "*",
+    "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+    "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
   };
-}
+  try {
+    const formResponseData = JSON.parse(event.body) as ClaimResponseData;
+    if (
+      !formResponseData.account ||
+      !formResponseData.eventId ||
+      !formResponseData.formResponse
+    ) {
+      return {
+        headers: headers,
+        statusCode: 412,
+        body: JSON.stringify({ error: "Missing form response parameters" }),
+      };
+    }
+
+    const response = await createEventClaimResponse(formResponseData);
+    return {
+      headers: headers,
+      statusCode: response.status,
+      body: JSON.stringify({
+        message: response.message,
+        error: response.error,
+      }),
+    };
+  } catch (e) {
+    console.log("Error creating event: ", e);
+    return {
+      headers: headers,
+      statusCode: 500,
+      body: JSON.stringify({ error: String(e) }),
+    };
+  }
+};
