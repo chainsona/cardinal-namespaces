@@ -1,5 +1,6 @@
+import { tryPublicKey } from "@cardinal/common";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import type { Timestamp } from "firebase/firestore";
+import { deleteDoc, Timestamp } from "firebase/firestore";
 import {
   collection,
   getDocs,
@@ -23,27 +24,37 @@ export const confirmTransactions = async () => {
       where("confirmed", "==", false)
     );
     const querySnapshot = await getDocs(q);
-
+    const currentTimestamp = Date.now();
     for (const doc of querySnapshot.docs) {
-      const { transactionId, environment, updateSignerPublicKey } =
-        doc.data() as {
-          transactionId: string;
-          environment: string;
-          updateSignerPublicKey: string;
-          timestamp: Timestamp;
-        };
+      const { environment, signerPublicKey, timestamp } = doc.data() as {
+        environment: string;
+        signerPublicKey: string;
+        timestamp: Timestamp;
+      };
+      const signer = tryPublicKey(signerPublicKey);
+      if (!signer) {
+        throw "Invalid signer public key uploaded to firebase";
+      }
+      if ((currentTimestamp - timestamp.toMillis()) / 1000 > 120) {
+        await deleteDoc(doc.ref);
+        continue;
+      }
       const connection = connectionFor(environment);
-      const signatureStatus = await connection.getSignatureStatus(
-        transactionId
+      const signatures = await connection.getSignaturesForAddress(
+        signer,
+        undefined,
+        "finalized"
       );
-      const transaction = await connection.getTransaction(transactionId);
-      if (
-        signatureStatus.value?.confirmationStatus === "confirmed" &&
-        transaction?.transaction.signatures.includes(updateSignerPublicKey)
-      ) {
-        await updateDoc(doc.ref, {
-          confirmed: true,
-        });
+      for (const signature of signatures) {
+        const transaction = await connection.getTransaction(
+          signature.signature
+        );
+        if (transaction?.transaction.signatures.includes(signerPublicKey)) {
+          await updateDoc(doc.ref, {
+            confirmed: true,
+          });
+          break;
+        }
       }
     }
   } catch (e) {
