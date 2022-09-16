@@ -1,36 +1,32 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { emptyWallet, tryGetAccount, tryPublicKey } from "@cardinal/common";
-import {
-  getNamespaceByName,
-  withApproveClaimRequest,
-} from "@cardinal/namespaces";
+import { getNamespaceByName } from "@cardinal/namespaces";
 import { utils } from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
-import {
-  Keypair,
-  PublicKey,
-  sendAndConfirmTransaction,
-  Transaction,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
 
 import { connectionFor } from "../../common/connection";
 import {
   PAYMENT_MINTS_DECIMALS_MAPPING,
   withHandlePayment,
 } from "../../common/payments";
-import { sendEmail } from "../common";
 import { eventApproverKeys } from "../constants";
 import type { ApproveData } from "../firebase";
-import { tryGetEvent, tryGetEventTicket } from "../firebase";
-
-const BATCH_SIZE = 8;
+import {
+  authFirebase,
+  eventFirestore,
+  tryGetEvent,
+  tryGetEventTicket,
+  tryGetPayer,
+} from "../firebase";
 
 export async function approve(data: ApproveData): Promise<{
   status: number;
+  transactions?: string[];
   message?: string;
   error?: string;
 }> {
+  // 1. check ticket
   const checkTicket = await tryGetEventTicket(data.ticketId);
   if (!checkTicket) {
     return {
@@ -38,6 +34,7 @@ export async function approve(data: ApproveData): Promise<{
       message: JSON.stringify({ message: "Ticket not found" }),
     };
   }
+  // 2. check event
   const checkEvent = await tryGetEvent(checkTicket.eventId);
   if (!checkEvent) {
     return {
@@ -45,20 +42,8 @@ export async function approve(data: ApproveData): Promise<{
       message: JSON.stringify({ message: "Event for ticket not found" }),
     };
   }
-
-  const approverPublicKey = tryPublicKey(data.account);
-  if (!approverPublicKey) {
-    return {
-      status: 400,
-      message: `Invalid approver pubkey`,
-    };
-  }
-  const approverWallet = emptyWallet(approverPublicKey);
-
+  // 3. check namespaces
   const connection = connectionFor(checkEvent.environment);
-  const claimAmount = Number(data.amount);
-  const claimURLs: string[] = [];
-
   const checkNamespace = await tryGetAccount(() =>
     getNamespaceByName(connection, data.ticketId)
   );
@@ -68,7 +53,7 @@ export async function approve(data: ApproveData): Promise<{
       message: `No ticket namespace found`,
     };
   }
-
+  // 4. Get approver
   let approverAuthority: Keypair | undefined;
   try {
     if (checkNamespace.parsed.approveAuthority) {
@@ -77,18 +62,47 @@ export async function approve(data: ApproveData): Promise<{
       );
     }
   } catch {
-    throw `Events pk incorrect or not found`;
+    throw new Error(`Events pk incorrect or not found`);
   }
-
   if (!approverAuthority) {
     throw "No approve authority found";
   }
+  // 5. Get claimer
+  const userPublicKey = tryPublicKey(data.account);
+  if (!userPublicKey) {
+    return {
+      status: 400,
+      message: `Invalid claimer pubkey`,
+    };
+  }
+  const userWallet = emptyWallet(userPublicKey);
+  // 6. Get fee payer
+  let payerWallet = userWallet;
+  if (checkTicket.feePayer) {
+    const payer = await tryGetPayer(checkTicket.feePayer);
+    if (!payer?.secretKey) throw "Missing secret key";
+    payerWallet = new SignerWallet(
+      Keypair.fromSecretKey(utils.bytes.bs58.decode(payer?.secretKey))
+    );
+  }
 
-  let transaction = new Transaction();
-  for (let i = 0; i < claimAmount; i++) {
+  const amount = Number(data.amount);
+  if (isNaN(amount)) {
+    throw "Invalid supply provided";
+  }
+
+  // 7. setup firebase
+  const firebaseBatch = writeBatch(eventFirestore);
+  await authFirebase();
+
+  const signerKeypair = Keypair.generate();
+  const serializedTransactions: string[] = [];
+  for (let i = 0; i < amount; i++) {
+    const transaction = new Transaction();
+
     if (checkEvent.eventPaymentMint) {
       const paymentMint = new PublicKey(checkEvent.eventPaymentMint);
-      if (!(paymentMint.toString() in PAYMENT_MINTS_DECIMALS_MAPPING)) {
+      if (!(paymentMint in PAYMENT_MINTS_DECIMALS_MAPPING)) {
         throw "Missing event payment mint decimals";
       }
       const mintDecimals =
@@ -99,66 +113,86 @@ export async function approve(data: ApproveData): Promise<{
         transaction,
         connection,
         new PublicKey(checkEvent.creatorId),
-        approverWallet,
+        userWallet,
         new PublicKey(checkEvent.eventPaymentMint),
         amountToPay,
         mintDecimals
       );
     }
 
-    const entryName = `${Math.random().toString(36).slice(2)}`;
-    const keypair = new Keypair();
-    await withApproveClaimRequest(
-      transaction,
-      connection,
-      new SignerWallet(approverAuthority),
+    const firstInstruction = transaction.instructions[0];
+    transaction.instructions = [
       {
-        namespaceName: data.ticketId,
-        entryName: entryName,
-        user: keypair.publicKey,
-        approveAuthority: approverAuthority.publicKey,
-      }
-    );
-    if (
-      transaction.instructions.length === BATCH_SIZE ||
-      i === claimAmount - 1
-    ) {
-      console.log(
-        `Executing approve claim request transaction for ${transaction.instructions.length} tickets`
-      );
-      transaction.feePayer = approverAuthority.publicKey;
-      transaction.recentBlockhash = (
-        await connection.getRecentBlockhash("max")
-      ).blockhash;
-      const txid = await sendAndConfirmTransaction(connection, transaction, [
-        approverAuthority,
-      ]);
-      console.log(`Successfully executed transaction ${txid}`);
-      transaction = new Transaction();
+        ...firstInstruction,
+        keys: [
+          ...firstInstruction.keys,
+          ...(checkTicket.additionalSigners || []).map((s) => ({
+            pubkey: new PublicKey(s),
+            isSigner: true,
+            isWritable: false,
+          })),
+          ...[
+            {
+              pubkey: signerKeypair.publicKey,
+              isSigner: true,
+              isWritable: false,
+            },
+          ],
+        ],
+      },
+      ...transaction.instructions.slice(1),
+    ];
+
+    transaction.feePayer = payerWallet.publicKey;
+    transaction.recentBlockhash = (
+      await connection.getRecentBlockhash("max")
+    ).blockhash;
+    approverAuthority && transaction.partialSign(approverAuthority);
+    transaction.partialSign(signerKeypair);
+    if (!payerWallet.publicKey.equals(userWallet.publicKey)) {
+      await payerWallet.signTransaction(transaction);
     }
-    const claimURL = `https://events.cardinal.so/${data.companyId}/${
-      checkEvent.shortLink
-    }/claim?otp=${utils.bytes.bs58.encode(keypair.secretKey)}&ticketId=${
-      data.ticketId
-    }&entryName=${entryName}&cluster=${checkEvent.environment}`;
-    claimURLs.push(claimURL);
-    console.log(
-      `Successfuly approved claim URLs by ${data.account.toString()}: ${claimURL}`
+    const copiedClaimTx = Transaction.from(
+      transaction.serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
     );
+
+    ////////////// UPDATE RESPONSES //////////////
+    const responseRef = doc(collection(eventFirestore, "responses"));
+    firebaseBatch.set(responseRef, {
+      eventId: checkEvent.docId,
+      ticketId: data.ticketId,
+      timestamp: Timestamp.fromDate(new Date()),
+      environment: checkEvent.environment,
+      payerAddress: payerWallet.publicKey.toString(),
+      claimerAddress: null,
+      ticketAmount: 1,
+      formResponse: null,
+      payerTransactionId: null,
+      payerSignerPubkey: signerKeypair.publicKey.toString(),
+      approvalData: { type: "email", value: data.email },
+      approvalTransactionId: null,
+      approvalSignerPubkey: null,
+      claimTransactionId: null,
+      claimSignerPubkey: null,
+    });
+
+    const claimSerialized = copiedClaimTx
+      .serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
+      .toString("base64");
+    serializedTransactions.push(claimSerialized);
   }
 
-  const eventURL = `ttps://identity.cardinal.so/${data.companyId}/${checkEvent.shortLink}`;
-  await sendEmail(
-    data.email,
-    checkEvent.docId,
-    checkEvent.eventName,
-    checkTicket.ticketName,
-    eventURL,
-    claimURLs
-  );
-  console.log(`Successfuly sent email to user: ${data.email}`);
+  await firebaseBatch.commit();
+
   return {
     status: 200,
-    message: JSON.stringify({ message: "Applicant Approval succeeded" }),
+    transactions: serializedTransactions,
+    message: `Built transactino to pay for ticket`,
   };
 }

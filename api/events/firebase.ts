@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import type { DocumentReference, Firestore } from "firebase/firestore";
 import {
   collection,
@@ -172,6 +173,13 @@ export const tryGetPayer = async (
   }
 };
 
+export const authFirebase = async () => {
+  const auth = getAuth();
+  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
+  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
+  await signInWithEmailAndPassword(auth, email, password);
+};
+
 export const getEventBannerImage = (eventDocumentId: string) => {
   return `https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/banners%2F${eventDocumentId}.png?alt=media`;
 };
@@ -244,8 +252,6 @@ export type ApproveData = {
   ticketId: string;
   email: string;
   amount: string;
-  ticketName: string;
-  companyId: string;
 };
 
 export type ClaimData = {
