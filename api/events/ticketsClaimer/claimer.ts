@@ -5,7 +5,6 @@ import {
   getNamespaceByName,
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
-import { utils } from "@project-serum/anchor";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
@@ -23,8 +22,6 @@ import { eventFirestore, tryGetEvent, tryGetEventTicket } from "../firebase";
 export async function claim(data: ClaimData): Promise<{
   status: number;
   transactions?: string[];
-  transactionDocumentIds?: string[];
-  updateSignerPrivateKey?: string;
   message?: string;
   error?: string;
 }> {
@@ -82,9 +79,8 @@ export async function claim(data: ClaimData): Promise<{
     throw "Invalid supply provided";
   }
 
-  const updateSignerKeypair = Keypair.generate();
+  const signerKeypair = Keypair.generate();
   const serializedTransactions: string[] = [];
-  const transactionDocumentIds: string[] = [];
   for (let i = 0; i < amount; i++) {
     const transaction = new Transaction();
     const entryName = `${Math.random().toString(36).slice(2)}`;
@@ -137,6 +133,13 @@ export async function claim(data: ClaimData): Promise<{
             isSigner: true,
             isWritable: false,
           })),
+          ...[
+            {
+              pubkey: signerKeypair.publicKey,
+              isSigner: true,
+              isWritable: false,
+            },
+          ],
         ],
       },
       ...transaction.instructions.slice(1),
@@ -156,7 +159,7 @@ export async function claim(data: ClaimData): Promise<{
     ).blockhash;
     approverAuthority && transaction.partialSign(approverAuthority);
     transaction.partialSign(mintKeypair);
-    transaction.partialSign(updateSignerKeypair);
+    transaction.partialSign(signerKeypair);
     const copiedClaimTx = Transaction.from(
       transaction.serialize({
         verifySignatures: false,
@@ -167,8 +170,8 @@ export async function claim(data: ClaimData): Promise<{
     const responseRef = doc(collection(eventFirestore, "responses"));
 
     const auth = getAuth();
-    const email = process.env.FIREBASE_ACCOUNT_EMAIL || "avinash@cardinal.so";
-    const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "Cardinal12345";
+    const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
+    const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
     await signInWithEmailAndPassword(auth, email, password);
 
     await setDoc(responseRef, {
@@ -181,7 +184,7 @@ export async function claim(data: ClaimData): Promise<{
       ticketId: data.ticketId,
       confirmed: false,
       claimType: "direct",
-      updateSignerPublicKey: updateSignerKeypair.publicKey.toString(),
+      signerPublicKey: signerKeypair.publicKey.toString(),
     });
 
     const claimSerialized = copiedClaimTx
@@ -191,16 +194,11 @@ export async function claim(data: ClaimData): Promise<{
       })
       .toString("base64");
     serializedTransactions.push(claimSerialized);
-    transactionDocumentIds.push(responseRef.id);
   }
 
   return {
     status: 200,
     transactions: serializedTransactions,
-    transactionDocumentIds: transactionDocumentIds,
-    updateSignerPrivateKey: utils.bytes.bs58.encode(
-      updateSignerKeypair.secretKey
-    ),
     message: `Built transaction to create ticket`,
   };
 }

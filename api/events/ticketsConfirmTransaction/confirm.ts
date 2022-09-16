@@ -1,4 +1,5 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import type { Timestamp } from "firebase/firestore";
 import {
   collection,
   getDocs,
@@ -24,13 +25,22 @@ export const confirmTransactions = async () => {
     const querySnapshot = await getDocs(q);
 
     for (const doc of querySnapshot.docs) {
-      const data = doc.data() as { transactionId: string; environment: string };
-      const { transactionId, environment } = data;
+      const { transactionId, environment, updateSignerPublicKey } =
+        doc.data() as {
+          transactionId: string;
+          environment: string;
+          updateSignerPublicKey: string;
+          timestamp: Timestamp;
+        };
       const connection = connectionFor(environment);
       const signatureStatus = await connection.getSignatureStatus(
         transactionId
       );
-      if (signatureStatus.value?.confirmationStatus === "confirmed") {
+      const transaction = await connection.getTransaction(transactionId);
+      if (
+        signatureStatus.value?.confirmationStatus === "confirmed" &&
+        transaction?.transaction.signatures.includes(updateSignerPublicKey)
+      ) {
         await updateDoc(doc.ref, {
           confirmed: true,
         });

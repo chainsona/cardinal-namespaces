@@ -279,17 +279,6 @@ functions:
           path: /tickets/{ticketId}/approve
           method: post
           cors: true
-  tickets-update-responses:
-    handler: events/ticketsUpdateResponses/handler.handle
-    timeout: 30
-    environment:
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
-    events:
-      - http:
-          path: /tickets/update-responses
-          method: post
-          cors: true
   tickets-confirm-transaction:
     handler: events/ticketsConfirmTransaction/handler.handle
     timeout: 30
