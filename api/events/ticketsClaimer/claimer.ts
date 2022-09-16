@@ -5,6 +5,8 @@ import {
   getNamespaceByName,
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
+import { utils } from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
@@ -17,7 +19,12 @@ import {
 } from "../../common/payments";
 import { eventApproverKeys } from "../constants";
 import type { ClaimData } from "../firebase";
-import { eventFirestore, tryGetEvent, tryGetEventTicket } from "../firebase";
+import {
+  eventFirestore,
+  tryGetEvent,
+  tryGetEventTicket,
+  tryGetPayer,
+} from "../firebase";
 
 export async function claim(data: ClaimData): Promise<{
   status: number;
@@ -48,6 +55,14 @@ export async function claim(data: ClaimData): Promise<{
     };
   }
   const claimerWallet = emptyWallet(claimerPublicKey);
+  let payerWallet = claimerWallet;
+  if (checkTicket.feePayer) {
+    const payer = await tryGetPayer(checkTicket.feePayer);
+    if (!payer?.secretKey) throw "Missing secret key";
+    payerWallet = new SignerWallet(
+      Keypair.fromSecretKey(utils.bytes.bs58.decode(payer?.secretKey))
+    );
+  }
 
   const checkNamespace = await tryGetAccount(() =>
     getNamespaceByName(connection, data.ticketId)
@@ -105,7 +120,7 @@ export async function claim(data: ClaimData): Promise<{
       );
     }
 
-    await withApproveClaimRequest(transaction, connection, claimerWallet, {
+    await withApproveClaimRequest(transaction, connection, payerWallet, {
       namespaceName: data.ticketId,
       entryName: entryName,
       user: claimerWallet.publicKey,
@@ -119,7 +134,10 @@ export async function claim(data: ClaimData): Promise<{
       transaction,
       data.ticketId,
       entryName,
-      mintKeypair
+      mintKeypair,
+      undefined,
+      undefined,
+      payerWallet.publicKey
     );
 
     const firstInstruction = transaction.instructions[0];
@@ -145,21 +163,16 @@ export async function claim(data: ClaimData): Promise<{
       ...transaction.instructions.slice(1),
     ];
 
-    transaction.feePayer =
-      checkTicket.additionalSigners &&
-      checkTicket.additionalSigners.length > 0 &&
-      ((checkTicket.feePayer &&
-        checkTicket.additionalSigners.includes(checkTicket.feePayer)) ||
-        checkTicket.additionalSigners[0] ===
-          "ozuJAEJtCLPPTYNicqSvj8hgQEDvy8xyEK2txG5UW3G")
-        ? new PublicKey(checkTicket.additionalSigners[0])
-        : claimerWallet.publicKey;
+    transaction.feePayer = payerWallet.publicKey;
     transaction.recentBlockhash = (
       await connection.getRecentBlockhash("max")
     ).blockhash;
     approverAuthority && transaction.partialSign(approverAuthority);
     transaction.partialSign(mintKeypair);
     transaction.partialSign(signerKeypair);
+    if (!payerWallet.publicKey.equals(claimerWallet.publicKey)) {
+      await payerWallet.signTransaction(transaction);
+    }
     const copiedClaimTx = Transaction.from(
       transaction.serialize({
         verifySignatures: false,

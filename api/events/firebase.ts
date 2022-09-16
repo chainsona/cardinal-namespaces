@@ -43,6 +43,14 @@ export const checkUniqueEventShortLink = async (
   return false;
 };
 
+export const getPayerRef = (payerDocumentId?: string): DocumentReference => {
+  if (payerDocumentId) {
+    return doc(eventFirestore, "payers", payerDocumentId);
+  } else {
+    return doc(collection(eventFirestore, "payers"));
+  }
+};
+
 export const getEventRef = (eventDocumentId?: string): DocumentReference => {
   if (eventDocumentId) {
     return doc(eventFirestore, "events", eventDocumentId);
@@ -152,6 +160,18 @@ export const tryGetEventTicket = async (
   }
 };
 
+export const tryGetPayer = async (
+  docId: string
+): Promise<FirebasePayer | undefined> => {
+  const payerRef = getPayerRef(docId);
+  const payerSnap = await getDoc(payerRef);
+  if (payerSnap.exists()) {
+    return payerSnap.data() as FirebasePayer;
+  } else {
+    return undefined;
+  }
+};
+
 export const getEventBannerImage = (eventDocumentId: string) => {
   return `https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/banners%2F${eventDocumentId}.png?alt=media`;
 };
@@ -182,6 +202,14 @@ export type FirebaseTicket = {
   feePayer?: string;
 };
 
+export type FirebasePayer = {
+  docId: string;
+  name: string;
+  publicKey: string;
+  secretKey: string;
+  authority: string;
+};
+
 export type EventData = {
   shortLink: string;
   eventName: string;
@@ -206,6 +234,7 @@ export type TicketCreationData = {
   creator: string;
   ticketImage: string;
   ticketMetadata: string;
+  feePayer?: string;
   additionalSigners?: string[];
 };
 

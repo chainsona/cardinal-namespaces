@@ -17,6 +17,7 @@ import {
   getTicketRef,
   tryGetEvent,
   tryGetEventTicketByDocId,
+  tryGetPayer,
 } from "../firebase";
 
 export async function createOrUpdate(
@@ -141,6 +142,12 @@ export async function createOrUpdate(
     transactions.push(serialized);
 
     // off chain
+    if (ticket.feePayer && ticket.feePayer.length !== 0) {
+      const payer = await tryGetPayer(ticket.feePayer);
+      if (!payer || payer.authority !== ticket.creator) {
+        throw "Invalid ticket fee payer";
+      }
+    }
     if (!checkTicket) {
       await setDoc(ticketRef, {
         docId: ticketRef.id,
@@ -149,6 +156,7 @@ export async function createOrUpdate(
         ticketName: ticket.ticketName,
         ticketQuantity: supply,
         ticketPrice: price,
+        feePayer: ticket.feePayer ?? null,
         additionalSigners: ticket.additionalSigners ?? null,
       });
     } else {
@@ -159,6 +167,7 @@ export async function createOrUpdate(
         ticketName: ticket.ticketName,
         ticketQuantity: supply,
         ticketPrice: price,
+        feePayer: ticket.feePayer ?? null,
         additionalSigners: ticket.additionalSigners ?? null,
       });
     }
