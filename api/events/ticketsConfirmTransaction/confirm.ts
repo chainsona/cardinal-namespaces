@@ -220,7 +220,7 @@ const notifyApproval = async (
     config: event.config,
     keypair: claimKey,
     entryName: entryName,
-    ticketId: ticket.ticketId,
+    ticketId: ticket.docId,
     environment: event.environment,
   });
   if (response.approvalData?.type === "email") {
