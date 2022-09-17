@@ -1,4 +1,5 @@
 import { utils } from "@project-serum/anchor";
+import type { PublicKey } from "@solana/web3.js";
 import { Keypair } from "@solana/web3.js";
 
 export enum EventApproverKind {
@@ -36,4 +37,15 @@ export const eventApproverKeys: Record<EventApproverKind, Keypair> = {
       process.env[`EVENT_APPROVER_${EventApproverKind.None}`] ?? ""
     )
   ),
+};
+
+export const getApproveAuthority = (
+  approveAuthority: PublicKey | null | undefined
+) => {
+  if (!approveAuthority) throw "Approve authority undefined";
+  const approver = Object.values(eventApproverKeys).find((v) =>
+    v.publicKey.equals(approveAuthority)
+  );
+  if (!approver) throw "No approve authority found";
+  return approver;
 };

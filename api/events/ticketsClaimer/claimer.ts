@@ -1,10 +1,8 @@
-import { emptyWallet, tryGetAccount, tryPublicKey } from "@cardinal/common";
+import { emptyWallet } from "@cardinal/common";
 import {
   getNamespaceByName,
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
-import { utils } from "@project-serum/anchor";
-import { SignerWallet } from "@saberhq/solana-contrib";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
 
@@ -14,14 +12,15 @@ import {
   PAYMENT_MINTS_DECIMALS_MAPPING,
   withHandlePayment,
 } from "../../common/payments";
-import { eventApproverKeys } from "../constants";
+import { publicKeyFrom } from "../common";
+import { getApproveAuthority } from "../constants";
 import type { ClaimData, FirebaseResponse } from "../firebase";
 import {
   authFirebase,
   eventFirestore,
   getEvent,
-  tryGetEventTicket,
-  tryGetPayer,
+  getPayerKeypair,
+  getTicket,
 } from "../firebase";
 
 export async function claim(data: ClaimData): Promise<{
@@ -30,68 +29,31 @@ export async function claim(data: ClaimData): Promise<{
   message?: string;
   error?: string;
 }> {
-  // 1. check ticket
-  const checkTicket = await tryGetEventTicket(data.ticketId);
-  if (!checkTicket) {
-    return {
-      status: 400,
-      message: JSON.stringify({ message: "Ticket not found" }),
-    };
-  }
-  // 2. check event
+  // 1. get ticket
+  const checkTicket = await getTicket(data.ticketId);
+  // 2. get event
   const checkEvent = await getEvent(checkTicket.eventId);
-  // 3. check namespaces
+  // 3. get namespace
   const connection = connectionFor(checkEvent.environment);
-  const checkNamespace = await tryGetAccount(() =>
-    getNamespaceByName(connection, data.ticketId)
+  const checkNamespace = await getNamespaceByName(connection, data.ticketId);
+  // 4. get approver
+  const approverAuthority = getApproveAuthority(
+    checkNamespace.parsed.approveAuthority
   );
-  if (!checkNamespace?.parsed) {
-    return {
-      status: 400,
-      message: `No ticket namespace found`,
-    };
-  }
-  // 4. Get approver
-  let approverAuthority: Keypair | undefined;
-  try {
-    if (checkNamespace.parsed.approveAuthority) {
-      approverAuthority = Object.values(eventApproverKeys).find((v) =>
-        v.publicKey.equals(checkNamespace.parsed.approveAuthority!)
-      );
-    }
-  } catch {
-    throw new Error(`Events pk incorrect or not found`);
-  }
-  if (!approverAuthority) {
-    throw "No approve authority found";
-  }
-  // 5. Get claimer
-  const userPublicKey = tryPublicKey(data.account);
-  if (!userPublicKey) {
-    return {
-      status: 400,
-      message: `Invalid claimer pubkey`,
-    };
-  }
+  // 5. get user
+  const userPublicKey = publicKeyFrom(data.account, "Invalid user publicKey");
   const userWallet = emptyWallet(userPublicKey);
-  // 6. Get fee payer
+  // 6. get payer
   let payerWallet = userWallet;
   if (checkTicket.feePayer) {
-    const payer = await tryGetPayer(checkTicket.feePayer);
-    if (!payer?.secretKey) throw "Missing secret key";
-    payerWallet = new SignerWallet(
-      Keypair.fromSecretKey(utils.bytes.bs58.decode(payer?.secretKey))
-    );
+    payerWallet = await getPayerKeypair(checkTicket.feePayer);
   }
-
+  // 7. check amount
   const amount = Number(data.amount);
-  if (isNaN(amount)) {
-    throw "Invalid supply provided";
-  }
-
-  // 7. setup firebase
-  const firebaseBatch = writeBatch(eventFirestore);
+  if (isNaN(amount)) throw "Invalid supply provided";
+  // 8. setup firebase
   await authFirebase();
+  const firebaseBatch = writeBatch(eventFirestore);
 
   const signerKeypair = Keypair.generate();
   const serializedTransactions: string[] = [];

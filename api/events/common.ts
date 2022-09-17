@@ -1,3 +1,4 @@
+import { tryPublicKey } from "@cardinal/common";
 import { SES } from "aws-sdk";
 import type { SendEmailRequest } from "aws-sdk/clients/ses";
 
@@ -85,4 +86,13 @@ export const sendEmail = async (
   };
 
   await ses.sendEmail(params).promise();
+};
+
+export const publicKeyFrom = (
+  publicKeyString: string | string[] | null | undefined,
+  error?: string
+) => {
+  const publicKey = tryPublicKey(publicKeyString);
+  if (!publicKey) throw error ?? "Invalid publicKey";
+  return publicKey;
 };

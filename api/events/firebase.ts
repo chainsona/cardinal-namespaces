@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { utils } from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
+import { Keypair } from "@solana/web3.js";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import type {
@@ -171,6 +174,12 @@ export const tryGetEventTicket = async (
   }
 };
 
+export const getTicket = async (docId: string) => {
+  const checkTicket = await tryGetEventTicket(docId);
+  if (!checkTicket) throw `Ticket with id ${docId} not found`;
+  return checkTicket;
+};
+
 export const tryGetPayer = async (
   docId: string
 ): Promise<FirebasePayer | undefined> => {
@@ -181,6 +190,14 @@ export const tryGetPayer = async (
   } else {
     return undefined;
   }
+};
+
+export const getPayerKeypair = async (docId: string) => {
+  const checkPayer = await tryGetPayer(docId);
+  if (!checkPayer?.secretKey) throw "Missing secret key";
+  return new SignerWallet(
+    Keypair.fromSecretKey(utils.bytes.bs58.decode(checkPayer?.secretKey))
+  );
 };
 
 export const authFirebase = async () => {
