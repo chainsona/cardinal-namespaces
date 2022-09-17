@@ -15,22 +15,26 @@ export const eventUrl = (eventShortLink: string, companyId: string) => {
   return `https://events.cardinal.so/${companyId}/${eventShortLink}`;
 };
 
-export const claimUrl = (
-  eventShortLink: string,
-  companyId: string,
-  keypair: Keypair,
-  ticketId: string,
-  entryName: string,
-  environment: string
-) => {
-  `https://events.cardinal.so/${companyId}/${eventShortLink}/claim?otp=${utils.bytes.bs58.encode(
+export const claimUrl = ({
+  eventShortLink,
+  companyId,
+  keypair,
+  ticketId,
+  entryName,
+  environment,
+}: {
+  eventShortLink: string;
+  companyId: string;
+  keypair: Keypair;
+  ticketId: string;
+  entryName: string;
+  environment: string;
+}) => {
+  return `https://events.cardinal.so/${companyId}/${eventShortLink}/claim?otp=${utils.bytes.bs58.encode(
     keypair.secretKey
-  )}&ticketId=${ticketId}&entryName=${entryName}
-  
-  ${
+  )}&ticketId=${ticketId}&entryName=${entryName}${
     environment !== "mainnet" && environment !== "mainnet-beta"
       ? `&cluster=${environment}`
       : ""
-  }
-  `;
+  }`;
 };
