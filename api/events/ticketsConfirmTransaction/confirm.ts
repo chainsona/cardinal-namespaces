@@ -53,8 +53,6 @@ export const EVENT_APPROVER_LAMPORTS = 2 * 10 ** 6;
 export const RESPONSE_TRANSACTION_EXPIRATION_SECONDS = 120;
 
 export const confirmTransactions = async () => {
-  await authFirebase();
-
   for (let i = 0; i < confirmTransactionInfos.length; i++) {
     const confirmTransactionInfo = confirmTransactionInfos[i]!;
     try {
@@ -76,6 +74,7 @@ export const confirmTransactions = async () => {
           (currentTimestamp - response.timestamp.toMillis()) / 1000 >
           RESPONSE_TRANSACTION_EXPIRATION_SECONDS
         ) {
+          await authFirebase();
           await updateDoc(doc.ref, {
             [confirmTransactionInfo.signerPubkey]: null,
           });
@@ -86,6 +85,7 @@ export const confirmTransactions = async () => {
             response.environment
           );
           if (!confirmedSignatureInfo) throw "Transaction not found";
+          await authFirebase();
           await updateDoc(doc.ref, {
             [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
           });
@@ -109,6 +109,7 @@ export const confirmTransactions = async () => {
 
   for (const doc of queryResults.docs) {
     const response = doc.data() as FirebaseResponse;
+    await authFirebase();
     const { txid, keypair, approveAuthority, entryName } =
       await sendApproveTransaction(response, response.environment);
     await notifyApproval(response, keypair, entryName);
