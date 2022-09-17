@@ -12,7 +12,6 @@ import {
 } from "@solana/web3.js";
 import {
   collection,
-  deleteDoc,
   getDocs,
   query,
   updateDoc,
@@ -206,7 +205,7 @@ const notifyApproval = async (
   const ticket = await getTicket(response.ticketId);
   const claimLink = claimUrl({
     eventShortLink: event.shortLink,
-    companyId: "default",
+    config: event.config,
     keypair: claimKey,
     entryName: entryName,
     ticketId: ticket.ticketId,
@@ -215,8 +214,12 @@ const notifyApproval = async (
   if (response.approvalData?.type === "email") {
     await sendEmail(
       response.approvalData.value,
-      // TODO store companyconfig in event
-      approvalSuccessfulEmail(event, ticket.ticketName, [claimLink], "default")
+      approvalSuccessfulEmail(
+        event,
+        ticket.ticketName,
+        [claimLink],
+        event.config
+      )
     );
   }
   throw "Unknown approval type";

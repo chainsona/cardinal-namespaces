@@ -11,26 +11,32 @@ export const publicKeyFrom = (
   return publicKey;
 };
 
-export const eventUrl = (eventShortLink: string, companyId: string) => {
-  return `https://events.cardinal.so/${companyId}/${eventShortLink}`;
+export const DEFAULT_EVENT_CONFIG = "default";
+
+export const eventUrl = (eventShortLink: string, companyId: string | null) => {
+  return `https://events.cardinal.so/${
+    companyId ?? DEFAULT_EVENT_CONFIG
+  }/${eventShortLink}`;
 };
 
 export const claimUrl = ({
   eventShortLink,
-  companyId,
+  config,
   keypair,
   ticketId,
   entryName,
   environment,
 }: {
   eventShortLink: string;
-  companyId: string;
+  config: string | null;
   keypair: Keypair;
   ticketId: string;
   entryName: string;
   environment: string;
 }) => {
-  return `https://events.cardinal.so/${companyId}/${eventShortLink}/claim?otp=${utils.bytes.bs58.encode(
+  return `https://events.cardinal.so/${
+    config ?? DEFAULT_EVENT_CONFIG
+  }/${eventShortLink}/claim?otp=${utils.bytes.bs58.encode(
     keypair.secretKey
   )}&ticketId=${ticketId}&entryName=${entryName}${
     environment !== "mainnet" && environment !== "mainnet-beta"

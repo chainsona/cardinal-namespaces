@@ -9,7 +9,7 @@ export const approvalSuccessfulEmail = (
   event: FirebaseEvent,
   ticketName: string,
   claimURLs: string[],
-  companyId: string
+  config: string | null
 ) => `
 <div>
 <img src=${getEventBannerImage(
@@ -18,7 +18,7 @@ export const approvalSuccessfulEmail = (
 <h3>
 Thank you for purchasing ${claimURLs.length} ${ticketName} ${
   claimURLs.length === 1 ? "ticket" : "tickets"
-} to <a href="${eventUrl(event.shortLink, companyId)}">${event.eventName}</a>!
+} to <a href="${eventUrl(event.shortLink, config)}">${event.eventName}</a>!
 </h3>
 <h4>
 Use the ${claimURLs.length === 1 ? "link" : "links"} below to claim your NFT ${

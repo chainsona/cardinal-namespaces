@@ -216,6 +216,7 @@ export const getEventBannerImage = (eventDocumentId: string) => {
 export type FirebaseEvent = {
   creatorId: string;
   docId: string;
+  config: string | null;
   environment: string;
   eventDescription: string;
   eventEndTime: string;
