@@ -52,11 +52,7 @@ module.exports.handle = async (event) => {
     return {
       headers: headers,
       statusCode: response.status,
-      body: JSON.stringify({
-        result: "done",
-        message: response.message || "",
-        error: response.error,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (e) {
     console.log("Error approving user: ", e);

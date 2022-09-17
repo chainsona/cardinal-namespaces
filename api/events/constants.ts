@@ -16,6 +16,7 @@ export const EventApproverDescription: Record<EventApproverKind, string> = {
   [EventApproverKind.None]: "1 NFT per any request",
 };
 
+console.log(process.env);
 export const eventApproverKeys: Record<EventApproverKind, Keypair> = {
   [EventApproverKind.Wallet]: Keypair.fromSecretKey(
     utils.bytes.bs58.decode(

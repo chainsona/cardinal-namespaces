@@ -101,13 +101,25 @@ export async function approve(data: ApproveData): Promise<{
             isSigner: true,
             isWritable: false,
           })),
-          ...[
-            {
-              pubkey: signerKeypair.publicKey,
-              isSigner: true,
-              isWritable: false,
-            },
-          ],
+          {
+            pubkey: signerKeypair.publicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: userPublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          ...(approverAuthority
+            ? [
+                {
+                  pubkey: approverAuthority.publicKey,
+                  isSigner: true,
+                  isWritable: false,
+                },
+              ]
+            : []),
         ],
       },
       ...transaction.instructions.slice(1),
@@ -162,6 +174,6 @@ export async function approve(data: ApproveData): Promise<{
   return {
     status: 200,
     transactions: serializedTransactions,
-    message: `Built transactino to pay for ticket`,
+    message: `Built transaction to pay for tickets`,
   };
 }

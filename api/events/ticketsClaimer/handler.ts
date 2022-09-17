@@ -37,12 +37,7 @@ module.exports.handle = async (event) => {
     return {
       headers: headers,
       statusCode: response.status,
-      body: JSON.stringify({
-        result: "done",
-        transactions: response.transactions || "",
-        message: response.message || "",
-        error: response.error,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (e) {
     console.log("Error building claim transaction: ", e);
