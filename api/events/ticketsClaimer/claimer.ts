@@ -100,7 +100,7 @@ export async function claim(data: ClaimData): Promise<{
 
     if (checkEvent.eventPaymentMint) {
       const paymentMint = new PublicKey(checkEvent.eventPaymentMint);
-      if (!(paymentMint in PAYMENT_MINTS_DECIMALS_MAPPING)) {
+      if (!(paymentMint.toString() in PAYMENT_MINTS_DECIMALS_MAPPING)) {
         throw "Missing event payment mint decimals";
       }
       const mintDecimals =
