@@ -3,7 +3,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import type { DocumentReference, Firestore } from "firebase/firestore";
+import type {
+  DocumentReference,
+  Firestore,
+  Timestamp,
+} from "firebase/firestore";
 import {
   collection,
   doc,
@@ -149,6 +153,12 @@ export const tryGetEvent = async (
   return eventsSnap.data() as FirebaseEvent;
 };
 
+export const getEvent = async (docId: string) => {
+  const checkEvent = await tryGetEvent(docId);
+  if (!checkEvent) throw `Event with id ${docId} not found`;
+  return checkEvent;
+};
+
 export const tryGetEventTicket = async (
   ticketDocId: string
 ): Promise<FirebaseTicket | undefined> => {
@@ -218,6 +228,24 @@ export type FirebasePayer = {
   authority: string;
 };
 
+export type FirebaseResponse = {
+  eventId: string | null;
+  ticketId: string | null;
+  environment: string | null;
+  timestamp: Timestamp | null;
+  payerAddress: string | null;
+  claimerAddress: string | null;
+  ticketAmount: number | null;
+  formResponse: FormResponse[] | null;
+  payerTransactionId: string | null;
+  payerSignerPubkey: string | null;
+  approvalData: { type: "direct" | "email"; value: string } | null;
+  approvalTransactionId: string | null;
+  approvalSignerPubkey: string | null;
+  claimTransactionId: string | null;
+  claimSignerPubkey: string | null;
+};
+
 export type EventData = {
   shortLink: string;
   eventName: string;
@@ -254,11 +282,13 @@ export type ApproveData = {
   amount: string;
 };
 
+export type FormResponse = { question: string; answer: string };
+
 export type ClaimData = {
   account: string;
   ticketId: string;
   amount: string;
-  formResponse?: { question: string; answer: string }[];
+  formResponse?: FormResponse[];
 };
 
 export type OtpClaimData = {
@@ -272,7 +302,7 @@ export type ClaimResponseData = {
   account: string;
   eventId: string;
   amount: number;
-  formResponse?: { question: string; answer: string }[];
+  formResponse?: FormResponse[];
 };
 
 export type UpdateResponseData = {

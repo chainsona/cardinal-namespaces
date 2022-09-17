@@ -2,7 +2,12 @@ import { emptyWallet, tryGetAccount, tryPublicKey } from "@cardinal/common";
 import { getNamespaceByName } from "@cardinal/namespaces";
 import { utils } from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
-import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
 
 import { connectionFor } from "../../common/connection";
@@ -11,14 +16,15 @@ import {
   withHandlePayment,
 } from "../../common/payments";
 import { eventApproverKeys } from "../constants";
-import type { ApproveData } from "../firebase";
+import type { ApproveData, FirebaseResponse } from "../firebase";
 import {
   authFirebase,
   eventFirestore,
-  tryGetEvent,
+  getEvent,
   tryGetEventTicket,
   tryGetPayer,
 } from "../firebase";
+import { EVENT_APPROVER_LAMPORTS } from "../ticketsConfirmTransaction/confirm";
 
 export async function approve(data: ApproveData): Promise<{
   status: number;
@@ -35,13 +41,7 @@ export async function approve(data: ApproveData): Promise<{
     };
   }
   // 2. check event
-  const checkEvent = await tryGetEvent(checkTicket.eventId);
-  if (!checkEvent) {
-    return {
-      status: 400,
-      message: JSON.stringify({ message: "Event for ticket not found" }),
-    };
-  }
+  const checkEvent = await getEvent(checkTicket.eventId);
   // 3. check namespaces
   const connection = connectionFor(checkEvent.environment);
   const checkNamespace = await tryGetAccount(() =>
@@ -99,15 +99,14 @@ export async function approve(data: ApproveData): Promise<{
   const serializedTransactions: string[] = [];
   for (let i = 0; i < amount; i++) {
     const transaction = new Transaction();
-
-    if (checkEvent.eventPaymentMint) {
+    const ticketPrice = Number(checkTicket.ticketPrice);
+    if (checkEvent.eventPaymentMint && ticketPrice > 0) {
       const paymentMint = new PublicKey(checkEvent.eventPaymentMint);
       if (!(paymentMint in PAYMENT_MINTS_DECIMALS_MAPPING)) {
         throw "Missing event payment mint decimals";
       }
       const mintDecimals =
         PAYMENT_MINTS_DECIMALS_MAPPING[paymentMint.toString()];
-      const ticketPrice = Number(checkTicket.ticketPrice);
       const amountToPay = ticketPrice * 10 ** mintDecimals;
       await withHandlePayment(
         transaction,
@@ -119,6 +118,15 @@ export async function approve(data: ApproveData): Promise<{
         mintDecimals
       );
     }
+
+    // Enough to pay for email
+    transaction.instructions.push(
+      SystemProgram.transfer({
+        fromPubkey: payerWallet.publicKey,
+        toPubkey: approverAuthority.publicKey,
+        lamports: EVENT_APPROVER_LAMPORTS,
+      })
+    );
 
     const firstInstruction = transaction.instructions[0];
     transaction.instructions = [
@@ -158,6 +166,13 @@ export async function approve(data: ApproveData): Promise<{
         requireAllSignatures: false,
       })
     );
+    const claimSerialized = copiedClaimTx
+      .serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
+      .toString("base64");
+    serializedTransactions.push(claimSerialized);
 
     ////////////// UPDATE RESPONSES //////////////
     const responseRef = doc(collection(eventFirestore, "responses"));
@@ -177,15 +192,7 @@ export async function approve(data: ApproveData): Promise<{
       approvalSignerPubkey: null,
       claimTransactionId: null,
       claimSignerPubkey: null,
-    });
-
-    const claimSerialized = copiedClaimTx
-      .serialize({
-        verifySignatures: false,
-        requireAllSignatures: false,
-      })
-      .toString("base64");
-    serializedTransactions.push(claimSerialized);
+    } as FirebaseResponse);
   }
 
   await firebaseBatch.commit();

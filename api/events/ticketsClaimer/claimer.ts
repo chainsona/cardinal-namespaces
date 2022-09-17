@@ -15,11 +15,11 @@ import {
   withHandlePayment,
 } from "../../common/payments";
 import { eventApproverKeys } from "../constants";
-import type { ClaimData } from "../firebase";
+import type { ClaimData, FirebaseResponse } from "../firebase";
 import {
   authFirebase,
   eventFirestore,
-  tryGetEvent,
+  getEvent,
   tryGetEventTicket,
   tryGetPayer,
 } from "../firebase";
@@ -39,13 +39,7 @@ export async function claim(data: ClaimData): Promise<{
     };
   }
   // 2. check event
-  const checkEvent = await tryGetEvent(checkTicket.eventId);
-  if (!checkEvent) {
-    return {
-      status: 400,
-      message: JSON.stringify({ message: "Event for ticket not found" }),
-    };
-  }
+  const checkEvent = await getEvent(checkTicket.eventId);
   // 3. check namespaces
   const connection = connectionFor(checkEvent.environment);
   const checkNamespace = await tryGetAccount(() =>
@@ -204,7 +198,7 @@ export async function claim(data: ClaimData): Promise<{
       approvalSignerPubkey: signerKeypair.publicKey.toString(),
       claimTransactionId: null,
       claimSignerPubkey: signerKeypair.publicKey.toString(),
-    });
+    } as FirebaseResponse);
 
     const claimSerialized = copiedClaimTx
       .serialize({
