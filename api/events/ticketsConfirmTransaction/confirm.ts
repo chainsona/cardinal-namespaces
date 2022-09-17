@@ -29,17 +29,18 @@ const confirmTransactionInfos: (
       id: "payerTransactionId";
       signerPubkey: "payerSignerPubkey";
     }
-  | {
-      id: "approvalTransactionId";
-      signerPubkey: "approvalSignerPubkey";
-    }
+  // THIS QUERY NEEDS TO BE SLIGHTLY DIFFERENT (CHECK IF PAYER TXID AND NO APPROVAL TXID)
+  // | {
+  //     id: "approvalTransactionId";
+  //     signerPubkey: "approvalSignerPubkey";
+  //   }
   | {
       id: "claimTransactionId";
       signerPubkey: "claimSignerPubkey";
     }
 )[] = [
   { id: "payerTransactionId", signerPubkey: "payerSignerPubkey" },
-  { id: "approvalTransactionId", signerPubkey: "approvalSignerPubkey" },
+  // { id: "approvalTransactionId", signerPubkey: "approvalSignerPubkey" },
   { id: "claimTransactionId", signerPubkey: "claimSignerPubkey" },
 ];
 
@@ -63,9 +64,23 @@ export const confirmTransactions = async () => {
         const response = doc.data() as FirebaseResponse;
         console.log(`response, info`, response, confirmTransactionInfo);
 
+        if (!response.timestamp) throw "Invalid timestamp";
+        if ((currentTimestamp - response.timestamp.toMillis()) / 1000 > 120) {
+          await deleteDoc(doc.ref);
+          continue;
+        }
+        const confirmedSignatureInfo = await findTransactionSignedByUser(
+          response[confirmTransactionInfo.signerPubkey],
+          response.environment
+        );
+        if (!confirmedSignatureInfo) throw "Transaction not found";
+        await updateDoc(doc.ref, {
+          [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
+        });
+
         //////////////////// approval transaction ////////////////////
         if (
-          confirmTransactionInfo.id === "approvalTransactionId" &&
+          confirmTransactionInfo.id === "payerTransactionId" &&
           !response.approvalTransactionId
         ) {
           const ticketId = response.ticketId;
@@ -139,21 +154,6 @@ export const confirmTransactions = async () => {
             approvalTransactionId: txid,
             approvalSignerPubkey: approverAuthority.publicKey.toString(),
           });
-        } else {
-          if (!response.timestamp) throw "Invalid timestamp";
-          if ((currentTimestamp - response.timestamp.toMillis()) / 1000 > 120) {
-            await deleteDoc(doc.ref);
-            continue;
-          }
-          const confirmedSignatureInfo = await findTransactionSignedByUser(
-            response[confirmTransactionInfo.signerPubkey],
-            response.environment
-          );
-          if (confirmedSignatureInfo) {
-            await updateDoc(doc.ref, {
-              [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
-            });
-          }
         }
       }
     } catch (e) {
