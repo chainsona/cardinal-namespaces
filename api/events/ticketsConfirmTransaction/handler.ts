@@ -6,7 +6,12 @@ module.exports.handle = async (event: any) => {
     `--------------- Checking for unconfirmed transactions on ${new Date().toLocaleString()}  ---------------`
   );
 
-  await confirmTransactions();
+  console.log(process.env, process.env.CONFIRM_TRANSACTIONS_DISABLED);
+  if (process.env.CONFIRM_TRANSACTIONS_DISABLED === "true") {
+    console.log("> Confirm transactions disabled");
+  } else {
+    await confirmTransactions();
+  }
 
   console.log(
     `--------------- Finished checking for unconfirmed transactions on ${new Date().toLocaleString()}  ---------------`

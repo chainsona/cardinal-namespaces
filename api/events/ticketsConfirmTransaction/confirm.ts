@@ -63,11 +63,13 @@ export const confirmTransactions = async () => {
           where(confirmTransactionInfo.signerPubkey, "!=", null)
         )
       );
-      console.log(confirmTransactionInfo, queryResults.docs.length);
+      console.log(
+        `> ${confirmTransactionInfo.toString()} - ${queryResults.docs.length}`
+      );
       const currentTimestamp = Date.now();
       for (const doc of queryResults.docs) {
         const response = doc.data() as FirebaseResponse;
-        console.log(`response, info`, response, confirmTransactionInfo);
+        console.log(`> Response, info`, response, confirmTransactionInfo);
 
         if (!response.timestamp) throw "Invalid timestamp";
         if (
@@ -107,7 +109,7 @@ export const confirmTransactions = async () => {
       where("approvalSignerPubkey", "==", null)
     )
   );
-  console.log("Approvals", queryResults.docs.length);
+  console.log("> Approvals", queryResults.docs.length);
 
   for (const doc of queryResults.docs) {
     const response = doc.data() as FirebaseResponse;
@@ -150,7 +152,7 @@ const findTransactionSignedByUser = async (
       return confirmedSignatureInfo;
     }
   }
-  console.log(`Failed to find transaction for ${signerString ?? ""}`);
+  console.log(`> Failed to find transaction for ${signerString ?? ""}`);
   return null;
 };
 
@@ -164,7 +166,7 @@ const sendApproveTransaction = async (
   entryName: string;
 }> => {
   const ticketId = response.ticketId;
-  if (!ticketId) throw "Response missing ticketId";
+  if (!ticketId) throw "[error] Response missing ticketId";
   const connection = connectionFor(environment ?? null);
   const checkNamespace = await getNamespaceByName(connection, ticketId);
   const approveAuthority = getApproveAuthority(
@@ -188,7 +190,7 @@ const sendApproveTransaction = async (
   );
 
   console.log(
-    `Executing approve claim request transaction for ${transaction.instructions.length} tickets`
+    `> ...executing approve claim request transaction for ${transaction.instructions.length} tickets`
   );
   transaction.feePayer = approveAuthority.publicKey;
   transaction.recentBlockhash = (
@@ -197,7 +199,7 @@ const sendApproveTransaction = async (
   const txid = await sendAndConfirmTransaction(connection, transaction, [
     approveAuthority,
   ]);
-  console.log(`Successfully executed transaction ${txid}`);
+  console.log(`> Successfully executed transaction ${txid}`);
   return {
     txid,
     keypair,
@@ -233,5 +235,5 @@ const notifyApproval = async (
     );
     return;
   }
-  throw "Unknown approval type";
+  throw "[error] Unknown approval type";
 };

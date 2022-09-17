@@ -293,6 +293,7 @@ functions:
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
       SES_ACCESS_KEY_ID: ${ssm:/SES_ACCESS_KEY_ID~true}
       SES_SECRET_ACCESS_KEY: ${ssm:/SES_SECRET_ACCESS_KEY~true}
+      CONFIRM_TRANSACTIONS_DISABLED: ${param:CONFIRM_TRANSACTIONS_DISABLED,false}
 
   ################################ Passbase ################################
   passbase-webhook:
