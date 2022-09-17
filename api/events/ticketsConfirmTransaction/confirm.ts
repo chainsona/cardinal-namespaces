@@ -1,10 +1,10 @@
-import { tryGetAccount, tryPublicKey } from "@cardinal/common";
+import { tryPublicKey } from "@cardinal/common";
 import {
   getNamespaceByName,
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
 import { SignerWallet } from "@saberhq/solana-contrib";
-import type { ConfirmedSignatureInfo } from "@solana/web3.js";
+import type { ConfirmedSignatureInfo, PublicKey } from "@solana/web3.js";
 import {
   Keypair,
   sendAndConfirmTransaction,
@@ -20,27 +20,28 @@ import {
 } from "firebase/firestore";
 
 import { connectionFor } from "../../common/connection";
+import { claimUrl } from "../common";
 import { eventApproverKeys } from "../constants";
-import type { FirebaseResponse } from "./../firebase";
-import { authFirebase, eventFirestore, tryGetEventTicket } from "./../firebase";
+import { approvalSuccessfulEmail, sendEmail } from "../email";
+import { FirebaseEvent, FirebaseResponse, getTicket } from "./../firebase";
+import { authFirebase, eventFirestore, getEvent } from "./../firebase";
 
 const confirmTransactionInfos: (
   | {
       id: "payerTransactionId";
       signerPubkey: "payerSignerPubkey";
     }
-  // THIS QUERY NEEDS TO BE SLIGHTLY DIFFERENT (CHECK IF PAYER TXID AND NO APPROVAL TXID)
-  // | {
-  //     id: "approvalTransactionId";
-  //     signerPubkey: "approvalSignerPubkey";
-  //   }
+  | {
+      id: "approvalTransactionId";
+      signerPubkey: "approvalSignerPubkey";
+    }
   | {
       id: "claimTransactionId";
       signerPubkey: "claimSignerPubkey";
     }
 )[] = [
   { id: "payerTransactionId", signerPubkey: "payerSignerPubkey" },
-  // { id: "approvalTransactionId", signerPubkey: "approvalSignerPubkey" },
+  { id: "approvalTransactionId", signerPubkey: "approvalSignerPubkey" },
   { id: "claimTransactionId", signerPubkey: "claimSignerPubkey" },
 ];
 
@@ -52,7 +53,7 @@ export const confirmTransactions = async () => {
   for (let i = 0; i < confirmTransactionInfos.length; i++) {
     const confirmTransactionInfo = confirmTransactionInfos[i]!;
     try {
-      const querySnapshot = await getDocs(
+      const queryResults = await getDocs(
         query(
           collection(eventFirestore, "responses"),
           where(confirmTransactionInfo.id, "==", null),
@@ -60,7 +61,7 @@ export const confirmTransactions = async () => {
         )
       );
       const currentTimestamp = Date.now();
-      for (const doc of querySnapshot.docs) {
+      for (const doc of queryResults.docs) {
         const response = doc.data() as FirebaseResponse;
         console.log(`response, info`, response, confirmTransactionInfo);
 
@@ -77,92 +78,38 @@ export const confirmTransactions = async () => {
         await updateDoc(doc.ref, {
           [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
         });
-
-        //////////////////// approval transaction ////////////////////
-        if (
-          confirmTransactionInfo.id === "payerTransactionId" &&
-          !response.approvalTransactionId
-        ) {
-          const ticketId = response.ticketId;
-          if (!ticketId) throw "Response missing ticketId";
-
-          // 1. check ticket
-          const checkTicket = await tryGetEventTicket(ticketId);
-          if (!checkTicket) {
-            return {
-              status: 400,
-              message: JSON.stringify({ message: "Ticket not found" }),
-            };
-          }
-          // 3. check namespaces
-          const connection = connectionFor(response.environment);
-          const checkNamespace = await tryGetAccount(() =>
-            getNamespaceByName(connection, ticketId)
-          );
-          if (!checkNamespace?.parsed) {
-            return {
-              status: 400,
-              message: `No ticket namespace found`,
-            };
-          }
-          // 4. Get approver
-          let approverAuthority: Keypair | undefined;
-          try {
-            if (checkNamespace.parsed.approveAuthority) {
-              approverAuthority = Object.values(eventApproverKeys).find((v) =>
-                v.publicKey.equals(checkNamespace.parsed.approveAuthority!)
-              );
-            }
-          } catch {
-            throw new Error(`Events pk incorrect or not found`);
-          }
-          if (!approverAuthority) {
-            throw "No approve authority found";
-          }
-
-          const transaction = new Transaction();
-          // TODO 1 per wallet 1 per etc.
-          const entryName = `${Math.random().toString(36).slice(2)}`;
-          const keypair = new Keypair();
-          await withApproveClaimRequest(
-            transaction,
-            connection,
-            new SignerWallet(approverAuthority),
-            {
-              namespaceName: ticketId,
-              entryName: entryName,
-              user: keypair.publicKey,
-              approveAuthority: approverAuthority?.publicKey,
-            }
-          );
-
-          console.log(
-            `Executing approve claim request transaction for ${transaction.instructions.length} tickets`
-          );
-          transaction.feePayer = approverAuthority.publicKey;
-          transaction.recentBlockhash = (
-            await connection.getRecentBlockhash("max")
-          ).blockhash;
-          const txid = await sendAndConfirmTransaction(
-            connection,
-            transaction,
-            [approverAuthority]
-          );
-
-          console.log(`Successfully executed transaction ${txid}`);
-          await updateDoc(doc.ref, {
-            approvalTransactionId: txid,
-            approvalSignerPubkey: approverAuthority.publicKey.toString(),
-          });
-        }
       }
     } catch (e) {
       console.log("Failed to confirm transaction responses in Firebase: ", e);
     }
   }
+
+  //////////////////// approval transaction ////////////////////
+  // get responses where payment has been confirmed and no approval is found
+  const queryResults = await getDocs(
+    query(
+      collection(eventFirestore, "responses"),
+      where("payerTransactionId", "!=", null),
+      where("approvalTransactionId", "==", null),
+      where("approvalSignerPubkey", "==", null)
+    )
+  );
+
+  for (const doc of queryResults.docs) {
+    const response = doc.data() as FirebaseResponse;
+    const [txid, keypair, approverPublicKey] = await sendApproveTransaction(
+      response,
+      response.environment
+    );
+    await notifyApproval(response, [keypair]);
+    await updateDoc(doc.ref, {
+      approvalTransactionId: txid,
+      approvalSignerPubkey: approverPublicKey.toString(),
+    });
+  }
 };
 
-export const findTransactionSignedByUser = async (
+const findTransactionSignedByUser = async (
   signerString: string | undefined | null,
   environment: string | null
 ): Promise<ConfirmedSignatureInfo | null> => {
@@ -185,4 +132,70 @@ export const findTransactionSignedByUser = async (
     }
   }
   return null;
+};
+
+const sendApproveTransaction = async (
+  response: FirebaseResponse,
+  environment: string | null
+): Promise<[string, Keypair, PublicKey]> => {
+  const ticketId = response.ticketId;
+  if (!ticketId) throw "Response missing ticketId";
+  const connection = connectionFor(environment ?? null);
+  const checkNamespace = await getNamespaceByName(connection, ticketId);
+  let approverAuthority: Keypair | undefined;
+  try {
+    if (checkNamespace.parsed.approveAuthority) {
+      approverAuthority = Object.values(eventApproverKeys).find((v) =>
+        v.publicKey.equals(checkNamespace.parsed.approveAuthority!)
+      );
+    }
+  } catch {
+    throw new Error(`Events pk incorrect or not found`);
+  }
+  if (!approverAuthority) throw "No approve authority found";
+
+  const transaction = new Transaction();
+
+  // TODO 1 per wallet 1 per etc.
+  const entryName = `${Math.random().toString(36).slice(2)}`;
+  const keypair = new Keypair();
+  await withApproveClaimRequest(
+    transaction,
+    connection,
+    new SignerWallet(approverAuthority),
+    {
+      namespaceName: ticketId,
+      entryName: entryName,
+      user: keypair.publicKey,
+      approveAuthority: approverAuthority?.publicKey,
+    }
+  );
+
+  console.log(
+    `Executing approve claim request transaction for ${transaction.instructions.length} tickets`
+  );
+  transaction.feePayer = approverAuthority.publicKey;
+  transaction.recentBlockhash = (
+    await connection.getRecentBlockhash("max")
+  ).blockhash;
+  const txid = await sendAndConfirmTransaction(connection, transaction, [
+    approverAuthority,
+  ]);
+
+  console.log(`Successfully executed transaction ${txid}`);
+  return [txid, keypair, approverAuthority.publicKey];
+};
+
+const notifyApproval = async (response: FirebaseResponse, claimKeys) => {
+  const event = await getEvent(response.eventId);
+  const ticket = await getTicket(response.ticketId);
+
+  if (response.approvalData?.type === "email") {
+    await sendEmail(
+      response.approvalData.value,
+      // TODO store companyconfig in event
+      approvalSuccessfulEmail(event, ticket.ticketName, [], "default")
+    );
+  }
+  throw "Unknown approval type";
 };

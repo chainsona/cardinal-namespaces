@@ -156,7 +156,8 @@ export const tryGetEvent = async (
   return eventsSnap.data() as FirebaseEvent;
 };
 
-export const getEvent = async (docId: string) => {
+export const getEvent = async (docId: string | null) => {
+  if (!docId) throw "Event docId invalid";
   const checkEvent = await tryGetEvent(docId);
   if (!checkEvent) throw `Event with id ${docId} not found`;
   return checkEvent;
@@ -174,7 +175,8 @@ export const tryGetEventTicket = async (
   }
 };
 
-export const getTicket = async (docId: string) => {
+export const getTicket = async (docId: string | null) => {
+  if (!docId) throw "Ticket docId invalid";
   const checkTicket = await tryGetEventTicket(docId);
   if (!checkTicket) throw `Ticket with id ${docId} not found`;
   return checkTicket;
