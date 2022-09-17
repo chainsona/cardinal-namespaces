@@ -140,8 +140,12 @@ const findTransactionSignedByUser = async (
     const transaction = await connection.getTransaction(
       confirmedSignatureInfo.signature
     );
+    const accountIndex = transaction?.transaction.message.accountKeys.findIndex(
+      (a) => a.equals(signerPublicKey)
+    );
     if (
-      transaction?.transaction.signatures.includes(signerPublicKey.toString())
+      accountIndex &&
+      transaction?.transaction.message.isAccountSigner(accountIndex)
     ) {
       return confirmedSignatureInfo;
     }
