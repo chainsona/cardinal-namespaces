@@ -1,164 +1,179 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { emptyWallet, tryGetAccount, tryPublicKey } from "@cardinal/common";
-import {
-  getNamespaceByName,
-  withApproveClaimRequest,
-} from "@cardinal/namespaces";
-import { utils } from "@project-serum/anchor";
-import { SignerWallet } from "@saberhq/solana-contrib";
+import { emptyWallet } from "@cardinal/common";
+import { getNamespaceByName } from "@cardinal/namespaces";
 import {
   Keypair,
   PublicKey,
-  sendAndConfirmTransaction,
+  SystemProgram,
   Transaction,
 } from "@solana/web3.js";
+import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
 
 import { connectionFor } from "../../common/connection";
 import {
   PAYMENT_MINTS_DECIMALS_MAPPING,
   withHandlePayment,
 } from "../../common/payments";
-import { sendEmail } from "../common";
-import { eventApproverKeys } from "../constants";
-import type { ApproveData } from "../firebase";
-import { tryGetEvent, tryGetEventTicket } from "../firebase";
-
-const BATCH_SIZE = 8;
+import { publicKeyFrom } from "../common";
+import { getApproveAuthority } from "../constants";
+import type { ApproveData, FirebaseResponse } from "../firebase";
+import {
+  authFirebase,
+  eventFirestore,
+  getEvent,
+  getPayerKeypair,
+  getTicket,
+} from "../firebase";
+import { EVENT_APPROVER_LAMPORTS } from "../ticketsConfirmTransaction/confirm";
 
 export async function approve(data: ApproveData): Promise<{
   status: number;
+  transactions?: string[];
   message?: string;
   error?: string;
 }> {
-  const checkTicket = await tryGetEventTicket(data.ticketId);
-  if (!checkTicket) {
-    return {
-      status: 400,
-      message: JSON.stringify({ message: "Ticket not found" }),
-    };
-  }
-  const checkEvent = await tryGetEvent(checkTicket.eventId);
-  if (!checkEvent) {
-    return {
-      status: 400,
-      message: JSON.stringify({ message: "Event for ticket not found" }),
-    };
-  }
-
-  const approverPublicKey = tryPublicKey(data.account);
-  if (!approverPublicKey) {
-    return {
-      status: 400,
-      message: `Invalid approver pubkey`,
-    };
-  }
-  const approverWallet = emptyWallet(approverPublicKey);
-
+  // 0. setup firebase
+  await authFirebase();
+  // 1. get ticket
+  const checkTicket = await getTicket(data.ticketId);
+  // 2. get event
+  const checkEvent = await getEvent(checkTicket.eventId);
+  // 3. get namespace
   const connection = connectionFor(checkEvent.environment);
-  const claimAmount = Number(data.amount);
-  const claimURLs: string[] = [];
-
-  const checkNamespace = await tryGetAccount(() =>
-    getNamespaceByName(connection, data.ticketId)
+  const checkNamespace = await getNamespaceByName(connection, data.ticketId);
+  // 4. get approver
+  const approverAuthority = getApproveAuthority(
+    checkNamespace.parsed.approveAuthority
   );
-  if (!checkNamespace?.parsed) {
-    return {
-      status: 400,
-      message: `No ticket namespace found`,
-    };
+  // 5. get user
+  const userPublicKey = publicKeyFrom(data.account, "Invalid user publicKey");
+  const userWallet = emptyWallet(userPublicKey);
+  // 6. get payer
+  let payerWallet = userWallet;
+  if (checkTicket.feePayer) {
+    payerWallet = await getPayerKeypair(checkTicket.feePayer);
   }
+  // 7. check amount
+  const amount = Number(data.amount);
+  if (isNaN(amount)) throw "Invalid supply provided";
 
-  let approverAuthority: Keypair | undefined;
-  try {
-    if (checkNamespace.parsed.approveAuthority) {
-      approverAuthority = Object.values(eventApproverKeys).find((v) =>
-        v.publicKey.equals(checkNamespace.parsed.approveAuthority!)
-      );
-    }
-  } catch {
-    throw `Events pk incorrect or not found`;
-  }
-
-  if (!approverAuthority) {
-    throw "No approve authority found";
-  }
-
-  let transaction = new Transaction();
-  for (let i = 0; i < claimAmount; i++) {
-    if (checkEvent.eventPaymentMint) {
+  const firebaseBatch = writeBatch(eventFirestore);
+  const signerKeypair = Keypair.generate();
+  const serializedTransactions: string[] = [];
+  for (let i = 0; i < amount; i++) {
+    const transaction = new Transaction();
+    const ticketPrice = Number(checkTicket.ticketPrice);
+    if (checkEvent.eventPaymentMint && ticketPrice > 0) {
       const paymentMint = new PublicKey(checkEvent.eventPaymentMint);
       if (!(paymentMint.toString() in PAYMENT_MINTS_DECIMALS_MAPPING)) {
         throw "Missing event payment mint decimals";
       }
       const mintDecimals =
         PAYMENT_MINTS_DECIMALS_MAPPING[paymentMint.toString()];
-      const ticketPrice = Number(checkTicket.ticketPrice);
       const amountToPay = ticketPrice * 10 ** mintDecimals;
       await withHandlePayment(
         transaction,
         connection,
         new PublicKey(checkEvent.creatorId),
-        approverWallet,
+        userWallet,
         new PublicKey(checkEvent.eventPaymentMint),
         amountToPay,
         mintDecimals
       );
     }
 
-    const entryName = `${Math.random().toString(36).slice(2)}`;
-    const keypair = new Keypair();
-    await withApproveClaimRequest(
-      transaction,
-      connection,
-      new SignerWallet(approverAuthority),
+    // Enough to pay for email
+    transaction.instructions.push(
+      SystemProgram.transfer({
+        fromPubkey: payerWallet.publicKey,
+        toPubkey: approverAuthority.publicKey,
+        lamports: EVENT_APPROVER_LAMPORTS,
+      })
+    );
+
+    const firstInstruction = transaction.instructions[0];
+    transaction.instructions = [
       {
-        namespaceName: data.ticketId,
-        entryName: entryName,
-        user: keypair.publicKey,
-        approveAuthority: approverAuthority.publicKey,
-      }
-    );
-    if (
-      transaction.instructions.length === BATCH_SIZE ||
-      i === claimAmount - 1
-    ) {
-      console.log(
-        `Executing approve claim request transaction for ${transaction.instructions.length} tickets`
-      );
-      transaction.feePayer = approverAuthority.publicKey;
-      transaction.recentBlockhash = (
-        await connection.getRecentBlockhash("max")
-      ).blockhash;
-      const txid = await sendAndConfirmTransaction(connection, transaction, [
-        approverAuthority,
-      ]);
-      console.log(`Successfully executed transaction ${txid}`);
-      transaction = new Transaction();
+        ...firstInstruction,
+        keys: [
+          ...firstInstruction.keys,
+          ...(checkTicket.additionalSigners || []).map((s) => ({
+            pubkey: new PublicKey(s),
+            isSigner: true,
+            isWritable: false,
+          })),
+          {
+            pubkey: signerKeypair.publicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: userPublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          ...(approverAuthority
+            ? [
+                {
+                  pubkey: approverAuthority.publicKey,
+                  isSigner: true,
+                  isWritable: false,
+                },
+              ]
+            : []),
+        ],
+      },
+      ...transaction.instructions.slice(1),
+    ];
+
+    transaction.feePayer = payerWallet.publicKey;
+    transaction.recentBlockhash = (
+      await connection.getRecentBlockhash("max")
+    ).blockhash;
+    approverAuthority && transaction.partialSign(approverAuthority);
+    transaction.partialSign(signerKeypair);
+    if (!payerWallet.publicKey.equals(userWallet.publicKey)) {
+      await payerWallet.signTransaction(transaction);
     }
-    const claimURL = `https://events.cardinal.so/${data.companyId}/${
-      checkEvent.shortLink
-    }/claim?otp=${utils.bytes.bs58.encode(keypair.secretKey)}&ticketId=${
-      data.ticketId
-    }&entryName=${entryName}&cluster=${checkEvent.environment}`;
-    claimURLs.push(claimURL);
-    console.log(
-      `Successfuly approved claim URLs by ${data.account.toString()}: ${claimURL}`
+    const copiedClaimTx = Transaction.from(
+      transaction.serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
     );
+    const claimSerialized = copiedClaimTx
+      .serialize({
+        verifySignatures: false,
+        requireAllSignatures: false,
+      })
+      .toString("base64");
+    serializedTransactions.push(claimSerialized);
+
+    ////////////// UPDATE RESPONSES //////////////
+    const responseRef = doc(collection(eventFirestore, "responses"));
+    firebaseBatch.set(responseRef, {
+      eventId: checkEvent.docId,
+      ticketId: data.ticketId,
+      timestamp: Timestamp.fromDate(new Date()),
+      environment: checkEvent.environment,
+      payerAddress: payerWallet.publicKey.toString(),
+      claimerAddress: null,
+      ticketAmount: 1,
+      formResponse: null,
+      payerTransactionId: null,
+      payerSignerPubkey: signerKeypair.publicKey.toString(),
+      approvalData: { type: "email", value: data.email },
+      approvalTransactionId: null,
+      approvalSignerPubkey: null,
+      claimTransactionId: null,
+      claimSignerPubkey: null,
+    } as FirebaseResponse);
   }
 
-  const eventURL = `ttps://identity.cardinal.so/${data.companyId}/${checkEvent.shortLink}`;
-  await sendEmail(
-    data.email,
-    checkEvent.docId,
-    checkEvent.eventName,
-    checkTicket.ticketName,
-    eventURL,
-    claimURLs
-  );
-  console.log(`Successfuly sent email to user: ${data.email}`);
+  await firebaseBatch.commit();
+
   return {
     status: 200,
-    message: JSON.stringify({ message: "Applicant Approval succeeded" }),
+    transactions: serializedTransactions,
+    message: `Built transaction to pay for tickets`,
   };
 }

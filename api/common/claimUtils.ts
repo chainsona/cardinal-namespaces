@@ -1,4 +1,4 @@
-import { getOwner } from "@cardinal/common";
+import { emptyWallet, getOwner } from "@cardinal/common";
 import {
   deprecated,
   tryGetAta,
@@ -34,14 +34,14 @@ export async function withInitAndClaim(
   await withInitNameEntry(
     transaction,
     connection,
-    wallet,
+    payer ? emptyWallet(payer) : wallet,
     namespaceName,
     entryName
   );
   await withInitNameEntryMint(
     transaction,
     connection,
-    wallet,
+    payer ? emptyWallet(payer) : wallet,
     namespaceName,
     entryName,
     mintKeypair

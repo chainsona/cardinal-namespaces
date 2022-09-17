@@ -1,8 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { utils } from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
+import { Keypair } from "@solana/web3.js";
 import { initializeApp } from "firebase/app";
-import type { DocumentReference, Firestore } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import type {
+  DocumentReference,
+  Firestore,
+  Timestamp,
+} from "firebase/firestore";
 import {
   collection,
   doc,
@@ -41,6 +46,14 @@ export const checkUniqueEventShortLink = async (
     return true;
   }
   return false;
+};
+
+export const getPayerRef = (payerDocumentId?: string): DocumentReference => {
+  if (payerDocumentId) {
+    return doc(eventFirestore, "payers", payerDocumentId);
+  } else {
+    return doc(collection(eventFirestore, "payers"));
+  }
 };
 
 export const getEventRef = (eventDocumentId?: string): DocumentReference => {
@@ -140,6 +153,13 @@ export const tryGetEvent = async (
   return eventsSnap.data() as FirebaseEvent;
 };
 
+export const getEvent = async (docId: string | null) => {
+  if (!docId) throw "Event docId invalid";
+  const checkEvent = await tryGetEvent(docId);
+  if (!checkEvent) throw `Event with id ${docId} not found`;
+  return checkEvent;
+};
+
 export const tryGetEventTicket = async (
   ticketDocId: string
 ): Promise<FirebaseTicket | undefined> => {
@@ -152,6 +172,40 @@ export const tryGetEventTicket = async (
   }
 };
 
+export const getTicket = async (docId: string | null) => {
+  if (!docId) throw "Ticket docId invalid";
+  const checkTicket = await tryGetEventTicket(docId);
+  if (!checkTicket) throw `Ticket with id ${docId} not found`;
+  return checkTicket;
+};
+
+export const tryGetPayer = async (
+  docId: string
+): Promise<FirebasePayer | undefined> => {
+  const payerRef = getPayerRef(docId);
+  const payerSnap = await getDoc(payerRef);
+  if (payerSnap.exists()) {
+    return payerSnap.data() as FirebasePayer;
+  } else {
+    return undefined;
+  }
+};
+
+export const getPayerKeypair = async (docId: string) => {
+  const checkPayer = await tryGetPayer(docId);
+  if (!checkPayer?.secretKey) throw "Missing secret key";
+  return new SignerWallet(
+    Keypair.fromSecretKey(utils.bytes.bs58.decode(checkPayer?.secretKey))
+  );
+};
+
+export const authFirebase = async () => {
+  const auth = getAuth();
+  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
+  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
+  await signInWithEmailAndPassword(auth, email, password);
+};
+
 export const getEventBannerImage = (eventDocumentId: string) => {
   return `https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/banners%2F${eventDocumentId}.png?alt=media`;
 };
@@ -159,6 +213,7 @@ export const getEventBannerImage = (eventDocumentId: string) => {
 export type FirebaseEvent = {
   creatorId: string;
   docId: string;
+  config: string | null;
   environment: string;
   eventDescription: string;
   eventEndTime: string;
@@ -166,7 +221,7 @@ export type FirebaseEvent = {
   eventName: string;
   eventStartTime: string;
   shortLink: string;
-  eventBannerImage: string;
+  eventBannerImage: string | null;
   eventPaymentMint: string;
 };
 
@@ -182,7 +237,34 @@ export type FirebaseTicket = {
   feePayer?: string;
 };
 
+export type FirebasePayer = {
+  docId: string;
+  name: string;
+  publicKey: string;
+  secretKey: string;
+  authority: string;
+};
+
+export type FirebaseResponse = {
+  eventId: string | null;
+  ticketId: string | null;
+  environment: string | null;
+  timestamp: Timestamp | null;
+  payerAddress: string | null;
+  claimerAddress: string | null;
+  ticketAmount: number | null;
+  formResponse: FormResponse[] | null;
+  payerTransactionId: string | null;
+  payerSignerPubkey: string | null;
+  approvalData: { type: "direct" | "email"; value: string } | null;
+  approvalTransactionId: string | null;
+  approvalSignerPubkey: string | null;
+  claimTransactionId: string | null;
+  claimSignerPubkey: string | null;
+};
+
 export type EventData = {
+  config?: string | null;
   shortLink: string;
   eventName: string;
   eventLocation: string;
@@ -191,7 +273,7 @@ export type EventData = {
   eventEndTime: string;
   creatorId: string;
   environment: string;
-  eventBannerImage: string;
+  eventBannerImage: string | null;
   eventQuestions?: string[];
 };
 
@@ -206,6 +288,7 @@ export type TicketCreationData = {
   creator: string;
   ticketImage: string;
   ticketMetadata: string;
+  feePayer?: string;
   additionalSigners?: string[];
 };
 
@@ -215,14 +298,15 @@ export type ApproveData = {
   ticketId: string;
   email: string;
   amount: string;
-  ticketName: string;
-  companyId: string;
 };
+
+export type FormResponse = { question: string; answer: string };
 
 export type ClaimData = {
   account: string;
   ticketId: string;
   amount: string;
+  formResponse?: FormResponse[];
 };
 
 export type OtpClaimData = {
@@ -236,5 +320,11 @@ export type ClaimResponseData = {
   account: string;
   eventId: string;
   amount: number;
-  formResponse?: { question: string; answer: string }[];
+  formResponse?: FormResponse[];
+};
+
+export type UpdateResponseData = {
+  transactionDocumentIds: string[];
+  transactionIds: string[];
+  updateSignerPrivateKey: string;
 };

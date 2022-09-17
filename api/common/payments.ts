@@ -8,12 +8,13 @@ import * as splToken from "@solana/spl-token";
 import type { Connection } from "@solana/web3.js";
 import { PublicKey, Transaction } from "@solana/web3.js";
 
-export const CARDINAL_FEE = 0.5;
-export const CARDINAL_PAYMENT_ADDRESS = new PublicKey(
+export const FEE_COLLECTOR_SHARE = 0.05;
+export const FEE_COLLECTOR_ADDRESS = new PublicKey(
   "cpmaMZyBQiPxpeuxNsQhW7N8z1o9yaNdLgiPhWGUEiX"
 );
 export const WRAPPED_SOL_ADDRESS =
   "So11111111111111111111111111111111111111112";
+
 export const PAYMENT_MINTS_DECIMALS_MAPPING: { [key: string]: number } = {
   So11111111111111111111111111111111111111112: 9,
 };
@@ -37,7 +38,7 @@ export const withHandlePayment = async (
     } catch (e) {
       throw "Claimer has no payment mint funds";
     }
-    const claimeATA = await withFindOrInitAssociatedTokenAccount(
+    const claimerATA = await withFindOrInitAssociatedTokenAccount(
       new Transaction(),
       connection,
       paymentMint,
@@ -46,11 +47,11 @@ export const withHandlePayment = async (
       true
     );
 
-    const cardinalATA = await withFindOrInitAssociatedTokenAccount(
+    const feeCollectorATA = await withFindOrInitAssociatedTokenAccount(
       transaction,
       connection,
       paymentMint,
-      CARDINAL_PAYMENT_ADDRESS,
+      FEE_COLLECTOR_ADDRESS,
       claimerWallet.publicKey,
       true
     );
@@ -65,11 +66,11 @@ export const withHandlePayment = async (
     );
 
     // creator amount
-    const creatorAmount = amountToPay * (1 - CARDINAL_FEE);
+    const creatorAmount = amountToPay * (1 - FEE_COLLECTOR_SHARE);
     transaction.instructions.push(
       splToken.Token.createTransferCheckedInstruction(
         splToken.TOKEN_PROGRAM_ID,
-        claimeATA,
+        claimerATA,
         paymentMint,
         creatorATA,
         claimerWallet.publicKey,
@@ -83,9 +84,9 @@ export const withHandlePayment = async (
     transaction.instructions.push(
       splToken.Token.createTransferCheckedInstruction(
         splToken.TOKEN_PROGRAM_ID,
-        claimeATA,
+        claimerATA,
         paymentMint,
-        cardinalATA,
+        feeCollectorATA,
         claimerWallet.publicKey,
         [],
         amountToPay - creatorAmount,

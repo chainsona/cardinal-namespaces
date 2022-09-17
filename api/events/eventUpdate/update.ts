@@ -1,10 +1,14 @@
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { updateDoc } from "firebase/firestore";
 import { ref, uploadString } from "firebase/storage";
 
 import { WRAPPED_SOL_ADDRESS } from "../../common/payments";
-import type { EventData } from "../firebase";
-import { eventStorage, getEventRef, tryGetEvent } from "../firebase";
+import type { EventData, FirebaseEvent } from "../firebase";
+import {
+  authFirebase,
+  eventStorage,
+  getEventRef,
+  tryGetEvent,
+} from "../firebase";
 
 export async function updateEvent(
   eventId: string,
@@ -27,15 +31,12 @@ export async function updateEvent(
     throw "Need a banner image for event creation";
   }
 
-  const auth = getAuth();
-  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
-  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
-  await signInWithEmailAndPassword(auth, email, password);
-
+  await authFirebase();
   const eventRef = getEventRef(checkEvent.docId);
   await updateDoc(eventRef, {
     docId: eventRef.id,
     shortLink: eventData.shortLink,
+    config: eventData.config ?? null,
     eventName: eventData.eventName,
     eventLocation: eventData.eventLocation,
     eventDescription: eventData.eventDescription,
@@ -45,7 +46,8 @@ export async function updateEvent(
     environment: eventData.environment,
     eventPaymentMint: WRAPPED_SOL_ADDRESS,
     eventQuestions: eventData.eventQuestions ?? [],
-  });
+    eventBannerImage: null,
+  } as FirebaseEvent);
 
   if (eventData.eventBannerImage && eventData.eventBannerImage.length !== 0) {
     const eventImageRef = ref(eventStorage, `banners/${eventRef.id}.png`);
