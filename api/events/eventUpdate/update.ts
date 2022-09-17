@@ -36,7 +36,7 @@ export async function updateEvent(
   await updateDoc(eventRef, {
     docId: eventRef.id,
     shortLink: eventData.shortLink,
-    config: eventData.config,
+    config: eventData.config ?? null,
     eventName: eventData.eventName,
     eventLocation: eventData.eventLocation,
     eventDescription: eventData.eventDescription,

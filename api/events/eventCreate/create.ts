@@ -23,7 +23,7 @@ export async function createEvent(eventData: EventData): Promise<{
   await setDoc(eventRef, {
     docId: eventRef.id,
     shortLink: eventData.shortLink,
-    config: eventData.config,
+    config: eventData.config ?? null,
     eventName: eventData.eventName,
     eventLocation: eventData.eventLocation,
     eventDescription: eventData.eventDescription,

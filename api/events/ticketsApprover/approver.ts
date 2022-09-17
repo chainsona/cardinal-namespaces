@@ -31,6 +31,8 @@ export async function approve(data: ApproveData): Promise<{
   message?: string;
   error?: string;
 }> {
+  // 0. setup firebase
+  await authFirebase();
   // 1. get ticket
   const checkTicket = await getTicket(data.ticketId);
   // 2. get event
@@ -53,10 +55,8 @@ export async function approve(data: ApproveData): Promise<{
   // 7. check amount
   const amount = Number(data.amount);
   if (isNaN(amount)) throw "Invalid supply provided";
-  // 8. setup firebase
-  await authFirebase();
-  const firebaseBatch = writeBatch(eventFirestore);
 
+  const firebaseBatch = writeBatch(eventFirestore);
   const signerKeypair = Keypair.generate();
   const serializedTransactions: string[] = [];
   for (let i = 0; i < amount; i++) {
