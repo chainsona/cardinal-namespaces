@@ -1,10 +1,10 @@
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { setDoc } from "firebase/firestore";
 import { ref, uploadString } from "firebase/storage";
 
 import { WRAPPED_SOL_ADDRESS } from "../../common/payments";
-import type { EventData } from "../firebase";
+import type { EventData, FirebaseEvent } from "../firebase";
 import {
+  authFirebase,
   eventStorage,
   getEventRef,
   tryGetEventFromShortlink,
@@ -16,19 +16,14 @@ export async function createEvent(eventData: EventData): Promise<{
   error?: string;
 }> {
   const checkEvent = await tryGetEventFromShortlink(eventData.shortLink);
-  if (checkEvent) {
-    throw "Event short link already taken";
-  }
+  if (checkEvent) throw "Event short link already taken";
 
-  const auth = getAuth();
-  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
-  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
-  await signInWithEmailAndPassword(auth, email, password);
-
+  await authFirebase();
   const eventRef = getEventRef();
   await setDoc(eventRef, {
     docId: eventRef.id,
     shortLink: eventData.shortLink,
+    config: eventData.config,
     eventName: eventData.eventName,
     eventLocation: eventData.eventLocation,
     eventDescription: eventData.eventDescription,
@@ -38,7 +33,8 @@ export async function createEvent(eventData: EventData): Promise<{
     environment: eventData.environment,
     eventPaymentMint: WRAPPED_SOL_ADDRESS,
     eventQuestions: eventData.eventQuestions ?? [],
-  });
+    eventBannerImage: null,
+  } as FirebaseEvent);
   if (eventData.eventBannerImage && eventData.eventBannerImage.length !== 0) {
     const eventImageRef = ref(eventStorage, `banners/${eventRef.id}.png`);
     await uploadString(eventImageRef, eventData.eventBannerImage, "data_url");

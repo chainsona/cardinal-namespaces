@@ -224,7 +224,7 @@ export type FirebaseEvent = {
   eventName: string;
   eventStartTime: string;
   shortLink: string;
-  eventBannerImage: string;
+  eventBannerImage: string | null;
   eventPaymentMint: string;
 };
 
@@ -267,6 +267,7 @@ export type FirebaseResponse = {
 };
 
 export type EventData = {
+  config?: string | null;
   shortLink: string;
   eventName: string;
   eventLocation: string;
@@ -275,7 +276,7 @@ export type EventData = {
   eventEndTime: string;
   creatorId: string;
   environment: string;
-  eventBannerImage: string;
+  eventBannerImage: string | null;
   eventQuestions?: string[];
 };
 
