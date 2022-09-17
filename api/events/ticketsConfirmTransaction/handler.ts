@@ -1,7 +1,7 @@
 import { confirmTransactions } from "./confirm";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-module.exports.invalidate = async (event: any) => {
+module.exports.handle = async (event: any) => {
   console.log(
     `--------------- Checking for unconfirmed transactions on ${new Date().toLocaleString()}  ---------------`
   );
