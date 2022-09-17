@@ -231,6 +231,7 @@ const notifyApproval = async (
         event.config
       )
     );
+    return;
   }
   throw "Unknown approval type";
 };
