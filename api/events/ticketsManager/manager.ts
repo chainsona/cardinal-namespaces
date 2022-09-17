@@ -1,21 +1,21 @@
-import { emptyWallet, tryGetAccount, tryPublicKey } from "@cardinal/common";
+import { emptyWallet, tryGetAccount } from "@cardinal/common";
 import {
   getNamespaceByName,
   withCreateNamespace,
   withUpdateNamespace,
 } from "@cardinal/namespaces";
 import { Transaction } from "@solana/web3.js";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { setDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadString } from "firebase/storage";
 
 import { connectionFor } from "../../common/connection";
+import { publicKeyFrom } from "../common";
 import { eventApproverKeys, EventApproverKind } from "../constants";
 import type { TicketCreationData } from "../firebase";
 import {
+  authFirebase,
   eventStorage,
   getTicketRef,
-  tryGetEvent,
   tryGetEventTicketByDocId,
   tryGetPayer,
 } from "../firebase";
@@ -36,29 +36,13 @@ export async function createOrUpdate(
     };
   }
 
-  const auth = getAuth();
-  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
-  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
-  await signInWithEmailAndPassword(auth, email, password);
-
+  await authFirebase();
   for (const ticket of ticketCreationDatas) {
     const connection = connectionFor(ticket.environment);
-    const creatorPublickKey = tryPublicKey(ticket.creator);
-    const eventId = ticketCreationDatas[0].eventId;
-    const checkEvent = await tryGetEvent(eventId);
-    if (!checkEvent) {
-      return {
-        status: 400,
-        message: `No event found for tickets`,
-      };
-    }
-
-    if (!creatorPublickKey) {
-      return {
-        status: 400,
-        message: `Invalid creator pubkey`,
-      };
-    }
+    const creatorPublickKey = publicKeyFrom(
+      ticket.creator,
+      "Invalid creator pubkey"
+    );
     const creatorWallet = emptyWallet(creatorPublickKey);
     const checkTicket = await tryGetEventTicketByDocId(
       ticket.eventId,
@@ -113,10 +97,12 @@ export async function createOrUpdate(
           updateAuthority: creatorWallet.publicKey,
           rentAuthority: creatorWallet.publicKey,
           approveAuthority: eventApproverKeys[EventApproverKind.None].publicKey,
+          schema: checkNamespace.parsed.schema,
           paymentAmountDaily: checkNamespace.parsed.paymentAmountDaily,
           paymentMint: checkNamespace.parsed.paymentMint,
           minRentalSeconds: checkNamespace.parsed.minRentalSeconds,
           transferableEntries: checkNamespace.parsed.transferableEntries,
+          invalidationType: checkNamespace.parsed.invalidationType,
           maxRentalSeconds: checkNamespace.parsed.maxRentalSeconds ?? undefined,
           limit: supply,
           maxExpiration: checkNamespace.parsed.maxExpiration ?? undefined,
