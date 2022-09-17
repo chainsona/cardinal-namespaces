@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { utils } from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
 import { Keypair } from "@solana/web3.js";
