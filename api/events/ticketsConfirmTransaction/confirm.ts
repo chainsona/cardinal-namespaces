@@ -63,6 +63,7 @@ export const confirmTransactions = async () => {
           where(confirmTransactionInfo.signerPubkey, "!=", null)
         )
       );
+      console.log(confirmTransactionInfo, queryResults.docs.length);
       const currentTimestamp = Date.now();
       for (const doc of queryResults.docs) {
         const response = doc.data() as FirebaseResponse;
@@ -106,6 +107,7 @@ export const confirmTransactions = async () => {
       where("approvalSignerPubkey", "==", null)
     )
   );
+  console.log("Approvals", queryResults.docs.length);
 
   for (const doc of queryResults.docs) {
     const response = doc.data() as FirebaseResponse;
@@ -126,7 +128,9 @@ const findTransactionSignedByUser = async (
 ): Promise<ConfirmedSignatureInfo | null> => {
   const signerPublicKey = tryPublicKey(signerString);
   if (!signerPublicKey) throw "Invalid signer public key uploaded to firebase";
-  const connection = connectionFor(environment);
+  const connection = connectionFor(environment, "mainnet-beta", {
+    commitment: "finalized",
+  });
   const confirmedSignatureInfos = await connection.getSignaturesForAddress(
     signerPublicKey,
     undefined,
@@ -142,6 +146,7 @@ const findTransactionSignedByUser = async (
       return confirmedSignatureInfo;
     }
   }
+  console.log(`Failed to find transaction for ${signerString ?? ""}`);
   return null;
 };
 
