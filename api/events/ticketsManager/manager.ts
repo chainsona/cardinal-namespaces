@@ -5,8 +5,6 @@ import {
   withUpdateNamespace,
 } from "@cardinal/namespaces";
 import { Transaction } from "@solana/web3.js";
-import { setDoc, updateDoc } from "firebase/firestore";
-import { ref, uploadString } from "firebase/storage";
 
 import { connectionFor } from "../../common/connection";
 import { publicKeyFrom } from "../common";
@@ -135,7 +133,7 @@ export async function createOrUpdate(
       }
     }
     if (!checkTicket) {
-      await setDoc(ticketRef, {
+      await ticketRef.set({
         docId: ticketRef.id,
         eventId: ticket.eventId,
         ticketShortLink: "",
@@ -147,7 +145,7 @@ export async function createOrUpdate(
         additionalSigners: ticket.additionalSigners ?? null,
       } as FirebaseTicket);
     } else {
-      await updateDoc(ticketRef, {
+      await ticketRef.update({
         docId: ticketRef.id,
         eventId: ticket.eventId,
         ticketShortLink: "",
@@ -165,12 +163,13 @@ export async function createOrUpdate(
       ticket.ticketImage.length !== 0 &&
       ticket.ticketImage.substring(0, 5) === "data:"
     ) {
-      const ticketImageRef = ref(
-        eventStorage,
-        `tickets/${ticketRef.id}/image.png`
-      );
-      console.log("uploading ticket image");
-      await uploadString(ticketImageRef, ticket.ticketImage, "data_url");
+      await eventStorage.bucket("tickets").upload(ticket.ticketImage);
+      // const ticketImageRef = ref(
+      //   eventStorage,
+      //   `tickets/${ticketRef.id}/image.png`
+      // );
+      // console.log("uploading ticket image");
+      // await uploadString(ticketImageRef, ticket.ticketImage, "data_url");
       console.log("uploaded ticket image");
     }
 
@@ -179,12 +178,13 @@ export async function createOrUpdate(
       ticket.ticketMetadata.length !== 0 &&
       ticket.ticketMetadata.substring(0, 5) === "data:"
     ) {
-      const ticketMetadataRef = ref(
-        eventStorage,
-        `tickets/${ticketRef.id}/metadata.json`
-      );
-      console.log("uploading ticket metadata");
-      await uploadString(ticketMetadataRef, ticket.ticketMetadata, "data_url");
+      await eventStorage.bucket("tickets").upload(ticket.ticketMetadata);
+      // const ticketMetadataRef = ref(
+      //   eventStorage,
+      //   `tickets/${ticketRef.id}/metadata.json`
+      // );
+      // await uploadString(ticketMetadataRef, ticket.ticketMetadata, "data_url");
+      console.log("uploaded ticket metadata");
     }
   }
 

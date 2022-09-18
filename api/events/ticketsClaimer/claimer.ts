@@ -4,7 +4,7 @@ import {
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 
 import { withInitAndClaim } from "../../common/claimUtils";
 import { connectionFor } from "../../common/connection";
@@ -17,10 +17,11 @@ import { getApproveAuthority } from "../constants";
 import type { ClaimData, FirebaseResponse } from "../firebase";
 import {
   authFirebase,
-  eventFirestore,
   getEvent,
   getPayerKeypair,
+  getResponseRef,
   getTicket,
+  getWriteBatch,
 } from "../firebase";
 
 export async function claim(data: ClaimData): Promise<{
@@ -54,7 +55,7 @@ export async function claim(data: ClaimData): Promise<{
   const amount = Number(data.amount);
   if (isNaN(amount)) throw "Invalid supply provided";
 
-  const firebaseBatch = writeBatch(eventFirestore);
+  const firebaseBatch = getWriteBatch();
   const signerKeypair = Keypair.generate();
   const serializedTransactions: string[] = [];
   for (let i = 0; i < amount; i++) {
@@ -143,7 +144,7 @@ export async function claim(data: ClaimData): Promise<{
     );
 
     ////////////// UPDATE RESPONSES //////////////
-    const responseRef = doc(collection(eventFirestore, "responses"));
+    const responseRef = getResponseRef();
     firebaseBatch.set(responseRef, {
       eventId: checkEvent.docId,
       ticketId: data.ticketId,
