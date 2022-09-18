@@ -83,7 +83,7 @@ export const confirmTransactions = async () => {
             await updateDoc(doc.ref, {
               [confirmTransactionInfo.signerPubkey]: null,
             });
-          } else {
+          } else if (response.approvalData?.type !== "email") {
             // Look for valid transaction with signerPubkey
             const confirmedSignatureInfo = await findTransactionSignedByUser(
               response[confirmTransactionInfo.signerPubkey],
@@ -122,6 +122,7 @@ export const confirmTransactions = async () => {
   for (const doc of queryResults.docs) {
     try {
       const keypair = Keypair.generate();
+      // transaction to set approvalSignerPubkey
       await runTransaction(eventFirestore, async (transaction) => {
         const responseDoc = await transaction.get(doc.ref);
         const response = responseDoc.data() as FirebaseResponse;
@@ -132,10 +133,12 @@ export const confirmTransactions = async () => {
           approvalSignerPubkey: keypair.publicKey.toString(),
         });
       });
+      // only 1 should make it past this block
       const response = doc.data() as FirebaseResponse;
       if (response.approvalSignerPubkey || response.approvalTransactionId) {
         throw "[error] response already approved and notified";
       }
+      // this can actually confirm and error which will take 2 extra minutes to reset and try to send email again
       const { txid, entryName } = await sendApproveTransaction(
         response,
         keypair,
