@@ -14,6 +14,7 @@ import {
   collection,
   getDocs,
   query,
+  runTransaction,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -68,34 +69,38 @@ export const confirmTransactions = async () => {
       );
       const currentTimestamp = Date.now();
       for (const doc of queryResults.docs) {
-        const response = doc.data() as FirebaseResponse;
-        console.log(`> Response, info`, response, confirmTransactionInfo);
+        try {
+          const response = doc.data() as FirebaseResponse;
+          console.log(`> Response, info`, response, confirmTransactionInfo);
 
-        if (!response.timestamp) throw "Invalid timestamp";
-        if (
-          // Expired transaction signerPubkey
-          (currentTimestamp - response.timestamp.toMillis()) / 1000 >
-          RESPONSE_TRANSACTION_EXPIRATION_SECONDS
-        ) {
-          await authFirebase();
-          await updateDoc(doc.ref, {
-            [confirmTransactionInfo.signerPubkey]: null,
-          });
-        } else {
-          // Look for valid transaction with signerPubkey
-          const confirmedSignatureInfo = await findTransactionSignedByUser(
-            response[confirmTransactionInfo.signerPubkey],
-            response.environment
-          );
-          if (!confirmedSignatureInfo) throw "Transaction not found";
-          await authFirebase();
-          await updateDoc(doc.ref, {
-            [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
-          });
+          if (!response.timestamp) throw "Invalid timestamp";
+          if (
+            // Expired transaction signerPubkey
+            (currentTimestamp - response.timestamp.toMillis()) / 1000 >
+            RESPONSE_TRANSACTION_EXPIRATION_SECONDS
+          ) {
+            await authFirebase();
+            await updateDoc(doc.ref, {
+              [confirmTransactionInfo.signerPubkey]: null,
+            });
+          } else if (response.approvalData?.type !== "email") {
+            // Look for valid transaction with signerPubkey
+            const confirmedSignatureInfo = await findTransactionSignedByUser(
+              response[confirmTransactionInfo.signerPubkey],
+              response.environment
+            );
+            if (!confirmedSignatureInfo) throw "Transaction not found";
+            await authFirebase();
+            await updateDoc(doc.ref, {
+              [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
+            });
+          }
+        } catch (e) {
+          console.log("[error] failed to confirm transaction response", e);
         }
       }
     } catch (e) {
-      console.log("Failed to confirm transaction responses in Firebase: ", e);
+      console.log("[error] failed to find transactions", e);
     }
   }
 
@@ -111,16 +116,34 @@ export const confirmTransactions = async () => {
   );
   console.log("> Approvals", queryResults.docs.length);
 
-  for (const doc of queryResults.docs) {
-    const response = doc.data() as FirebaseResponse;
+  if (queryResults.docs.length > 0) {
     await authFirebase();
-    const { txid, keypair, approveAuthority, entryName } =
-      await sendApproveTransaction(response, response.environment);
-    await notifyApproval(response, keypair, entryName);
-    await updateDoc(doc.ref, {
-      approvalTransactionId: txid,
-      approvalSignerPubkey: approveAuthority.toString(),
-    });
+  }
+  for (const doc of queryResults.docs) {
+    try {
+      // transaction to set approvalSignerPubkey
+      await runTransaction(eventFirestore, async (transaction) => {
+        const keypair = Keypair.generate();
+        const responseDoc = await transaction.get(doc.ref);
+        const response = responseDoc.data() as FirebaseResponse;
+        if (response.approvalSignerPubkey) {
+          throw "[error] response already being approved and notified";
+        }
+        // this can actually confirm and error
+        const { txid, entryName } = await sendApproveTransaction(
+          response,
+          keypair,
+          response.environment
+        );
+        await notifyApproval(response, keypair, entryName);
+        await updateDoc(responseDoc.ref, {
+          approvalSignerPubkey: keypair.publicKey.toString(),
+          approvalTransactionId: txid,
+        });
+      });
+    } catch (e) {
+      console.log("[error] Failed to run send transaction", e);
+    }
   }
 };
 
@@ -158,6 +181,7 @@ const findTransactionSignedByUser = async (
 
 const sendApproveTransaction = async (
   response: FirebaseResponse,
+  keypair: Keypair,
   environment: string | null
 ): Promise<{
   txid: string;
@@ -167,6 +191,8 @@ const sendApproveTransaction = async (
 }> => {
   const ticketId = response.ticketId;
   if (!ticketId) throw "[error] Response missing ticketId";
+  if (!response.payerTransactionId)
+    throw "[error] Response missing payer transaction";
   const connection = connectionFor(environment ?? null);
   const checkNamespace = await getNamespaceByName(connection, ticketId);
   const approveAuthority = getApproveAuthority(
@@ -175,8 +201,9 @@ const sendApproveTransaction = async (
   const transaction = new Transaction();
 
   // TODO 1 per wallet 1 per etc.
-  const entryName = `${Math.random().toString(36).slice(2)}`;
-  const keypair = new Keypair();
+  // user payer transaction ID this will overwrite existing claim request so only most recent is valid
+  // const entryName = `${Math.random().toString(36).slice(2)}`;
+  const entryName = response.payerTransactionId?.slice(0, 32);
   await withApproveClaimRequest(
     transaction,
     connection,
