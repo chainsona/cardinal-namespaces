@@ -121,32 +121,25 @@ export const confirmTransactions = async () => {
   }
   for (const doc of queryResults.docs) {
     try {
-      const keypair = Keypair.generate();
       // transaction to set approvalSignerPubkey
       await runTransaction(eventFirestore, async (transaction) => {
+        const keypair = Keypair.generate();
         const responseDoc = await transaction.get(doc.ref);
         const response = responseDoc.data() as FirebaseResponse;
         if (response.approvalSignerPubkey) {
           throw "[error] response already being approved and notified";
         }
-        transaction.update(responseDoc.ref, {
+        // this can actually confirm and error
+        const { txid, entryName } = await sendApproveTransaction(
+          response,
+          keypair,
+          response.environment
+        );
+        await notifyApproval(response, keypair, entryName);
+        await updateDoc(responseDoc.ref, {
           approvalSignerPubkey: keypair.publicKey.toString(),
+          approvalTransactionId: txid,
         });
-      });
-      // only 1 should make it past this block
-      const response = doc.data() as FirebaseResponse;
-      if (response.approvalSignerPubkey || response.approvalTransactionId) {
-        throw "[error] response already approved and notified";
-      }
-      // this can actually confirm and error which will take 2 extra minutes to reset and try to send email again
-      const { txid, entryName } = await sendApproveTransaction(
-        response,
-        keypair,
-        response.environment
-      );
-      await notifyApproval(response, keypair, entryName);
-      await updateDoc(doc.ref, {
-        approvalTransactionId: txid,
       });
     } catch (e) {
       console.log("[error] Failed to run send transaction", e);
