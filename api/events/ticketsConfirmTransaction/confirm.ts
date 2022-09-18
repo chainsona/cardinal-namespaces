@@ -138,7 +138,7 @@ export const confirmTransactions = async () => {
           response.environment
         );
         await notifyApproval(response, keypair, entryName);
-        await updateDoc(responseDoc.ref, {
+        transaction.update(responseDoc.ref, {
           approvalSignerPubkey: keypair.publicKey.toString(),
           approvalTransactionId: txid,
         });
