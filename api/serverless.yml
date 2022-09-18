@@ -261,6 +261,8 @@ functions:
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
       EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
       EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
+      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
+      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve/claim
