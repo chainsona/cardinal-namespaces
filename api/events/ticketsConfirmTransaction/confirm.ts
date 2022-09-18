@@ -73,7 +73,7 @@ export const confirmTransactions = async () => {
       for (const doc of queryResults.docs) {
         try {
           const response = doc.data() as FirebaseResponse;
-          console.log(`> Response, info`, response);
+          console.log(`> Response`, response);
 
           if (!response.timestamp) throw "Invalid timestamp";
           if (
