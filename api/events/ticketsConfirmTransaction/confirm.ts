@@ -69,34 +69,38 @@ export const confirmTransactions = async () => {
       );
       const currentTimestamp = Date.now();
       for (const doc of queryResults.docs) {
-        const response = doc.data() as FirebaseResponse;
-        console.log(`> Response, info`, response, confirmTransactionInfo);
+        try {
+          const response = doc.data() as FirebaseResponse;
+          console.log(`> Response, info`, response, confirmTransactionInfo);
 
-        if (!response.timestamp) throw "Invalid timestamp";
-        if (
-          // Expired transaction signerPubkey
-          (currentTimestamp - response.timestamp.toMillis()) / 1000 >
-          RESPONSE_TRANSACTION_EXPIRATION_SECONDS
-        ) {
-          await authFirebase();
-          await updateDoc(doc.ref, {
-            [confirmTransactionInfo.signerPubkey]: null,
-          });
-        } else {
-          // Look for valid transaction with signerPubkey
-          const confirmedSignatureInfo = await findTransactionSignedByUser(
-            response[confirmTransactionInfo.signerPubkey],
-            response.environment
-          );
-          if (!confirmedSignatureInfo) throw "Transaction not found";
-          await authFirebase();
-          await updateDoc(doc.ref, {
-            [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
-          });
+          if (!response.timestamp) throw "Invalid timestamp";
+          if (
+            // Expired transaction signerPubkey
+            (currentTimestamp - response.timestamp.toMillis()) / 1000 >
+            RESPONSE_TRANSACTION_EXPIRATION_SECONDS
+          ) {
+            await authFirebase();
+            await updateDoc(doc.ref, {
+              [confirmTransactionInfo.signerPubkey]: null,
+            });
+          } else {
+            // Look for valid transaction with signerPubkey
+            const confirmedSignatureInfo = await findTransactionSignedByUser(
+              response[confirmTransactionInfo.signerPubkey],
+              response.environment
+            );
+            if (!confirmedSignatureInfo) throw "Transaction not found";
+            await authFirebase();
+            await updateDoc(doc.ref, {
+              [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
+            });
+          }
+        } catch (e) {
+          console.log("[error] failed to confirm transaction response", e);
         }
       }
     } catch (e) {
-      console.log("Failed to confirm transaction responses in Firebase: ", e);
+      console.log("[error] failed to find transactions", e);
     }
   }
 
