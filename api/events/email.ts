@@ -43,6 +43,13 @@ ${
     : "These are ONE TIME USE only links. Feel free to share these links them with your friends or anyone that is coming with you."
 }
 <br/><br/>
+
+<b>Location: </b>${event.eventLocation} <br/>
+<b>Date: </b> ${new Date(event.eventStartTime).toLocaleTimeString([], {
+  hour: "numeric",
+  minute: "2-digit",
+})}
+<br/><br/>
 Best,<br/>
 <a href="https://www.cardinal.so/">The Cardinal Team</a>
 </div>`;
