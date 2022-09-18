@@ -65,13 +65,15 @@ export const confirmTransactions = async () => {
         )
       );
       console.log(
-        `> ${confirmTransactionInfo.toString()} - ${queryResults.docs.length}`
+        `> ${confirmTransactionInfo.id.toString()} (${
+          queryResults.docs.length
+        })`
       );
       const currentTimestamp = Date.now();
       for (const doc of queryResults.docs) {
         try {
           const response = doc.data() as FirebaseResponse;
-          console.log(`> Response, info`, response, confirmTransactionInfo);
+          console.log(`> Response, info`, response);
 
           if (!response.timestamp) throw "Invalid timestamp";
           if (
@@ -83,7 +85,7 @@ export const confirmTransactions = async () => {
             await updateDoc(doc.ref, {
               [confirmTransactionInfo.signerPubkey]: null,
             });
-          } else if (response.approvalData?.type !== "email") {
+          } else {
             // Look for valid transaction with signerPubkey
             const confirmedSignatureInfo = await findTransactionSignedByUser(
               response[confirmTransactionInfo.signerPubkey],
