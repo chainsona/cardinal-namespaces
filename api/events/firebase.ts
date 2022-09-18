@@ -64,6 +64,27 @@ export const getEventRef = (eventDocumentId?: string): DocumentReference => {
   }
 };
 
+export const getResponseRef = (docId?: string): DocumentReference => {
+  if (docId) {
+    return doc(eventFirestore, "responses", docId);
+  } else {
+    return doc(collection(eventFirestore, "responses"));
+  }
+};
+
+export const getResponseByApproval = async (approvalSignerPubkey: string) => {
+  const queryResults = await getDocs(
+    query(
+      collection(eventFirestore, "responses"),
+      where("approvalSignerPubkey", "==", approvalSignerPubkey)
+    )
+  );
+  if (queryResults.docs.length !== 1) {
+    throw "Response approvalSignerKeypair not found";
+  }
+  return queryResults.docs[0];
+};
+
 export const getTicketRef = (
   eventDocumentId?: string,
   ticketDocumentId?: string
