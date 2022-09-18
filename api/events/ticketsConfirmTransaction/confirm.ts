@@ -14,6 +14,7 @@ import {
   collection,
   getDocs,
   query,
+  runTransaction,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -111,16 +112,29 @@ export const confirmTransactions = async () => {
   );
   console.log("> Approvals", queryResults.docs.length);
 
-  for (const doc of queryResults.docs) {
-    const response = doc.data() as FirebaseResponse;
+  if (queryResults.docs.length > 0) {
     await authFirebase();
-    const { txid, keypair, approveAuthority, entryName } =
-      await sendApproveTransaction(response, response.environment);
-    await notifyApproval(response, keypair, entryName);
-    await updateDoc(doc.ref, {
-      approvalTransactionId: txid,
-      approvalSignerPubkey: approveAuthority.toString(),
-    });
+  }
+  for (const doc of queryResults.docs) {
+    try {
+      await runTransaction(eventFirestore, async (transaction) => {
+        const responseDoc = await transaction.get(doc.ref);
+        const response = responseDoc.data() as FirebaseResponse;
+        if (response.approvalSignerPubkey || response.approvalTransactionId) {
+          throw "[error] response already approved and notified";
+        }
+        await authFirebase();
+        const { txid, keypair, approveAuthority, entryName } =
+          await sendApproveTransaction(response, response.environment);
+        await notifyApproval(response, keypair, entryName);
+        transaction.update(responseDoc.ref, {
+          approvalTransactionId: txid,
+          approvalSignerPubkey: approveAuthority.toString(),
+        });
+      });
+    } catch (e) {
+      console.log("Failed to run send transaction", e);
+    }
   }
 };
 
