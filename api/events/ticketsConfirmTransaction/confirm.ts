@@ -73,7 +73,7 @@ export const confirmTransactions = async () => {
       for (const doc of queryResults.docs) {
         try {
           const response = doc.data() as FirebaseResponse;
-          console.log(`> Response, info`, response);
+          console.log(`> Response`, response);
 
           if (!response.timestamp) throw "Invalid timestamp";
           if (
@@ -138,7 +138,7 @@ export const confirmTransactions = async () => {
           response.environment
         );
         await notifyApproval(response, keypair, entryName);
-        await updateDoc(responseDoc.ref, {
+        transaction.update(responseDoc.ref, {
           approvalSignerPubkey: keypair.publicKey.toString(),
           approvalTransactionId: txid,
         });
