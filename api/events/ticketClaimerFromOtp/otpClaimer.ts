@@ -57,6 +57,7 @@ export async function otpClaim(data: OtpClaimData): Promise<{
     });
   } else {
     mintKeypair = Keypair.generate();
+    if (!data.entryName) throw "Missing entry name";
     await withInitAndClaim(
       connection,
       userWallet,

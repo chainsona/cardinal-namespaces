@@ -12,7 +12,7 @@ module.exports.otpClaim = async (event) => {
   const data = JSON.parse(event.body);
 
   try {
-    if (!ticketId || !data.account || !data.entryName || !data.otp) {
+    if (!ticketId || !data.account || !data.otp) {
       return {
         headers: headers,
         statusCode: 412,
