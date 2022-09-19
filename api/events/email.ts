@@ -12,6 +12,17 @@ export const approvalSuccessfulEmail = (
   claimURL: string,
   config: string | null
 ) => {
+  const eventUri = eventUrl(event.shortLink, config);
+  const eventStartime = (
+    typeof event.eventStartTime === "string"
+      ? new Date(event.eventStartTime)
+      : event.eventStartTime.toDate()
+  ).toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
   const locationLink = `https://maps.google.com/?q=${encodeURIComponent(
     event.eventLocation
   )}`;
@@ -29,7 +40,7 @@ export const approvalSuccessfulEmail = (
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <div style="display:block; margin-left: auto; margin-right: auto; color: black; font-family:-apple-system, Inter, sans-serif;">
-  <div style="max-width:786px; border-radius: 20px; padding-top:40px; ">
+  <div style="max-width:786px; border-radius: 20px;">
     <img src="https://i.imgur.com/gTMiSl4.png" width="180px" style="margin-top: 20px; margin-bottom: 20px; border-radius: 3%;" />
     <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 20px;">
       <img
@@ -37,24 +48,30 @@ export const approvalSuccessfulEmail = (
         alt="event-image" style="width: 200px; display: block; margin: auto; border-radius: 3%">
       <h2 style="margin-top: 10px; margin-bottom: 0px;">${event.eventName}</h2>
 
-      <h3> You've got your <u>${ticketName} ticket</u>! </h3>
+      <h3> Claim your <u><a
+      target="_blank"
+      rel="noreferer"
+      href=${eventUri} style="text-decoration: none; color: inherit;"</a>${ticketName} ticket</u>! </h3>
+      <h5> <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>${
+    event.eventLocation
+  } </a> at <a style="color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>${eventStartime}</a> </h5>
       <div style="display: block; margin-left: auto; margin-right: auto; margin-bottom: 20px; width: max-content;">
         <a
         target="_blank"
         rel="noreferer"
         href=${`https://phantom.app/ul/browse/${encodeURIComponent(claimURL)}`}
-          style="padding: 14px 18px; color: white; background-color: #72224c; border-radius: 5px; display: block; font-size: 16px; text-decoration: none;">Claim
+          style="padding: 14px 18px; color: white; background-color: #8820fe; border-radius: 5px; display: block; font-size: 16px; text-decoration: none;">Claim
           on Mobile</a>
       </div>
-      <div style="width: 600px; margin: auto; font-size: 12px; color: #888">
-        <i>Note: This is a ONE TIME USE only link that is only compatible with your name and email address. You will need a <b>mobile Phantom wallet</b> to claim this ticket. This ticket is non-transferrable.</i>
+      <div style="width: 600px; margin: auto; font-size: 14px; color: #000 font-weight: 500;">
+        Note: This is a ONE TIME USE only link that is only compatible with your name and email address. You will need a <b>mobile Phantom wallet</b> to claim this ticket. This ticket is non-transferrable.
       </div>
 
     </div>
     <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
     <div style="width: 100%; border-radius: 20px;">
-      <h2 style="margin-bottom: 10px; text-align: center;"> About the event </h2>
-      <div style="display: flex; margin: auto; width: 100%; background-color: #f8f8f8; border-radius: 20px;">
+      <h2 style="margin-bottom: 15px; text-align: center;"> About the event </h2>
+      <div style="display: flex; justify-center: center; margin: auto; margin: 0px auto; background-color: #f8f8f8; border-radius: 20px;">
         <img src=${getEventBannerImage(
           event.docId
         )} width="40%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%; display: inline-block;">
@@ -63,24 +80,10 @@ export const approvalSuccessfulEmail = (
           <div style="font-weight: 600; justify-content: center;">
             <a style="text-decoration: none; color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>
               <div style="display: block; padding-bottom: 8px;">
-                🗓️ ${(typeof event.eventStartTime === "string"
-                  ? new Date(event.eventStartTime)
-                  : event.eventStartTime.toDate()
-                ).toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                🗓️ ${eventStartime}
               </div>
               <div style="display: block; padding-bottom: px;">
-                🕗 ${(typeof event.eventStartTime === "string"
-                  ? new Date(event.eventStartTime)
-                  : event.eventStartTime.toDate()
-                ).toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
+                🕗 ${eventStartime}
               </div>
             </a>
             <div style="padding-bottom: 12px; display: block;">📍
@@ -95,8 +98,8 @@ export const approvalSuccessfulEmail = (
             <a
             target="_blank"
             rel="noreferer"
-            href=${eventUrl(event.shortLink, config)}
-              style="padding: 10px 16px; color: white; text-decoration: none; background-color: #72224c; border-radius: 5px; border: 1px solid #72224C; display: block; font-size: 16px;">View
+            href=${eventUri}
+              style="padding: 10px 16px; color: white; text-decoration: none; background-color: #8820fe; border-radius: 5px; border: 1px solid #8820fe; display: block; font-size: 16px;">View
               Event Details</a>
           </div>
         </div>
