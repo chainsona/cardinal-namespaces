@@ -10,6 +10,7 @@ import {
 import {
   CreateMasterEditionV3,
   CreateMetadataV2,
+  Creator,
   DataV2,
   MasterEdition,
   Metadata,
@@ -96,7 +97,13 @@ export const getLinks = async (
               .toString(36)
               .slice(6)}`,
             sellerFeeBasisPoints: 0,
-            creators: null,
+            creators: [
+              new Creator({
+                address: wallet.publicKey.toString(),
+                verified: true,
+                share: 100,
+              }),
+            ],
             collection: null,
             uses: null,
           }),
