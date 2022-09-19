@@ -55,6 +55,7 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   if (tokenManagerId) {
     await withClaimToken(transaction, connection, userWallet, tokenManagerId, {
       otpKeypair: approvalSignerKeypair,
+      payer: payerWallet.publicKey,
     });
   } else {
     mintKeypair = Keypair.generate();
