@@ -278,6 +278,7 @@ export type FirebaseApprovalData = {
   type: "direct" | "email";
   value: string;
   entryName: string;
+  approvalSignerPubkey: string;
 } | null;
 
 export type FirebaseApproval = {

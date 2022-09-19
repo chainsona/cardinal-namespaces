@@ -158,9 +158,10 @@ export async function approve(data: ApproveData): Promise<{
         type: "email",
         value: data.email,
         entryName,
+        approvalSignerPubkey: approvalSigner.publicKey.toString(),
       },
       approvalTransactionId: null,
-      approvalSignerPubkey: approvalSigner.publicKey.toString(),
+      approvalSignerPubkey: null,
       claimTransactionId: null,
       claimSignerPubkey: null,
     } as FirebaseResponse);

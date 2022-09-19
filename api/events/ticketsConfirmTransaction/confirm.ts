@@ -39,11 +39,16 @@ const confirmTransactionInfos: (
       signerPubkey: "payerSignerPubkey";
     }
   | {
+      id: "approvalTransactionId";
+      signerPubkey: "approvalSignerPubkey";
+    }
+  | {
       id: "claimTransactionId";
       signerPubkey: "claimSignerPubkey";
     }
 )[] = [
   { id: "payerTransactionId", signerPubkey: "payerSignerPubkey" },
+  { id: "approvalTransactionId", signerPubkey: "approvalSignerPubkey" },
   { id: "claimTransactionId", signerPubkey: "claimSignerPubkey" },
 ];
 
@@ -110,7 +115,7 @@ export const confirmTransactions = async () => {
       collection(eventFirestore, "responses"),
       where("payerTransactionId", "!=", null),
       where("approvalTransactionId", "==", null),
-      where("approvalSignerPubkey", "!=", null)
+      where("approvalSignerPubkey", "==", null)
     )
   );
   console.log("> Approvals", queryResults.docs.length);
@@ -125,13 +130,15 @@ export const confirmTransactions = async () => {
       await runTransaction(eventFirestore, async (transaction) => {
         const responseDoc = await transaction.get(doc.ref);
         const responseTx = responseDoc.data() as FirebaseResponse;
-        if (!responseTx.approvalSignerPubkey || !responseTx.approvalData) {
+        if (!responseTx.approvalData) {
           throw "[error] response missing approval signer pubkey";
         }
         if (responseTx.approvalTransactionId) {
           throw "[error] response already being approved and notified";
         }
-        const approvalRef = getApprovalRef(responseTx.approvalSignerPubkey);
+        const approvalRef = getApprovalRef(
+          responseTx.approvalData.approvalSignerPubkey
+        );
         const approvalDoc = await transaction.get(approvalRef);
         const approval = approvalDoc.data() as FirebaseApproval;
         if (!approval.secretKey) {
@@ -149,6 +156,7 @@ export const confirmTransactions = async () => {
           responseTx.approvalData.entryName
         );
         transaction.update(responseDoc.ref, {
+          approvalSignerPubkey: responseTx.approvalData.approvalSignerPubkey,
           approvalTransactionId: responseTx.payerTransactionId,
         });
         transaction.update(approvalRef, {
