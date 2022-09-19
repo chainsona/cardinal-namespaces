@@ -356,6 +356,7 @@ export type OtpClaimData = {
   account: string;
   ticketId: string;
   entryName: string;
+  tokenManagerId?: string;
   otp: string;
 };
 

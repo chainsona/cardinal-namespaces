@@ -22,12 +22,7 @@ module.exports.otpClaim = async (event) => {
       };
     }
 
-    const response = await otpClaimer.otpClaim({
-      ticketId: ticketId,
-      account: data.account,
-      entryName: data.entryName,
-      otp: data.otp,
-    } as OtpClaimData);
+    const response = await otpClaimer.otpClaim(data as OtpClaimData);
     return {
       headers: headers,
       statusCode: response.status,
