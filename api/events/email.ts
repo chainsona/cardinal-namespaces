@@ -13,7 +13,7 @@ export const approvalSuccessfulEmail = (
   config: string | null
 ) => {
   const eventUri = eventUrl(event.shortLink, config);
-  const eventStartime = (
+  const eventStartDate = (
     typeof event.eventStartTime === "string"
       ? new Date(event.eventStartTime)
       : event.eventStartTime.toDate()
@@ -22,6 +22,18 @@ export const approvalSuccessfulEmail = (
     year: "numeric",
     month: "long",
     day: "numeric",
+  });
+  const eventStartime = (
+    typeof event.eventStartTime === "string"
+      ? new Date(event.eventStartTime)
+      : event.eventStartTime.toDate()
+  ).toLocaleTimeString("en-US", {
+    month: "numeric",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
   });
   const locationLink = `https://maps.google.com/?q=${encodeURIComponent(
     event.eventLocation
@@ -54,7 +66,7 @@ export const approvalSuccessfulEmail = (
       href=${eventUri} style="text-decoration: none; color: inherit;"</a>${ticketName} ticket</u>! </h3>
       <h5> <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>${
     event.eventLocation
-  } </a> at <a style="color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>${eventStartime}</a> </h5>
+  } </a> at <a style="color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>${eventStartDate}</a> </h5>
       <div style="display: block; margin-left: auto; margin-right: auto; margin-bottom: 20px; width: max-content;">
         <a
         target="_blank"
@@ -80,17 +92,16 @@ export const approvalSuccessfulEmail = (
           <div style="font-weight: 600; justify-content: center;">
             <a style="text-decoration: none; color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>
               <div style="display: block; padding-bottom: 8px;">
-                🗓️ ${eventStartime}
+                🗓️ ${eventStartDate}
               </div>
-              <div style="display: block; padding-bottom: px;">
+              <div style="display: block; padding-bottom: 8px;">
                 🕗 ${eventStartime}
               </div>
             </a>
             <div style="padding-bottom: 12px; display: block;">📍
-              <u>
-                <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>
-                  ${event.eventLocation} </a>
-              </u>
+              <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>${
+    event.eventLocation
+  }</a>
             </div>
           </div>
 
