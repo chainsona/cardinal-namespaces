@@ -11,7 +11,19 @@ export const approvalSuccessfulEmail = (
   ticketId: string,
   claimURL: string,
   config: string | null
-) => `
+) => {
+  const locationLink = `https://maps.google.com/?q=${encodeURIComponent(
+    event.eventLocation
+  )}`;
+  const calendarInviteLink = `http://www.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(
+    event.eventName
+  )}&dates=${encodeURIComponent(
+    new Date(event.eventStartTime.toString()).toLocaleString()
+  )}&details=Event%20Details%20Here&location=${encodeURIComponent(
+    event.eventLocation
+  )}`;
+
+  return `
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,27 +63,31 @@ export const approvalSuccessfulEmail = (
         <div
           style="padding: 20px; width: 60%; height: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
           <div style="display: flex; flex-direction: column; gap: 8px; font-weight: 600; justify-content: center;">
-            <div>🗓️ ${(typeof event.eventStartTime === "string"
-              ? new Date(event.eventStartTime)
-              : event.eventStartTime.toDate()
-            ).toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}</div>
-            <div>🕗 ${(typeof event.eventStartTime === "string"
-              ? new Date(event.eventStartTime)
-              : event.eventStartTime.toDate()
-            ).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-            })}</div>
+            <a style="text-decoration: none; color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>
+              <div>
+                🗓️ ${(typeof event.eventStartTime === "string"
+                  ? new Date(event.eventStartTime)
+                  : event.eventStartTime.toDate()
+                ).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </div>
+              <div>
+                🕗 ${(typeof event.eventStartTime === "string"
+                  ? new Date(event.eventStartTime)
+                  : event.eventStartTime.toDate()
+                ).toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </div>
+            </a>
             <div>📍
               <u>
-                <a style="text-decoration: none;" target='_blank' rel="noreferrer" href=${`https://maps.google.com/?q=${encodeURIComponent(
-                  event.eventLocation
-                )}`}>
+                <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>
                   ${event.eventLocation} </a>
               </u>
             </div>
@@ -100,6 +116,7 @@ export const approvalSuccessfulEmail = (
     </div>
   </div>
 `;
+};
 
 export const sendEmail = async (destination: string, data: string) => {
   const ses = new SES({
