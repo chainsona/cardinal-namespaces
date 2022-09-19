@@ -71,7 +71,7 @@ export const approvalSuccessfulEmail = (
     <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
     <div style="width: 100%; border-radius: 20px;">
       <h2 style="margin-bottom: 15px; text-align: center;"> About the event </h2>
-      <div style="display: flex; justify-center: center; margin: auto; margin: 0px auto; background-color: #f8f8f8; border-radius: 20px;">
+      <div style="display: flex; justify-center: center; margin: auto; margin: 0px auto; background-color: #f8f8f8; overflow: hidden; border-radius: 20px;">
         <img src=${getEventBannerImage(
           event.docId
         )} width="40%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%; display: inline-block;">
