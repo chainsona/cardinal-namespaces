@@ -19,12 +19,12 @@ export const approvalSuccessfulEmail = (
 
 <div style="display:flex; justify-content: center; color: black; font-family:Inter;">
   <div style="width:786px; border-radius: 20px; padding-top:40px; ">
-    <img src="https://i.imgur.com/KwG2EA9.png" width="180px" style="margin-top: 20px; margin-bottom: 20px;" />
+    <img src="https://i.imgur.com/KwG2EA9.png" width="180px" style="margin-top: 20px; margin-bottom: 20px; border-radius: 3%;" />
     <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 20px;">
       <img
         src=${`https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/tickets%2F${ticketId}%2Fimage.png?alt=media`}
         alt="event-image" style="width: 200px; display: block; margin: auto; border-radius: 3%">
-      <h2 style="margin: 0px;">${event.eventName}</h2>
+      <h2 style="margin-top: 10px; margin-bottom: 0px;">${event.eventName}</h2>
 
       <h3> You've got your <u>${ticketName} ticket</u>! </h3>
       <div style="display: flex; justify-content: center; margin-bottom: 20px;">
@@ -32,7 +32,7 @@ export const approvalSuccessfulEmail = (
         target="_blank"
         rel="noreferer"
         href=${`https://phantom.app/ul/browse/${encodeURIComponent(claimURL)}`}
-          style="padding: 14px 18px; color: white; background-color: #72224c; border-radius: 5px; display: block; font-size: 16px;">Claim
+          style="padding: 14px 18px; color: white; background-color: #72224c; border-radius: 5px; display: block; font-size: 16px; text-decoration: none;">Claim
           on Mobile</a>
       </div>
       <div style="width: 600px; margin: auto; font-size: 12px; color: #888">
@@ -47,9 +47,9 @@ export const approvalSuccessfulEmail = (
       <div style="display: flex; width: 100%;">
         <img
           src=${getEventBannerImage(event.docId)}
-          width="30%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%">
+          width="40%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%">
           <div
-          style="background-color: #f8f8f8; padding: 20px; width: 70%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+          style="background-color: #f8f8f8; padding: 20px; width: 60%; height: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <div>🗓️ ${(typeof event.eventStartTime === "string"
               ? new Date(event.eventStartTime)
@@ -69,7 +69,7 @@ export const approvalSuccessfulEmail = (
             })}</div>
             <div>📍
               <u>
-                <a target='_blank' rel="noreferrer" href=${`https://maps.google.com/?q=${event.eventLocation}`}>
+                <a style="text-decoration: none;" target='_blank' rel="noreferrer" href=${`https://maps.google.com/?q=${event.eventLocation}`}>
                   ${event.eventLocation} </a>
               </u>
             </div>
