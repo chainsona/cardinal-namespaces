@@ -22,7 +22,7 @@ export const approvalSuccessfulEmail = (
     <img src="https://i.imgur.com/KwG2EA9.png" width="180px" style="margin-top: 20px; margin-bottom: 20px;" />
     <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 20px;">
       <img
-        src="https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/tickets%2F${ticketId}%2Fimage.png?alt=media"
+        src=${`https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/tickets%2F${ticketId}%2Fimage.png?alt=media`}
         alt="event-image" style="width: 200px; display: block; margin: auto; border-radius: 3%">
       <h2 style="margin: 0px;">${event.eventName}</h2>
 
@@ -47,9 +47,9 @@ export const approvalSuccessfulEmail = (
       <div style="display: flex; width: 100%;">
         <img
           src=${getEventBannerImage(event.docId)}
-          width="400px" height="250px" style="object-fit: contain; border-radius: 3%;">
-        <div
-          style="background-color: #f8f8f8; padding: 20px; width: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+          width="30%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%">
+          <div
+          style="background-color: #f8f8f8; padding: 20px; width: 70%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <div>🗓️ ${new Date(event.eventStartTime).toLocaleDateString(
               "en-US",
@@ -72,7 +72,7 @@ export const approvalSuccessfulEmail = (
             </div>
           </div>
 
-          <div>
+          <div style="display:flex;">
             <a
             target="_blank"
             rel="noreferer"
