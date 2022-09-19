@@ -258,7 +258,8 @@ const notifyApproval = async (
       approvalSuccessfulEmail(
         event,
         ticket.ticketName,
-        [claimLink],
+        ticket.ticketId,
+        claimLink,
         event.config
       )
     );

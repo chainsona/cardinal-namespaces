@@ -8,67 +8,99 @@ import { getEventBannerImage } from "./firebase";
 export const approvalSuccessfulEmail = (
   event: FirebaseEvent,
   ticketName: string,
-  claimURLs: string[],
+  ticketId: string,
+  claimURL: string,
   config: string | null
 ) => `
-<div style="display:flex; justify-content: center;">
-<div style="width:786px; background-color: #f8f8f8; border-radius: 20px; font-family:sans-serif;">
-<img src=${getEventBannerImage(
-  event.docId
-)} alt="event-image" style="width: 100%; max-width: 1000px; margin: auto; border-radius: 3%;">
-<h3>
-<div style=" padding: 20px;  ">
-Thank you for purchasing ${claimURLs.length} ${ticketName} ${
-  claimURLs.length === 1 ? "ticket" : "tickets"
-} to <a href="${eventUrl(event.shortLink, config)}">${event.eventName}</a>!
-</h3>
-<h4>
-Use the ${claimURLs.length === 1 ? "link" : "links"} below to claim your NFT ${
-  claimURLs.length === 1 ? "ticket" : "tickets"
-} for the event:
-</h4>
-<br />
-${claimURLs
-  .map(
-    (url, index) =>
-      `<b>Ticket ${
-        index + 1
-      }:</b> Claim Ticket <a href=${url}>From Laptop</a> or <a href=${`https://phantom.app/ul/browse/${encodeURIComponent(
-        url
-      )}`}>From Mobile</a> (Phantom Wallet Required)<br/></br/>`
-  )
-  .join("")}
-<br />
-${
-  claimURLs.length === 1
-    ? "<i>Note: This is a ONE TIME USE only link. Feel free to share this link to anyone you want to claim your ticket.</i>"
-    : "<i>Note: These are ONE TIME USE only links. Feel free to share these links them with your friends or anyone that is coming with you.</i>"
-}
-<br/><br/><hr/>
-<h3 style="margin-bottom: 0; padding-bottom: 0;">Event Details:</h3> <br/>  
 
-<b>📍 Location: </b><u>
-    <a
-      target='_blank'
-      rel="noreferrer" 
-      href=${`https://maps.google.com/?q=${event.eventLocation}`}
-    >
-    ${event.eventLocation}
-    </a></u> <br/>
-  <b>⏱ Date and Time: </b> ${new Date(event.eventStartTime).toLocaleTimeString(
-    [],
-    {
-      hour: "numeric",
-      minute: "2-digit",
-    }
-  )} <br/>
-  <b>🖊 Event Description:</b> <br/><br/>
-    ${event.eventDescription}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <br/><br/><hr/><br/>
-Best,<br/>
-<a href="https://www.cardinal.so/">The Cardinal Team</a>
-</div></div>`;
+<div style="display:flex; justify-content: center; color: black; font-family:Inter;">
+  <div style="width:786px; border-radius: 20px; padding-top:40px; ">
+    <img src="https://i.imgur.com/KwG2EA9.png" width="180px" style="margin-top: 20px; margin-bottom: 20px;" />
+    <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 20px;">
+      <img
+        src=https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/tickets%2F${ticketId}%2Fimage.png?alt=media
+        alt="event-image" style="width: 200px; display: block; margin: auto; border-radius: 3%">
+      <h2 style="margin: 0px;">${event.eventName}</h2>
+
+      <h3> You've got your <u>${ticketName} ticket</u>! </h3>
+      <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
+        <a
+        target="_blank"
+        rel="noreferrer"
+        href=${claimURL}
+          style="padding: 14px 18px; color: white; background-color: #72224C; border-radius: 5px; border: none; display: block; font-size: 16px;">Claim
+          on Desktop</a>
+        <a
+        target="_blank"
+        rel="noreferer"
+        href=${`https://phantom.app/ul/browse/${encodeURIComponent(claimURL)}`}
+          style="padding: 14px 18px; color: #72224c; background-color: white; border-radius: 5px; border: 1px solid #72224C; display: block; font-size: 16px;">Claim
+          on Mobile</a>
+      </div>
+      <div style="width: 600px; margin: auto; font-size: 12px; color: #888">
+        <i>Note: These are ONE
+          TIME USE only links. You can share this with anyone to claim the ticket.</i>
+      </div>
+
+    </div>
+    <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
+    <div style="width: 100%; border-radius: 20px;">
+      <h2 style="margin-bottom: 10px; text-align: center;"> About the event </h2>
+      <div style="display: flex; width: 100%;">
+        <img
+          src=${getEventBannerImage(event.docId)}
+          width="400px" height="250px" style="object-fit: contain; border-radius: 3%;">
+        <div
+          style="background-color: #f8f8f8; padding: 20px; width: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div>🗓️ ${new Date(event.eventStartTime).toLocaleDateString(
+              "en-US",
+              {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            )}</div>
+            <div>🕗 ${new Date(event.eventStartTime).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+            })}</div>
+            <div>📍
+              <u>
+                <a target='_blank' rel="noreferrer" href=${`https://maps.google.com/?q=${event.eventLocation}`}>
+                  ${event.eventLocation} </a>
+              </u>
+            </div>
+          </div>
+
+          <div>
+            <a
+            target="_blank"
+            rel="noreferer"
+            href=${eventUrl(event.shortLink, config)}
+              style="padding: 10px 16px; color: white; background-color: #72224c; border-radius: 5px; border: 1px solid #72224C; display: block; font-size: 16px;">View
+              Event Details</a>
+          </div>
+        </div>
+
+      </div>
+      <hr style="margin: 40px auto; width: 90%; border: 1px lightgray solid;" />
+      <div style="text-align: center; color: #888; display: flex; flex-direction: column; gap: 8px; margin-bottom: 30px;">
+        <div>
+          Have any questions? Reply to this email and we'll get back to you as soon as possible.
+        </div>
+        <div>
+          538 Castro St. San Francisco, CA, 94114
+        </div>
+      </div>
+    </div>
+  </div>
+`;
 
 export const sendEmail = async (destination: string, data: string) => {
   const ses = new SES({
