@@ -47,8 +47,7 @@ export const approvalSuccessfulEmail = (
           on Mobile</a>
       </div>
       <div style="width: 600px; margin: auto; font-size: 12px; color: #888">
-        <i>Note: This is a ONE
-        TIME USE only link. You will need a <b>mobile Phantom wallet</b> to claim this ticket.</i>
+        <i>Note: This is a ONE TIME USE only link that is only compatible with your name and email address. You will need a <b>mobile Phantom wallet</b> to claim this ticket. This ticket is non-transferrable.</i>
       </div>
 
     </div>
@@ -117,7 +116,11 @@ export const approvalSuccessfulEmail = (
 `;
 };
 
-export const sendEmail = async (destination: string, data: string) => {
+export const sendEmail = async (
+  destination: string,
+  data: string,
+  subject?: string | null
+) => {
   const ses = new SES({
     apiVersion: "",
     region: process.env.SES_REGION || "",
@@ -132,7 +135,7 @@ export const sendEmail = async (destination: string, data: string) => {
     },
     Message: {
       Subject: {
-        Data: "Your tickets are here to be claimed!",
+        Data: subject ?? "Your tickets are here to be claimed!",
       },
       Body: {
         Html: {

@@ -256,11 +256,11 @@ export type FirebaseEvent = {
 export type FirebaseTicket = {
   docId: string;
   eventId: string;
-  ticketId: string;
   ticketName: string;
-  ticketQuantity: string;
+  ticketDescription?: string;
+  ticketQuantity: number;
   ticketShortLink: string;
-  ticketPrice: string;
+  ticketPrice: number;
   additionalSigners?: string[];
   feePayer?: string;
 };
@@ -326,6 +326,7 @@ export type TicketCreationData = {
   ticketName: string;
   ticketQuantity: string;
   ticketPrice: string;
+  ticketDescription?: string;
   environment: string;
   creator: string;
   ticketImage: string;

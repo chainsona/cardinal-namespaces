@@ -1,5 +1,6 @@
 /* eslint-disable simple-import-sort/imports, import/first */
 import * as dotenv from "dotenv";
+
 dotenv.config();
 
 import { issueToken } from "@cardinal/token-manager";
@@ -25,6 +26,7 @@ import {
 import { approvalSuccessfulEmail, sendEmail } from "../email";
 import type { FirebaseApproval, FirebaseResponse } from "../firebase";
 import {
+  authFirebase,
   eventFirestore,
   getApprovalRef,
   getTicket,
@@ -185,9 +187,11 @@ export const getLinks = async (
           ticket.docId,
           claimLink,
           config
-        )
+        ),
+        ticket.ticketDescription
       );
 
+      await authFirebase();
       const responseRef = doc(collection(eventFirestore, "responses"));
       const firebaseBatch = writeBatch(eventFirestore);
       const entryName = `${Math.random().toString(36).slice(6)}`;
@@ -220,6 +224,7 @@ export const getLinks = async (
         secretKey: utils.bytes.bs58.encode(otp.secretKey),
         approvalData: null,
       } as FirebaseApproval);
+      await firebaseBatch.commit();
     } catch (e) {
       console.log("Failed", e);
     }
