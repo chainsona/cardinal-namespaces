@@ -28,6 +28,7 @@
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.2",
     "firebase": "^9.9.3",
+    "firebase-admin": "^11.0.1",
     "jsbi": "^4.1.0",
     "node-fetch": "^2.6.6",
     "serverless-dotenv-plugin": "^4.0.2",
