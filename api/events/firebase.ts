@@ -80,17 +80,16 @@ export const getApprovalRef = (docId?: string): DocumentReference => {
   }
 };
 
-export const getResponseByApproval = async (approvalSignerPubkey: string) => {
+export const tryGetResponsesByApproval = async (
+  approvalSignerPubkey: string
+) => {
   const queryResults = await getDocs(
     query(
       collection(eventFirestore, "responses"),
       where("approvalSignerPubkey", "==", approvalSignerPubkey)
     )
   );
-  if (queryResults.docs.length !== 1) {
-    throw "Response approvalSignerKeypair not found";
-  }
-  return queryResults.docs[0];
+  return queryResults;
 };
 
 export const getTicketRef = (

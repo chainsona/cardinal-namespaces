@@ -2,7 +2,7 @@ import { emptyWallet, tryPublicKey } from "@cardinal/common";
 import { withClaimToken } from "@cardinal/token-manager";
 import { utils } from "@project-serum/anchor";
 import { Keypair, Transaction } from "@solana/web3.js";
-import { updateDoc } from "firebase/firestore";
+import { setDoc, Timestamp, updateDoc } from "firebase/firestore";
 
 import { withInitAndClaim } from "../../common/claimUtils";
 import { connectionFor } from "../../common/connection";
@@ -12,8 +12,9 @@ import {
   authFirebase,
   getEvent,
   getPayerKeypair,
-  getResponseByApproval,
+  getResponseRef,
   getTicket,
+  tryGetResponsesByApproval,
 } from "../firebase";
 
 export async function otpClaim(data: OtpClaimData): Promise<{
@@ -54,6 +55,7 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   if (tokenManagerId) {
     await withClaimToken(transaction, connection, userWallet, tokenManagerId, {
       otpKeypair: approvalSignerKeypair,
+      payer: payerWallet.publicKey,
     });
   } else {
     mintKeypair = Keypair.generate();
@@ -113,13 +115,35 @@ export async function otpClaim(data: OtpClaimData): Promise<{
     .toString("base64");
 
   ////////////// UPDATE RESPONSES //////////////
-  const response = await getResponseByApproval(
+  const queryResults = await tryGetResponsesByApproval(
     approvalSignerKeypair.publicKey.toString()
   );
-  await updateDoc(response.ref, {
-    claimTransactionId: null,
-    claimSignerPubkey: signerKeypair.publicKey.toString(),
-  } as FirebaseResponse);
+  if (queryResults.docs.length > 0) {
+    const response = queryResults.docs[0];
+    await updateDoc(response.ref, {
+      claimTransactionId: null,
+      claimSignerPubkey: signerKeypair.publicKey.toString(),
+    } as FirebaseResponse);
+  } else {
+    const responseRef = getResponseRef();
+    await setDoc(responseRef, {
+      eventId: checkEvent.docId,
+      ticketId: data.ticketId,
+      timestamp: Timestamp.fromDate(new Date()),
+      environment: checkEvent.environment,
+      payerAddress: payerWallet.publicKey.toString(),
+      claimerAddress: userWallet.publicKey.toString(),
+      ticketAmount: 1,
+      formResponse: null,
+      payerTransactionId: null,
+      payerSignerPubkey: signerKeypair.publicKey.toString(),
+      approvalData: null,
+      approvalTransactionId: null,
+      approvalSignerPubkey: null,
+      claimTransactionId: null,
+      claimSignerPubkey: signerKeypair.publicKey.toString(),
+    } as FirebaseResponse);
+  }
 
   return {
     status: 200,

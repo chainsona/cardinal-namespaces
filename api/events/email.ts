@@ -44,10 +44,10 @@ export const approvalSuccessfulEmail = (
     <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
     <div style="width: 100%; border-radius: 20px;">
       <h2 style="margin-bottom: 10px; text-align: center;"> About the event </h2>
-      <div style="display: flex; width: 100%; background-color: #f8f8f8;">
+      <div style="display: flex; width: 100%; background-color: #f8f8f8; border-radius: 20px;">
         <img src=${getEventBannerImage(
           event.docId
-        )} width="40%" style="border-top-left-radius: 3%; border-bottom-left-radius: 3%">
+        )} width="40%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%">
         <div
           style="padding: 20px; width: 60%; height: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
