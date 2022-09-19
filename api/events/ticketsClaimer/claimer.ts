@@ -81,7 +81,7 @@ export async function claim(data: ClaimData): Promise<{
     }
 
     // TODO 1 per wallet 1 per etc.
-    const entryName = `${Math.random().toString(36).slice(2)}`;
+    const entryName = `${Math.random().toString(36).slice(6)}`;
     await withApproveClaimRequest(transaction, connection, payerWallet, {
       namespaceName: data.ticketId,
       entryName: entryName,

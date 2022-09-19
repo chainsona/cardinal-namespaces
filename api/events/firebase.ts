@@ -72,6 +72,14 @@ export const getResponseRef = (docId?: string): DocumentReference => {
   }
 };
 
+export const getApprovalRef = (docId?: string): DocumentReference => {
+  if (docId) {
+    return doc(eventFirestore, "approvals", docId);
+  } else {
+    return doc(collection(eventFirestore, "approvals"));
+  }
+};
+
 export const getResponseByApproval = async (approvalSignerPubkey: string) => {
   const queryResults = await getDocs(
     query(
@@ -266,6 +274,19 @@ export type FirebasePayer = {
   authority: string;
 };
 
+export type FirebaseApprovalData = {
+  type: "direct" | "email";
+  value: string;
+  entryName: string;
+} | null;
+
+export type FirebaseApproval = {
+  docId: string | null;
+  responseId: string | null;
+  secretKey: string | null;
+  approvalData: FirebaseApprovalData | null;
+};
+
 export type FirebaseResponse = {
   eventId: string | null;
   ticketId: string | null;
@@ -277,7 +298,7 @@ export type FirebaseResponse = {
   formResponse: FormResponse[] | null;
   payerTransactionId: string | null;
   payerSignerPubkey: string | null;
-  approvalData: { type: "direct" | "email"; value: string } | null;
+  approvalData: FirebaseApprovalData | null;
   approvalTransactionId: string | null;
   approvalSignerPubkey: string | null;
   claimTransactionId: string | null;

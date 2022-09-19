@@ -1,11 +1,9 @@
 import { emptyWallet } from "@cardinal/common";
-import { getNamespaceByName } from "@cardinal/namespaces";
 import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
+  getNamespaceByName,
+  withApproveClaimRequest,
+} from "@cardinal/namespaces";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
 
 import { connectionFor } from "../../common/connection";
@@ -15,15 +13,19 @@ import {
 } from "../../common/payments";
 import { publicKeyFrom } from "../common";
 import { getApproveAuthority } from "../constants";
-import type { ApproveData, FirebaseResponse } from "../firebase";
+import type {
+  ApproveData,
+  FirebaseApproval,
+  FirebaseResponse,
+} from "../firebase";
 import {
   authFirebase,
   eventFirestore,
+  getApprovalRef,
   getEvent,
   getPayerKeypair,
   getTicket,
 } from "../firebase";
-import { EVENT_APPROVER_LAMPORTS } from "../ticketsConfirmTransaction/confirm";
 
 export async function approve(data: ApproveData): Promise<{
   status: number;
@@ -80,15 +82,15 @@ export async function approve(data: ApproveData): Promise<{
         mintDecimals
       );
     }
-
-    // Enough to pay for email
-    transaction.instructions.push(
-      SystemProgram.transfer({
-        fromPubkey: payerWallet.publicKey,
-        toPubkey: approverAuthority.publicKey,
-        lamports: EVENT_APPROVER_LAMPORTS,
-      })
-    );
+    // TODO 1 per wallet 1 per etc.
+    const approvalSigner = Keypair.generate();
+    const entryName = `${Math.random().toString(36).slice(6)}`;
+    await withApproveClaimRequest(transaction, connection, payerWallet, {
+      namespaceName: data.ticketId,
+      entryName: entryName,
+      user: approvalSigner.publicKey,
+      approveAuthority: approverAuthority?.publicKey,
+    });
 
     const firstInstruction = transaction.instructions[0];
     transaction.instructions = [
@@ -111,15 +113,6 @@ export async function approve(data: ApproveData): Promise<{
             isSigner: true,
             isWritable: false,
           },
-          ...(approverAuthority
-            ? [
-                {
-                  pubkey: approverAuthority.publicKey,
-                  isSigner: true,
-                  isWritable: false,
-                },
-              ]
-            : []),
         ],
       },
       ...transaction.instructions.slice(1),
@@ -161,12 +154,23 @@ export async function approve(data: ApproveData): Promise<{
       formResponse: null,
       payerTransactionId: null,
       payerSignerPubkey: signerKeypair.publicKey.toString(),
-      approvalData: { type: "email", value: data.email },
+      approvalData: {
+        type: "email",
+        value: data.email,
+        entryName,
+      },
       approvalTransactionId: null,
-      approvalSignerPubkey: null,
+      approvalSignerPubkey: approvalSigner.publicKey.toString(),
       claimTransactionId: null,
       claimSignerPubkey: null,
     } as FirebaseResponse);
+
+    const approvalRef = getApprovalRef(approvalSigner.publicKey.toString());
+    firebaseBatch.set(approvalRef, {
+      responseId: responseRef.id,
+      secretKey: approvalSigner.secretKey.toString(),
+      approvalData: null,
+    } as FirebaseApproval);
   }
 
   await firebaseBatch.commit();
