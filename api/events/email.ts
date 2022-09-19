@@ -50,7 +50,7 @@ export const approvalSuccessfulEmail = (
         )} width="40%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%">
         <div
           style="padding: 20px; width: 60%; height: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; flex-direction: column; gap: 8px; font-weight: 600; justify-content: center;">
             <div>🗓️ ${(typeof event.eventStartTime === "string"
               ? new Date(event.eventStartTime)
               : event.eventStartTime.toDate()
@@ -69,7 +69,9 @@ export const approvalSuccessfulEmail = (
             })}</div>
             <div>📍
               <u>
-                <a style="text-decoration: none;" target='_blank' rel="noreferrer" href=${`https://maps.google.com/?q=${event.eventLocation}`}>
+                <a style="text-decoration: none;" target='_blank' rel="noreferrer" href=${`https://maps.google.com/?q=${encodeURIComponent(
+                  event.eventLocation
+                )}`}>
                   ${event.eventLocation} </a>
               </u>
             </div>
@@ -80,7 +82,7 @@ export const approvalSuccessfulEmail = (
             target="_blank"
             rel="noreferer"
             href=${eventUrl(event.shortLink, config)}
-              style="padding: 10px 16px; color: white; background-color: #72224c; border-radius: 5px; border: 1px solid #72224C; display: block; font-size: 16px;">View
+              style="padding: 10px 16px; color: white; text-decoration: none; background-color: #72224c; border-radius: 5px; border: 1px solid #72224C; display: block; font-size: 16px;">View
               Event Details</a>
           </div>
         </div>
@@ -102,9 +104,9 @@ export const approvalSuccessfulEmail = (
 export const sendEmail = async (destination: string, data: string) => {
   const ses = new SES({
     apiVersion: "2010-12-01",
-    region: process.env.SES_REGION,
-    accessKeyId: process.env.SES_ACCESS_KEY_ID,
-    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
+    region: process.env.SES_REGION || "",
+    accessKeyId: process.env.SES_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY || "",
   });
 
   const params: SendEmailRequest = {
