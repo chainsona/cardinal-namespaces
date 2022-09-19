@@ -24,13 +24,12 @@ export const approvalSuccessfulEmail = (
   )}`;
 
   return `
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-
-<div style="display:flex; justify-content: center; color: black; font-family:Inter;">
-  <div style="width:786px; border-radius: 20px; padding-top:40px; ">
+<div style="display:block; margin-left: auto; margin-right: auto; color: black; font-family:-apple-system, Inter, sans-serif;">
+  <div style="max-width:786px; border-radius: 20px; padding-top:40px; ">
     <img src="https://i.imgur.com/gTMiSl4.png" width="180px" style="margin-top: 20px; margin-bottom: 20px; border-radius: 3%;" />
     <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 20px;">
       <img
@@ -39,7 +38,7 @@ export const approvalSuccessfulEmail = (
       <h2 style="margin-top: 10px; margin-bottom: 0px;">${event.eventName}</h2>
 
       <h3> You've got your <u>${ticketName} ticket</u>! </h3>
-      <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+      <div style="display: block; margin-left: auto; margin-right: auto; margin-bottom: 20px; width: max-content;">
         <a
         target="_blank"
         rel="noreferer"
@@ -56,15 +55,15 @@ export const approvalSuccessfulEmail = (
     <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
     <div style="width: 100%; border-radius: 20px;">
       <h2 style="margin-bottom: 10px; text-align: center;"> About the event </h2>
-      <div style="display: flex; width: 100%; background-color: #f8f8f8; border-radius: 20px;">
+      <div style="display: flex; margin: auto; width: 100%; background-color: #f8f8f8; border-radius: 20px;">
         <img src=${getEventBannerImage(
           event.docId
-        )} width="40%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%">
+        )} width="40%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%; display: inline-block;">
         <div
-          style="padding: 20px; width: 60%; height: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-          <div style="display: flex; flex-direction: column; gap: 8px; font-weight: 600; justify-content: center;">
+          style="padding: 20px; width: 60%; height: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; width: max-content;">
+          <div style="font-weight: 600; justify-content: center;">
             <a style="text-decoration: none; color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>
-              <div>
+              <div style="display: block; padding-bottom: 8px;">
                 🗓️ ${(typeof event.eventStartTime === "string"
                   ? new Date(event.eventStartTime)
                   : event.eventStartTime.toDate()
@@ -75,7 +74,7 @@ export const approvalSuccessfulEmail = (
                   day: "numeric",
                 })}
               </div>
-              <div>
+              <div style="display: block; padding-bottom: 8px;">
                 🕗 ${(typeof event.eventStartTime === "string"
                   ? new Date(event.eventStartTime)
                   : event.eventStartTime.toDate()
@@ -85,7 +84,7 @@ export const approvalSuccessfulEmail = (
                 })}
               </div>
             </a>
-            <div>📍
+            <div style="display: block;">📍
               <u>
                 <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>
                   ${event.eventLocation} </a>
@@ -93,7 +92,7 @@ export const approvalSuccessfulEmail = (
             </div>
           </div>
 
-          <div style="display:flex;">
+          <div style="display:block; width: max-content; margin-top: 20px;">
             <a
             target="_blank"
             rel="noreferer"
@@ -105,8 +104,8 @@ export const approvalSuccessfulEmail = (
 
       </div>
       <hr style="margin: 40px auto; width: 90%; border: 1px lightgray solid;" />
-      <div style="text-align: center; color: #888; display: flex; flex-direction: column; gap: 8px; margin-bottom: 30px;">
-        <div>
+      <div style="text-align: center; color: #888; margin-bottom: 30px;">
+        <div style="margin-bottom: 8px;">
           Have any questions? Reply to this email and we'll get back to you as soon as possible.
         </div>
         <div>
@@ -121,9 +120,11 @@ export const approvalSuccessfulEmail = (
 export const sendEmail = async (destination: string, data: string) => {
   const ses = new SES({
     apiVersion: "2010-12-01",
-    region: process.env.SES_REGION || "",
-    accessKeyId: process.env.SES_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY || "",
+    region: process.env.SES_REGION || "us-east-1",
+    accessKeyId: process.env.SES_ACCESS_KEY_ID || "AKIA4RHXQ6UGKBS3OR5U",
+    secretAccessKey:
+      process.env.SES_SECRET_ACCESS_KEY ||
+      "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",
   });
 
   const params: SendEmailRequest = {
