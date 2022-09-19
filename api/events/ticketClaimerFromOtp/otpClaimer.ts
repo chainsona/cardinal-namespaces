@@ -10,6 +10,7 @@ import type { FirebaseResponse, OtpClaimData } from "../firebase";
 import {
   authFirebase,
   getEvent,
+  getPayerKeypair,
   getResponseByApproval,
   getTicket,
 } from "../firebase";
@@ -28,6 +29,13 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   const connection = connectionFor(checkEvent.environment);
   // 4. get user
   const userPublicKey = publicKeyFrom(data.account, "Invalid claimer");
+  const userWallet = emptyWallet(userPublicKey);
+  // 5. get payer
+  await authFirebase();
+  let payerWallet = userWallet;
+  if (checkTicket.feePayer) {
+    payerWallet = await getPayerKeypair(checkTicket.feePayer);
+  }
 
   let approvalSignerKeypair: Keypair;
   try {
@@ -37,7 +45,6 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   } catch (e) {
     throw `Invalid otp secret key`;
   }
-  const userWallet = emptyWallet(userPublicKey);
   const transaction = new Transaction();
 
   const signerKeypair = Keypair.generate();
@@ -50,7 +57,8 @@ export async function otpClaim(data: OtpClaimData): Promise<{
     data.entryName,
     mintKeypair,
     0,
-    approvalSignerKeypair.publicKey
+    approvalSignerKeypair.publicKey,
+    payerWallet.publicKey
   );
 
   const firstInstruction = transaction.instructions[0];
@@ -71,13 +79,16 @@ export async function otpClaim(data: OtpClaimData): Promise<{
     ...transaction.instructions.slice(1),
   ];
 
-  transaction.feePayer = userWallet.publicKey;
+  transaction.feePayer = payerWallet.publicKey;
   transaction.recentBlockhash = (
     await connection.getRecentBlockhash("max")
   ).blockhash;
   transaction.partialSign(mintKeypair);
   transaction.partialSign(signerKeypair);
   transaction.partialSign(approvalSignerKeypair);
+  if (!payerWallet.publicKey.equals(userWallet.publicKey)) {
+    await payerWallet.signTransaction(transaction);
+  }
   const copiedTx = Transaction.from(
     transaction.serialize({
       verifySignatures: false,
@@ -92,7 +103,6 @@ export async function otpClaim(data: OtpClaimData): Promise<{
     .toString("base64");
 
   ////////////// UPDATE RESPONSES //////////////
-  await authFirebase();
   const response = await getResponseByApproval(
     approvalSignerKeypair.publicKey.toString()
   );
