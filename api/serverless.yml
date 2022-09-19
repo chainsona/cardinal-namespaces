@@ -207,6 +207,7 @@ functions:
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /events
@@ -218,6 +219,7 @@ functions:
     environment:
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /events/{eventId}
@@ -233,6 +235,7 @@ functions:
       EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
       FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
       FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /tickets
