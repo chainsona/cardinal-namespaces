@@ -1,6 +1,7 @@
 import { utils } from "@project-serum/anchor";
 import { Keypair } from "@solana/web3.js";
 import * as dotenv from "dotenv";
+import type { Timestamp } from "firebase/firestore";
 import fs from "fs";
 import fetch from "node-fetch";
 
@@ -17,8 +18,8 @@ export type EventData = {
   eventName: string;
   eventLocation: string;
   eventDescription: string;
-  eventStartTime: string;
-  eventEndTime: string;
+  eventStartTime: Timestamp | string;
+  eventEndTime: Timestamp | string;
   creatorId: string;
   environment: string;
   eventBannerImage?: string;
