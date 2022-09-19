@@ -57,16 +57,19 @@ export const approvalSuccessfulEmail = (
         <div
           style="background-color: #f8f8f8; padding: 20px; width: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div>🗓️ ${new Date(event.eventStartTime).toLocaleDateString(
-              "en-US",
-              {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }
-            )}</div>
-            <div>🕗 ${new Date(event.eventStartTime).toLocaleTimeString([], {
+            <div>🗓️ ${(typeof event.eventStartTime === "string"
+              ? new Date(event.eventStartTime)
+              : event.eventStartTime.toDate()
+            ).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}</div>
+            <div>🕗 ${(typeof event.eventStartTime === "string"
+              ? new Date(event.eventStartTime)
+              : event.eventStartTime.toDate()
+            ).toLocaleTimeString([], {
               hour: "numeric",
               minute: "2-digit",
             })}</div>

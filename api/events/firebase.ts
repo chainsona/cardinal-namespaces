@@ -245,10 +245,10 @@ export type FirebaseEvent = {
   config: string | null;
   environment: string;
   eventDescription: string;
-  eventEndTime: string;
+  eventEndTime: Timestamp | string;
   eventLocation: string;
   eventName: string;
-  eventStartTime: string;
+  eventStartTime: Timestamp | string;
   shortLink: string;
   eventBannerImage: string | null;
   eventPaymentMint: string;
@@ -312,8 +312,8 @@ export type EventData = {
   eventName: string;
   eventLocation: string;
   eventDescription: string;
-  eventStartTime: string;
-  eventEndTime: string;
+  eventStartTime: Timestamp | string;
+  eventEndTime: Timestamp | string;
   creatorId: string;
   environment: string;
   eventBannerImage: string | null;
