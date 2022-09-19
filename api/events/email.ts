@@ -22,28 +22,22 @@ export const approvalSuccessfulEmail = (
     <img src="https://i.imgur.com/KwG2EA9.png" width="180px" style="margin-top: 20px; margin-bottom: 20px;" />
     <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 20px;">
       <img
-        src=https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/tickets%2F${ticketId}%2Fimage.png?alt=media
+        src="https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/tickets%2F${ticketId}%2Fimage.png?alt=media"
         alt="event-image" style="width: 200px; display: block; margin: auto; border-radius: 3%">
       <h2 style="margin: 0px;">${event.eventName}</h2>
 
       <h3> You've got your <u>${ticketName} ticket</u>! </h3>
-      <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
-        <a
-        target="_blank"
-        rel="noreferrer"
-        href=${claimURL}
-          style="padding: 14px 18px; color: white; background-color: #72224C; border-radius: 5px; border: none; display: block; font-size: 16px;">Claim
-          on Desktop</a>
+      <div style="display: flex; justify-content: center; margin-bottom: 20px;">
         <a
         target="_blank"
         rel="noreferer"
         href=${`https://phantom.app/ul/browse/${encodeURIComponent(claimURL)}`}
-          style="padding: 14px 18px; color: #72224c; background-color: white; border-radius: 5px; border: 1px solid #72224C; display: block; font-size: 16px;">Claim
+          style="padding: 14px 18px; color: white; background-color: #72224c; border-radius: 5px; display: block; font-size: 16px;">Claim
           on Mobile</a>
       </div>
       <div style="width: 600px; margin: auto; font-size: 12px; color: #888">
-        <i>Note: These are ONE
-          TIME USE only links. You can share this with anyone to claim the ticket.</i>
+        <i>Note: This is a ONE
+        TIME USE only link. You will need a <b>mobile Phantom wallet</b> to claim this ticket.</i>
       </div>
 
     </div>
