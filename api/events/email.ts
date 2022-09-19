@@ -31,7 +31,7 @@ export const approvalSuccessfulEmail = (
 
 <div style="display:flex; justify-content: center; color: black; font-family:Inter;">
   <div style="width:786px; border-radius: 20px; padding-top:40px; ">
-    <img src="https://i.imgur.com/KwG2EA9.png" width="180px" style="margin-top: 20px; margin-bottom: 20px; border-radius: 3%;" />
+    <img src="https://i.imgur.com/gTMiSl4.png" width="180px" style="margin-top: 20px; margin-bottom: 20px; border-radius: 3%;" />
     <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 20px;">
       <img
         src=${`https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/tickets%2F${ticketId}%2Fimage.png?alt=media`}
