@@ -187,7 +187,8 @@ export const getLinks = async (
           ticket.docId,
           claimLink,
           config
-        )
+        ),
+        ticket.ticketDescription
       );
 
       await authFirebase();

@@ -11,7 +11,7 @@ import { ref, uploadString } from "firebase/storage";
 import { connectionFor } from "../../common/connection";
 import { publicKeyFrom } from "../common";
 import { eventApproverKeys, EventApproverKind } from "../constants";
-import type { TicketCreationData } from "../firebase";
+import type { FirebaseTicket, TicketCreationData } from "../firebase";
 import {
   authFirebase,
   eventStorage,
@@ -140,22 +140,24 @@ export async function createOrUpdate(
         eventId: ticket.eventId,
         ticketShortLink: "",
         ticketName: ticket.ticketName,
+        ticketDescription: ticket.ticketDescription,
         ticketQuantity: supply,
         ticketPrice: price,
         feePayer: ticket.feePayer ?? null,
         additionalSigners: ticket.additionalSigners ?? null,
-      });
+      } as FirebaseTicket);
     } else {
       await updateDoc(ticketRef, {
         docId: ticketRef.id,
         eventId: ticket.eventId,
         ticketShortLink: "",
         ticketName: ticket.ticketName,
+        ticketDescription: ticket.ticketDescription,
         ticketQuantity: supply,
         ticketPrice: price,
         feePayer: ticket.feePayer ?? null,
         additionalSigners: ticket.additionalSigners ?? null,
-      });
+      } as FirebaseTicket);
     }
 
     if (
