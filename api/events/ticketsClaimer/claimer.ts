@@ -4,7 +4,7 @@ import {
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 import { withInitAndClaim } from "../../common/claimUtils";
 import { connectionFor } from "../../common/connection";
@@ -16,7 +16,6 @@ import { publicKeyFrom } from "../common";
 import { getApproveAuthority } from "../constants";
 import type { ClaimData, FirebaseResponse } from "../firebase";
 import {
-  authFirebase,
   getEvent,
   getPayerKeypair,
   getResponseRef,
@@ -30,8 +29,6 @@ export async function claim(data: ClaimData): Promise<{
   message?: string;
   error?: string;
 }> {
-  // 0. setup firebase
-  await authFirebase();
   // 1. get ticket
   const checkTicket = await getTicket(data.ticketId);
   // 2. get event

@@ -1,11 +1,6 @@
 import { WRAPPED_SOL_ADDRESS } from "../../common/payments";
 import type { EventData, FirebaseEvent } from "../firebase";
-import {
-  authFirebase,
-  eventStorage,
-  getEventRef,
-  tryGetEvent,
-} from "../firebase";
+import { eventStorage, getEventRef, tryGetEvent } from "../firebase";
 
 export async function updateEvent(
   eventId: string,
@@ -28,7 +23,6 @@ export async function updateEvent(
     throw "Need a banner image for event creation";
   }
 
-  await authFirebase();
   const eventRef = getEventRef(checkEvent.docId);
   await eventRef.update({
     docId: eventRef.id,

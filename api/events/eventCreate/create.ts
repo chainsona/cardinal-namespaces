@@ -1,8 +1,8 @@
 import { WRAPPED_SOL_ADDRESS } from "../../common/payments";
 import type { EventData, FirebaseEvent } from "../firebase";
 import {
-  authFirebase,
   eventStorage,
+  formatUpload,
   getEventRef,
   tryGetEventFromShortlink,
 } from "../firebase";
@@ -15,7 +15,6 @@ export async function createEvent(eventData: EventData): Promise<{
   const checkEvent = await tryGetEventFromShortlink(eventData.shortLink);
   if (checkEvent) throw "Event short link already taken";
 
-  await authFirebase();
   const eventRef = getEventRef();
   await eventRef.set({
     docId: eventRef.id,
@@ -33,9 +32,16 @@ export async function createEvent(eventData: EventData): Promise<{
     eventBannerImage: null,
   } as FirebaseEvent);
   if (eventData.eventBannerImage && eventData.eventBannerImage.length !== 0) {
-    await eventStorage.bucket("banners").upload(eventData.eventBannerImage);
-    // const eventImageRef = ref(eventStorage, `banners/${eventRef.id}.png`);
-    // await uploadString(eventImageRef, eventData.eventBannerImage, "data_url");
+    const contents = formatUpload(eventData.eventBannerImage);
+    const imageFile = eventStorage.bucket().file(`banners/${eventRef.id}.png`);
+    await imageFile
+      .save(contents, {
+        gzip: true,
+        contentType: "image/png",
+      })
+      .then(() => {
+        console.log("uploaded ticket metadata");
+      });
   }
   return {
     status: 200,

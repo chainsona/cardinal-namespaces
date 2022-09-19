@@ -9,7 +9,6 @@ import { connectionFor } from "../../common/connection";
 import { publicKeyFrom } from "../common";
 import type { FirebaseResponse, OtpClaimData } from "../firebase";
 import {
-  authFirebase,
   getEvent,
   getPayerKeypair,
   getResponseRef,
@@ -32,8 +31,6 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   // 4. get user
   const userPublicKey = publicKeyFrom(data.account, "Invalid claimer");
   const userWallet = emptyWallet(userPublicKey);
-  // 5. get payer
-  await authFirebase();
   let payerWallet = userWallet;
   if (checkTicket.feePayer) {
     payerWallet = await getPayerKeypair(checkTicket.feePayer);

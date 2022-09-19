@@ -1,7 +1,8 @@
 import { utils } from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
 import { Keypair } from "@solana/web3.js";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { apps, credential } from "firebase-admin";
+import type { AppOptions } from "firebase-admin/app";
 import { initializeApp } from "firebase-admin/app";
 import type {
   DocumentReference,
@@ -11,19 +12,23 @@ import type {
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCJgPBVSp2TokeX_UpydLf4M7yamYA0nhs",
-  authDomain: "cardinal-events.firebaseapp.com",
-  projectId: "cardinal-events",
-  storageBucket: "cardinal-events.appspot.com",
-  messagingSenderId: "453139651235",
-  appId: "1:453139651235:web:67443d5b218b600e7f3d16",
-  measurementId: "G-R9SVMD5CRT",
+const firebaseConfig: AppOptions = {
+  credential: credential.cert({
+    projectId: "cardinal-events",
+    privateKey: process.env.ADMIN_PRIVATE_KEY || "PRIVATE_KEY",
+    clientEmail:
+      "cardinal-firebase-serverless@cardinal-events.iam.gserviceaccount.com",
+  }),
+  storageBucket: "gs://cardinal-events.appspot.com/",
 };
 
-export const firebaseEventApp = initializeApp(firebaseConfig);
-export const eventFirestore = getFirestore(firebaseEventApp);
-export const eventStorage = getStorage(firebaseEventApp);
+export const firebaseEventApp =
+  apps.length === 0 ? initializeApp(firebaseConfig) : apps[0]!;
+export const eventFirestore =
+  apps.length === 0 ? getFirestore(firebaseEventApp) : apps[0]!.firestore();
+export const eventStorage =
+  apps.length === 0 ? getStorage(firebaseEventApp) : apps[0]!.storage();
+console.log("apps", apps);
 
 export const getWriteBatch = (): WriteBatch => eventFirestore.batch();
 
@@ -219,11 +224,13 @@ export const getPayerKeypair = async (docId: string) => {
   );
 };
 
-export const authFirebase = async () => {
-  const auth = getAuth();
-  const email = process.env.FIREBASE_ACCOUNT_EMAIL || "";
-  const password = process.env.FIREBASE_ACCOUNT_PASSWORD || "";
-  await signInWithEmailAndPassword(auth, email, password);
+export const formatUpload = (contents: string, metadata = false): Buffer => {
+  return Buffer.from(
+    metadata
+      ? contents.replace(/^data:application\/json;base64,/, "")
+      : contents.replace(/^data:image\/(png|gif|jpeg);base64,/, ""),
+    "base64"
+  );
 };
 
 export const getEventBannerImage = (eventDocumentId: string) => {

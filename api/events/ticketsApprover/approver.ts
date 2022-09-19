@@ -20,7 +20,6 @@ import type {
   FirebaseResponse,
 } from "../firebase";
 import {
-  authFirebase,
   getApprovalRef,
   getEvent,
   getPayerKeypair,
@@ -35,8 +34,6 @@ export async function approve(data: ApproveData): Promise<{
   message?: string;
   error?: string;
 }> {
-  // 0. setup firebase
-  await authFirebase();
   // 1. get ticket
   const checkTicket = await getTicket(data.ticketId);
   // 2. get event

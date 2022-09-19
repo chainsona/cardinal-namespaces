@@ -18,7 +18,6 @@ import { getApproveAuthority } from "../constants";
 import { approvalSuccessfulEmail, sendEmail } from "../email";
 import type { FirebaseApproval, FirebaseResponse } from "./../firebase";
 import {
-  authFirebase,
   eventFirestore,
   getApprovalRef,
   getEvent,
@@ -71,7 +70,6 @@ export const confirmTransactions = async () => {
             (currentTimestamp - response.timestamp.toMillis()) / 1000 >
             RESPONSE_TRANSACTION_EXPIRATION_SECONDS
           ) {
-            await authFirebase();
             await doc.ref.update({
               [confirmTransactionInfo.signerPubkey]: null,
             });
@@ -82,7 +80,6 @@ export const confirmTransactions = async () => {
               response.environment
             );
             if (!confirmedSignatureInfo) throw "Transaction not found";
-            await authFirebase();
             await doc.ref.update({
               [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
             });
@@ -106,9 +103,6 @@ export const confirmTransactions = async () => {
   const queryResults = (await responsesQuery.get()).docs;
   console.log("> Approvals", queryResults.length);
 
-  if (queryResults.length > 0) {
-    await authFirebase();
-  }
   for (const doc of queryResults) {
     try {
       // let keypair: Keypair | undefined;
