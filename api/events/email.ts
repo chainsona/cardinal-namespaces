@@ -74,7 +74,7 @@ export const approvalSuccessfulEmail = (
                   day: "numeric",
                 })}
               </div>
-              <div style="display: block; padding-bottom: 8px;">
+              <div style="display: block; padding-bottom: px;">
                 🕗 ${(typeof event.eventStartTime === "string"
                   ? new Date(event.eventStartTime)
                   : event.eventStartTime.toDate()
@@ -84,7 +84,7 @@ export const approvalSuccessfulEmail = (
                 })}
               </div>
             </a>
-            <div style="display: block;">📍
+            <div style="padding-bottom: 12px; display: block;">📍
               <u>
                 <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>
                   ${event.eventLocation} </a>
@@ -119,12 +119,10 @@ export const approvalSuccessfulEmail = (
 
 export const sendEmail = async (destination: string, data: string) => {
   const ses = new SES({
-    apiVersion: "2010-12-01",
-    region: process.env.SES_REGION || "us-east-1",
-    accessKeyId: process.env.SES_ACCESS_KEY_ID || "AKIA4RHXQ6UGKBS3OR5U",
-    secretAccessKey:
-      process.env.SES_SECRET_ACCESS_KEY ||
-      "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",
+    apiVersion: "",
+    region: process.env.SES_REGION || "",
+    accessKeyId: process.env.SES_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY || "",
   });
 
   const params: SendEmailRequest = {
