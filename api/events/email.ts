@@ -83,12 +83,13 @@ export const approvalSuccessfulEmail = (
     <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
     <div style="width: 100%; border-radius: 20px;">
       <h2 style="margin-bottom: 15px; text-align: center;"> About the event </h2>
-      <div style="display: flex; justify-center: center; margin: auto; margin: 0px auto; background-color: #f8f8f8; overflow: hidden; border-radius: 20px;">
+      <div style="text-align: center; margin: 0px auto; background-color: #f8f8f8; overflow: hidden; border-radius: 20px; display: inline-block; width: auto;">
         <img src=${getEventBannerImage(
           event.docId
-        )} width="40%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%; display: inline-block;">
+        )} width="49%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%; display: inline-block; vertical-align:middle;">
+        <div style="width: 1%; display: inline-block"></div>
         <div
-          style="padding: 20px; width: 60%; height: 100%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; width: max-content;">
+          style="padding-top: 20px; padding-bottom: 20px; width: 49%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: inline-block; text-align: left; vertical-align:top;">
           <div style="font-weight: 600; justify-content: center;">
             <a style="text-decoration: none; color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>
               <div style="display: block; padding-bottom: 8px;">
@@ -104,7 +105,6 @@ export const approvalSuccessfulEmail = (
   }</a>
             </div>
           </div>
-
           <div style="display:block; width: max-content; margin-top: 20px;">
             <a
             target="_blank"
@@ -114,7 +114,6 @@ export const approvalSuccessfulEmail = (
               Event Details</a>
           </div>
         </div>
-
       </div>
       <hr style="margin: 40px auto; width: 90%; border: 1px lightgray solid;" />
       <div style="text-align: center; color: #888; margin-bottom: 30px;">
@@ -129,6 +128,9 @@ export const approvalSuccessfulEmail = (
   </div>
 `;
 };
+
+// <img src="https://imgur.com/a/Zj2IykL"
+// alt="solana-logo" style="width: 200px; display: block; margin: 5px auto;"/>
 
 export const sendEmail = async (
   destination: string,
