@@ -3,6 +3,7 @@ import {
   getNamespaceByName,
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
+import { utils } from "@project-serum/anchor";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
 
@@ -169,7 +170,7 @@ export async function approve(data: ApproveData): Promise<{
     const approvalRef = getApprovalRef(approvalSigner.publicKey.toString());
     firebaseBatch.set(approvalRef, {
       responseId: responseRef.id,
-      secretKey: approvalSigner.secretKey.toString(),
+      secretKey: utils.bytes.bs58.encode(approvalSigner.secretKey),
       approvalData: null,
     } as FirebaseApproval);
   }
