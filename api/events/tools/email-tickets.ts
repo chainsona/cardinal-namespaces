@@ -22,9 +22,16 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { approvalSuccessfulEmail, sendEmail } from "../email";
-import { getTicket, tryGetEventFromShortlink } from "../firebase";
+import type { FirebaseApproval, FirebaseResponse } from "../firebase";
+import {
+  eventFirestore,
+  getApprovalRef,
+  getTicket,
+  tryGetEventFromShortlink,
+} from "../firebase";
 import { connectionFor } from "./connection";
 import { createMintTransaction } from "./utils";
+import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
 
 const wallet = Keypair.fromSecretKey(
   utils.bytes.bs58.decode(process.env.AIRDROP_WALLET || "")
@@ -173,6 +180,39 @@ export const getLinks = async (
           config
         )
       );
+
+      const responseRef = doc(collection(eventFirestore, "responses"));
+      const firebaseBatch = writeBatch(eventFirestore);
+      const entryName = `${Math.random().toString(36).slice(6)}`;
+      firebaseBatch.set(responseRef, {
+        eventId: event.docId,
+        ticketId: ticketId,
+        timestamp: Timestamp.fromDate(new Date()),
+        environment: event.environment,
+        payerAddress: wallet.publicKey.toString(),
+        claimerAddress: null,
+        ticketAmount: 1,
+        formResponse: null,
+        payerTransactionId: null,
+        payerSignerPubkey: otp.publicKey.toString(),
+        approvalData: {
+          type: "email",
+          value: destination,
+          entryName,
+          approvalSignerPubkey: otp.publicKey.toString(),
+        },
+        approvalTransactionId: null,
+        approvalSignerPubkey: otp.publicKey.toString(),
+        claimTransactionId: null,
+        claimSignerPubkey: null,
+      } as FirebaseResponse);
+
+      const approvalRef = getApprovalRef(otp.publicKey.toString());
+      firebaseBatch.set(approvalRef, {
+        responseId: responseRef.id,
+        secretKey: utils.bytes.bs58.encode(otp.secretKey),
+        approvalData: null,
+      } as FirebaseApproval);
     } catch (e) {
       console.log("Failed", e);
     }
