@@ -121,6 +121,7 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   if (queryResults.docs.length > 0) {
     const response = queryResults.docs[0];
     await updateDoc(response.ref, {
+      claimerAddress: userWallet.publicKey.toString(),
       claimTransactionId: null,
       claimSignerPubkey: signerKeypair.publicKey.toString(),
     } as FirebaseResponse);
