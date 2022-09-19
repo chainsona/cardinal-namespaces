@@ -1,3 +1,7 @@
+/* eslint-disable simple-import-sort/imports, import/first */
+import * as dotenv from "dotenv";
+dotenv.config();
+
 import { issueToken } from "@cardinal/token-manager";
 import {
   InvalidationType,
@@ -17,12 +21,10 @@ import {
   sendAndConfirmRawTransaction,
   Transaction,
 } from "@solana/web3.js";
-import * as dotenv from "dotenv";
-
+import { approvalSuccessfulEmail, sendEmail } from "../email";
+import { getTicket, tryGetEventFromShortlink } from "../firebase";
 import { connectionFor } from "./connection";
 import { createMintTransaction } from "./utils";
-
-dotenv.config();
 
 const wallet = Keypair.fromSecretKey(
   utils.bytes.bs58.decode(process.env.AIRDROP_WALLET || "")
@@ -32,10 +34,16 @@ export const getLinks = async (
   numLinks: number,
   cluster = "devnet",
   baseUrl = "https://events.cardinal.so",
-  ticketId = "crd-vF1rCIVARtDGV8udx9tZ-30573"
+  ticketId = "crd-vF1rCIVARtDGV8udx9tZ-30573",
+  eventShortLink = "solana-spaces-unveiling",
+  config = "solana-spaces",
+  destination = "jpbogle22@gmail.com"
 ) => {
   const allLinks: string[] = [];
   const connection = connectionFor(cluster);
+  const event = await tryGetEventFromShortlink(eventShortLink);
+  if (!event) throw "Invalid event";
+  const ticket = await getTicket(ticketId);
 
   for (let i = 0; i < numLinks; i++) {
     console.log(`----------(${i}/${numLinks})--------------`);
@@ -154,6 +162,17 @@ export const getLinks = async (
         );
         allLinks.push(claimLink);
       }
+
+      await sendEmail(
+        destination,
+        approvalSuccessfulEmail(
+          event,
+          ticket.ticketName,
+          ticket.docId,
+          claimLink,
+          config
+        )
+      );
     } catch (e) {
       console.log("Failed", e);
     }
