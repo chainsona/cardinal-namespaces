@@ -1,4 +1,5 @@
-import { emptyWallet } from "@cardinal/common";
+import { emptyWallet, tryPublicKey } from "@cardinal/common";
+import { withClaimToken } from "@cardinal/token-manager";
 import { utils } from "@project-serum/anchor";
 import { Keypair, Transaction } from "@solana/web3.js";
 import { updateDoc } from "firebase/firestore";
@@ -48,18 +49,27 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   const transaction = new Transaction();
 
   const signerKeypair = Keypair.generate();
-  const mintKeypair = Keypair.generate();
-  await withInitAndClaim(
-    connection,
-    userWallet,
-    transaction,
-    data.ticketId,
-    data.entryName,
-    mintKeypair,
-    0,
-    approvalSignerKeypair.publicKey,
-    payerWallet.publicKey
-  );
+  const tokenManagerId = tryPublicKey(data.tokenManagerId);
+  let mintKeypair: Keypair | undefined = undefined;
+  if (tokenManagerId) {
+    await withClaimToken(transaction, connection, userWallet, tokenManagerId, {
+      otpKeypair: approvalSignerKeypair,
+    });
+  } else {
+    mintKeypair = Keypair.generate();
+    if (!data.entryName) throw "Missing entry name";
+    await withInitAndClaim(
+      connection,
+      userWallet,
+      transaction,
+      data.ticketId,
+      data.entryName,
+      mintKeypair,
+      0,
+      approvalSignerKeypair.publicKey,
+      payerWallet.publicKey
+    );
+  }
 
   const firstInstruction = transaction.instructions[0];
   transaction.instructions = [
@@ -83,7 +93,7 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   transaction.recentBlockhash = (
     await connection.getRecentBlockhash("max")
   ).blockhash;
-  transaction.partialSign(mintKeypair);
+  mintKeypair && transaction.partialSign(mintKeypair);
   transaction.partialSign(signerKeypair);
   transaction.partialSign(approvalSignerKeypair);
   if (!payerWallet.publicKey.equals(userWallet.publicKey)) {

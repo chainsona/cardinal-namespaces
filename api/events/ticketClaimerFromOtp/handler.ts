@@ -12,7 +12,7 @@ module.exports.otpClaim = async (event) => {
   const data = JSON.parse(event.body);
 
   try {
-    if (!ticketId || !data.account || !data.entryName || !data.otp) {
+    if (!ticketId || !data.account || !data.otp) {
       return {
         headers: headers,
         statusCode: 412,
@@ -22,12 +22,7 @@ module.exports.otpClaim = async (event) => {
       };
     }
 
-    const response = await otpClaimer.otpClaim({
-      ticketId: ticketId,
-      account: data.account,
-      entryName: data.entryName,
-      otp: data.otp,
-    } as OtpClaimData);
+    const response = await otpClaimer.otpClaim(data as OtpClaimData);
     return {
       headers: headers,
       statusCode: response.status,
