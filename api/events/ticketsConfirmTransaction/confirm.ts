@@ -3,6 +3,7 @@ import {
   getNamespaceByName,
   withApproveClaimRequest,
 } from "@cardinal/namespaces";
+import { utils } from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
 import type { ConfirmedSignatureInfo, PublicKey } from "@solana/web3.js";
 import {
@@ -23,10 +24,11 @@ import { connectionFor } from "../../common/connection";
 import { claimUrl } from "../common";
 import { getApproveAuthority } from "../constants";
 import { approvalSuccessfulEmail, sendEmail } from "../email";
-import type { FirebaseResponse } from "./../firebase";
+import type { FirebaseApproval, FirebaseResponse } from "./../firebase";
 import {
   authFirebase,
   eventFirestore,
+  getApprovalRef,
   getEvent,
   getTicket,
 } from "./../firebase";
@@ -123,24 +125,42 @@ export const confirmTransactions = async () => {
   }
   for (const doc of queryResults.docs) {
     try {
-      // transaction to set approvalSignerPubkey
+      // let keypair: Keypair | undefined;
+      // let response: FirebaseResponse | undefined;
       await runTransaction(eventFirestore, async (transaction) => {
-        const keypair = Keypair.generate();
         const responseDoc = await transaction.get(doc.ref);
-        const response = responseDoc.data() as FirebaseResponse;
-        if (response.approvalSignerPubkey) {
+        const responseTx = responseDoc.data() as FirebaseResponse;
+        if (!responseTx.approvalData) {
+          throw "[error] response missing approval signer pubkey";
+        }
+        if (responseTx.approvalTransactionId) {
           throw "[error] response already being approved and notified";
         }
-        // this can actually confirm and error
-        const { txid, entryName } = await sendApproveTransaction(
-          response,
-          keypair,
-          response.environment
+        const approvalRef = getApprovalRef(
+          responseTx.approvalData.approvalSignerPubkey
         );
-        await notifyApproval(response, keypair, entryName);
+        const approvalDoc = await transaction.get(approvalRef);
+        const approval = approvalDoc.data() as FirebaseApproval;
+        if (!approval.secretKey) {
+          throw "[error] approval missing secret key";
+        }
+        if (approval.approvalData) {
+          throw "[error] response already been approved and notified";
+        }
+        const keypair = Keypair.fromSecretKey(
+          utils.bytes.bs58.decode(approval.secretKey)
+        );
+        await notifyApproval(
+          responseTx,
+          keypair,
+          responseTx.approvalData.entryName
+        );
         transaction.update(responseDoc.ref, {
-          approvalSignerPubkey: keypair.publicKey.toString(),
-          approvalTransactionId: txid,
+          approvalSignerPubkey: responseTx.approvalData.approvalSignerPubkey,
+          approvalTransactionId: responseTx.payerTransactionId,
+        });
+        transaction.update(approvalRef, {
+          approvalData: responseTx.approvalData,
         });
       });
     } catch (e) {
@@ -181,7 +201,7 @@ const findTransactionSignedByUser = async (
   return null;
 };
 
-const sendApproveTransaction = async (
+const _sendApproveTransaction = async (
   response: FirebaseResponse,
   keypair: Keypair,
   environment: string | null
