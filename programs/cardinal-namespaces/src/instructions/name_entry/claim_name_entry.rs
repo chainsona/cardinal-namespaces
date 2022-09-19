@@ -168,8 +168,7 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
     if ctx.accounts.namespace.payment_amount_daily > 0 || ctx.accounts.namespace.max_expiration.is_some() {
         // payment_mint
         let payment_mint_account_info = next_account_info(remaining_accs)?;
-        let payment_mint = Account::<Mint>::try_from(payment_mint_account_info)?;
-        if payment_mint.key() != ctx.accounts.namespace.payment_mint {
+        if payment_mint_account_info.key() != ctx.accounts.namespace.payment_mint {
             return Err(error!(ErrorCode::InvalidPaymentMint));
         }
         payment_manager_account_info = Some(next_account_info(remaining_accs)?);
@@ -190,7 +189,11 @@ pub fn handler<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts,
                 None
             },
             extension_duration_seconds: if ctx.accounts.namespace.payment_amount_daily > 0 { Some(86400) } else { None },
-            extension_payment_mint: if ctx.accounts.namespace.payment_amount_daily > 0 { Some(payment_mint.key()) } else { None },
+            extension_payment_mint: if ctx.accounts.namespace.payment_amount_daily > 0 {
+                Some(payment_mint_account_info.key())
+            } else {
+                None
+            },
             max_expiration: ctx.accounts.namespace.max_expiration,
             disable_partial_extension: None,
         };
