@@ -26,15 +26,15 @@ import {
 import { approvalSuccessfulEmail, sendEmail } from "../email";
 import type { FirebaseApproval, FirebaseResponse } from "../firebase";
 import {
-  authFirebase,
-  eventFirestore,
+  getResponseRef,
+  getWriteBatch,
   getApprovalRef,
   getTicket,
   tryGetEventFromShortlink,
 } from "../firebase";
 import { connectionFor } from "./connection";
 import { createMintTransaction } from "./utils";
-import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 const wallet = Keypair.fromSecretKey(
   utils.bytes.bs58.decode(process.env.AIRDROP_WALLET || "")
@@ -201,9 +201,8 @@ export const getLinks = async (
         ticket.ticketDescription
       );
 
-      await authFirebase();
-      const responseRef = doc(collection(eventFirestore, "responses"));
-      const firebaseBatch = writeBatch(eventFirestore);
+      const responseRef = getResponseRef();
+      const firebaseBatch = getWriteBatch();
       const entryName = `${Math.random().toString(36).slice(6)}`;
       firebaseBatch.set(responseRef, {
         eventId: event.docId,
@@ -256,8 +255,8 @@ type UserData = {
 
 const users: UserData[] = [
   {
-    email: "avinash@cardinal.so",
-    firstName: "Avinash",
+    email: "giannis@cardinal.so",
+    firstName: "Giannis",
   },
 ];
 
