@@ -15,7 +15,9 @@ import { getStorage } from "firebase-admin/storage";
 const firebaseConfig: AppOptions = {
   credential: credential.cert({
     projectId: "cardinal-events",
-    privateKey: process.env.FIREBASE_PRIVATE_KEY || "FIREBASE_PRIVATE_KEY",
+    privateKey: (
+      process.env.FIREBASE_PRIVATE_KEY || "FIREBASE_PRIVATE_KEY"
+    ).replace(/\\n/gm, "\n"),
     clientEmail:
       "cardinal-firebase-serverless@cardinal-events.iam.gserviceaccount.com",
   }),
@@ -28,7 +30,6 @@ export const eventFirestore =
   apps.length === 0 ? getFirestore(firebaseEventApp) : apps[0]!.firestore();
 export const eventStorage =
   apps.length === 0 ? getStorage(firebaseEventApp) : apps[0]!.storage();
-console.log("apps", apps);
 
 export const getWriteBatch = (): WriteBatch => eventFirestore.batch();
 
