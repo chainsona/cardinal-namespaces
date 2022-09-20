@@ -72,7 +72,7 @@ export const approvalSuccessfulEmail = (
         target="_blank"
         rel="noreferer"
         href=${`https://phantom.app/ul/browse/${encodeURIComponent(claimURL)}`}
-          style="padding: 14px 18px; color: white; background-color: #8820fe; border-radius: 5px; display: block; font-size: 16px; text-decoration: none;">Claim
+          style="padding: 12px 18px; color: white; background-color: #8820fe; border-radius: 5px; display: block; font-size: 16px; text-decoration: none;">Claim
           on Mobile</a>
       </div>
       <div style="width: 600px; margin: auto; font-size: 14px; color: #000 font-weight: 500;">
@@ -83,13 +83,13 @@ export const approvalSuccessfulEmail = (
     <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
     <div style="width: 100%; border-radius: 20px;">
       <h2 style="margin-bottom: 15px; text-align: center;"> About the event </h2>
-      <div style="text-align: center; margin: 0px auto; background-color: #f8f8f8; overflow: hidden; border-radius: 20px; display: inline-block; width: auto;">
+      <div style="text-align: center; margin: 0px auto; background-color: #f8f8f8; overflow: hidden; border-radius: 20px; display: flex; justify-content: center; width: auto;">
         <img src=${getEventBannerImage(
           event.docId
-        )} width="49%" style="object-fit: contain; border-top-left-radius: 3%; border-bottom-left-radius: 3%; display: inline-block; vertical-align:middle;">
-        <div style="width: 1%; display: inline-block"></div>
+        )} width="49%" style="float: left; object-fit: contain; display: inline-block; vertical-align:middle;">
+        <div style="width: 2%; display: inline-block; float: left"></div>
         <div
-          style="padding-top: 20px; padding-bottom: 20px; width: 49%; border-top-right-radius: 20px; border-bottom-right-radius: 20px; display: inline-block; text-align: left; vertical-align:top;">
+          style="float: left; justify-self: start; padding-top: 20px; padding-bottom: 20px; height: 100%; width: 49%; display: inline-block; text-align: left; vertical-align: top;">
           <div style="font-weight: 600; justify-content: center;">
             <a style="text-decoration: none; color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>
               <div style="display: block; padding-bottom: 8px;">
@@ -110,7 +110,7 @@ export const approvalSuccessfulEmail = (
             target="_blank"
             rel="noreferer"
             href=${eventUri}
-              style="padding: 10px 16px; color: white; text-decoration: none; background-color: #8820fe; border-radius: 5px; border: 1px solid #8820fe; display: block; font-size: 16px;">View
+              style="padding: 12px 16px; color: white; text-decoration: none; background-color: #8820fe; border-radius: 5px; border: 1px solid #8820fe; display: block; font-size: 16px;">View
               Event Details</a>
           </div>
         </div>
