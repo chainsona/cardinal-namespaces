@@ -150,7 +150,7 @@ export const getLinks = async (
             maxExpiration: 1664514000,
           },
           kind: TokenManagerKind.Edition,
-          invalidationType: InvalidationType.Return,
+          invalidationType: InvalidationType.Release,
         }
       );
       if (!otp) throw "Invalid otp";
