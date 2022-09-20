@@ -2,14 +2,13 @@ import { emptyWallet, tryPublicKey } from "@cardinal/common";
 import { withClaimToken } from "@cardinal/token-manager";
 import { utils } from "@project-serum/anchor";
 import { Keypair, Transaction } from "@solana/web3.js";
-import { setDoc, Timestamp, updateDoc } from "firebase/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 import { withInitAndClaim } from "../../common/claimUtils";
 import { connectionFor } from "../../common/connection";
 import { publicKeyFrom } from "../common";
 import type { FirebaseResponse, OtpClaimData } from "../firebase";
 import {
-  authFirebase,
   getEvent,
   getPayerKeypair,
   getResponseRef,
@@ -32,8 +31,6 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   // 4. get user
   const userPublicKey = publicKeyFrom(data.account, "Invalid claimer");
   const userWallet = emptyWallet(userPublicKey);
-  // 5. get payer
-  await authFirebase();
   let payerWallet = userWallet;
   if (checkTicket.feePayer) {
     payerWallet = await getPayerKeypair(checkTicket.feePayer);
@@ -118,16 +115,16 @@ export async function otpClaim(data: OtpClaimData): Promise<{
   const queryResults = await tryGetResponsesByApproval(
     approvalSignerKeypair.publicKey.toString()
   );
-  if (queryResults.docs.length > 0) {
-    const response = queryResults.docs[0];
-    await updateDoc(response.ref, {
+  if (queryResults.length > 0) {
+    const response = queryResults[0];
+    await response.ref.update({
       claimerAddress: userWallet.publicKey.toString(),
       claimTransactionId: null,
       claimSignerPubkey: signerKeypair.publicKey.toString(),
     } as FirebaseResponse);
   } else {
     const responseRef = getResponseRef();
-    await setDoc(responseRef, {
+    await responseRef.set({
       eventId: checkEvent.docId,
       ticketId: data.ticketId,
       timestamp: Timestamp.fromDate(new Date()),

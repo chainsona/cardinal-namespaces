@@ -11,14 +11,6 @@ import {
   sendAndConfirmTransaction,
   Transaction,
 } from "@solana/web3.js";
-import {
-  collection,
-  getDocs,
-  query,
-  runTransaction,
-  updateDoc,
-  where,
-} from "firebase/firestore";
 
 import { connectionFor } from "../../common/connection";
 import { claimUrl } from "../common";
@@ -26,7 +18,6 @@ import { getApproveAuthority } from "../constants";
 import { approvalSuccessfulEmail, sendEmail } from "../email";
 import type { FirebaseApproval, FirebaseResponse } from "./../firebase";
 import {
-  authFirebase,
   eventFirestore,
   getApprovalRef,
   getEvent,
@@ -59,20 +50,16 @@ export const confirmTransactions = async () => {
   for (let i = 0; i < confirmTransactionInfos.length; i++) {
     const confirmTransactionInfo = confirmTransactionInfos[i]!;
     try {
-      const queryResults = await getDocs(
-        query(
-          collection(eventFirestore, "responses"),
-          where(confirmTransactionInfo.id, "==", null),
-          where(confirmTransactionInfo.signerPubkey, "!=", null)
-        )
-      );
+      const responsesQuery = eventFirestore
+        .collection("responses")
+        .where(confirmTransactionInfo.id, "==", null)
+        .where(confirmTransactionInfo.signerPubkey, "!=", null);
+      const queryResults = (await responsesQuery.get()).docs;
       console.log(
-        `> ${confirmTransactionInfo.id.toString()} (${
-          queryResults.docs.length
-        })`
+        `> ${confirmTransactionInfo.id.toString()} (${queryResults.length})`
       );
       const currentTimestamp = Date.now();
-      for (const doc of queryResults.docs) {
+      for (const doc of queryResults) {
         try {
           const response = doc.data() as FirebaseResponse;
           console.log(`> Response`, response);
@@ -83,8 +70,7 @@ export const confirmTransactions = async () => {
             (currentTimestamp - response.timestamp.toMillis()) / 1000 >
             RESPONSE_TRANSACTION_EXPIRATION_SECONDS
           ) {
-            await authFirebase();
-            await updateDoc(doc.ref, {
+            await doc.ref.update({
               [confirmTransactionInfo.signerPubkey]: null,
             });
           } else {
@@ -94,8 +80,7 @@ export const confirmTransactions = async () => {
               response.environment
             );
             if (!confirmedSignatureInfo) throw "Transaction not found";
-            await authFirebase();
-            await updateDoc(doc.ref, {
+            await doc.ref.update({
               [confirmTransactionInfo.id]: confirmedSignatureInfo.signature,
             });
           }
@@ -110,24 +95,19 @@ export const confirmTransactions = async () => {
 
   //////////////////// approval transaction ////////////////////
   // get responses where payment has been confirmed and no approval is found
-  const queryResults = await getDocs(
-    query(
-      collection(eventFirestore, "responses"),
-      where("payerTransactionId", "!=", null),
-      where("approvalTransactionId", "==", null),
-      where("approvalSignerPubkey", "==", null)
-    )
-  );
-  console.log("> Approvals", queryResults.docs.length);
+  const responsesQuery = eventFirestore
+    .collection("responses")
+    .where("payerTransactionId", "!=", null)
+    .where("approvalTransactionId", "==", null)
+    .where("approvalSignerPubkey", "==", null);
+  const queryResults = (await responsesQuery.get()).docs;
+  console.log("> Approvals", queryResults.length);
 
-  if (queryResults.docs.length > 0) {
-    await authFirebase();
-  }
-  for (const doc of queryResults.docs) {
+  for (const doc of queryResults) {
     try {
       // let keypair: Keypair | undefined;
       // let response: FirebaseResponse | undefined;
-      await runTransaction(eventFirestore, async (transaction) => {
+      await eventFirestore.runTransaction(async (transaction) => {
         const responseDoc = await transaction.get(doc.ref);
         const responseTx = responseDoc.data() as FirebaseResponse;
         if (!responseTx.approvalData) {

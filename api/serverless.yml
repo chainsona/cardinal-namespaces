@@ -205,8 +205,7 @@ functions:
     handler: events/eventCreate/handler.handle
     timeout: 30
     environment:
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /events
@@ -216,8 +215,7 @@ functions:
     handler: events/eventUpdate/handler.handle
     timeout: 30
     environment:
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /events/{eventId}
@@ -231,8 +229,7 @@ functions:
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
       EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
       EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /tickets
@@ -246,8 +243,7 @@ functions:
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
       EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
       EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /tickets/{ticketId}/claim
@@ -261,8 +257,7 @@ functions:
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
       EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
       EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve/claim
@@ -276,8 +271,7 @@ functions:
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
       EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
       EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
     events:
       - http:
           path: /tickets/{ticketId}/approve
@@ -291,11 +285,10 @@ functions:
       EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
       EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
       EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_ACCOUNT_EMAIL: ${ssm:/FIREBASE_ACCOUNT_EMAIL~true}
-      FIREBASE_ACCOUNT_PASSWORD: ${ssm:/FIREBASE_ACCOUNT_PASSWORD~true}
       SES_ACCESS_KEY_ID: ${ssm:/SES_ACCESS_KEY_ID~true}
       SES_SECRET_ACCESS_KEY: ${ssm:/SES_SECRET_ACCESS_KEY~true}
       CONFIRM_TRANSACTIONS_DISABLED: ${param:CONFIRM_TRANSACTIONS_DISABLED,false}
+      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
 
   ################################ Passbase ################################
   passbase-webhook:

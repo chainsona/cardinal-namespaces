@@ -5,16 +5,14 @@ import {
   withUpdateNamespace,
 } from "@cardinal/namespaces";
 import { Transaction } from "@solana/web3.js";
-import { setDoc, updateDoc } from "firebase/firestore";
-import { ref, uploadString } from "firebase/storage";
 
 import { connectionFor } from "../../common/connection";
 import { publicKeyFrom } from "../common";
 import { eventApproverKeys, EventApproverKind } from "../constants";
 import type { FirebaseTicket, TicketCreationData } from "../firebase";
 import {
-  authFirebase,
   eventStorage,
+  formatUpload,
   getTicketRef,
   tryGetEventTicketByDocId,
   tryGetPayer,
@@ -36,7 +34,6 @@ export async function createOrUpdate(
     };
   }
 
-  await authFirebase();
   for (const ticket of ticketCreationDatas) {
     const connection = connectionFor(ticket.environment);
     const creatorPublickKey = publicKeyFrom(
@@ -61,7 +58,6 @@ export async function createOrUpdate(
     }
 
     const transaction = new Transaction();
-
     // on chain
     const checkNamespace = await tryGetAccount(() =>
       getNamespaceByName(connection, ticketRef.id)
@@ -135,7 +131,7 @@ export async function createOrUpdate(
       }
     }
     if (!checkTicket) {
-      await setDoc(ticketRef, {
+      await ticketRef.set({
         docId: ticketRef.id,
         eventId: ticket.eventId,
         ticketShortLink: "",
@@ -147,7 +143,7 @@ export async function createOrUpdate(
         additionalSigners: ticket.additionalSigners ?? null,
       } as FirebaseTicket);
     } else {
-      await updateDoc(ticketRef, {
+      await ticketRef.update({
         docId: ticketRef.id,
         eventId: ticket.eventId,
         ticketShortLink: "",
@@ -165,13 +161,18 @@ export async function createOrUpdate(
       ticket.ticketImage.length !== 0 &&
       ticket.ticketImage.substring(0, 5) === "data:"
     ) {
-      const ticketImageRef = ref(
-        eventStorage,
-        `tickets/${ticketRef.id}/image.png`
-      );
-      console.log("uploading ticket image");
-      await uploadString(ticketImageRef, ticket.ticketImage, "data_url");
-      console.log("uploaded ticket image");
+      const contents = formatUpload(ticket.ticketImage);
+      const imageFile = eventStorage
+        .bucket()
+        .file(`tickets/${ticketRef.id}/image.png`);
+      await imageFile
+        .save(contents, {
+          gzip: true,
+          contentType: "image/png",
+        })
+        .then(() => {
+          console.log("uploaded ticket image");
+        });
     }
 
     if (
@@ -179,12 +180,18 @@ export async function createOrUpdate(
       ticket.ticketMetadata.length !== 0 &&
       ticket.ticketMetadata.substring(0, 5) === "data:"
     ) {
-      const ticketMetadataRef = ref(
-        eventStorage,
-        `tickets/${ticketRef.id}/metadata.json`
-      );
-      console.log("uploading ticket metadata");
-      await uploadString(ticketMetadataRef, ticket.ticketMetadata, "data_url");
+      console.log("ticket.ticketMetadata", ticket.ticketMetadata);
+      const contents = formatUpload(ticket.ticketMetadata, true);
+      const metadataFile = eventStorage
+        .bucket()
+        .file(`tickets/${ticketRef.id}/metadata.json`);
+      await metadataFile
+        .save(JSON.stringify(JSON.parse(contents.toString())), {
+          contentType: "application/json",
+        })
+        .then(() => {
+          console.log("uploaded ticket metadata");
+        });
     }
   }
 

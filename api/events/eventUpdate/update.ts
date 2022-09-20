@@ -1,14 +1,6 @@
-import { updateDoc } from "firebase/firestore";
-import { ref, uploadString } from "firebase/storage";
-
 import { WRAPPED_SOL_ADDRESS } from "../../common/payments";
 import type { EventData, FirebaseEvent } from "../firebase";
-import {
-  authFirebase,
-  eventStorage,
-  getEventRef,
-  tryGetEvent,
-} from "../firebase";
+import { eventStorage, getEventRef, tryGetEvent } from "../firebase";
 
 export async function updateEvent(
   eventId: string,
@@ -31,9 +23,8 @@ export async function updateEvent(
     throw "Need a banner image for event creation";
   }
 
-  await authFirebase();
   const eventRef = getEventRef(checkEvent.docId);
-  await updateDoc(eventRef, {
+  await eventRef.update({
     docId: eventRef.id,
     shortLink: eventData.shortLink,
     config: eventData.config ?? null,
@@ -50,8 +41,9 @@ export async function updateEvent(
   } as FirebaseEvent);
 
   if (eventData.eventBannerImage && eventData.eventBannerImage.length !== 0) {
-    const eventImageRef = ref(eventStorage, `banners/${eventRef.id}.png`);
-    await uploadString(eventImageRef, eventData.eventBannerImage, "data_url");
+    await eventStorage.bucket("events").upload(eventData.eventBannerImage);
+    // const eventImageRef = ref(eventStorage, `banners/${eventRef.id}.png`);
+    // await uploadString(eventImageRef, eventData.eventBannerImage, "data_url");
   }
   return {
     status: 200,

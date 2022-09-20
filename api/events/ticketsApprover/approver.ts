@@ -5,7 +5,7 @@ import {
 } from "@cardinal/namespaces";
 import { utils } from "@project-serum/anchor";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { collection, doc, Timestamp, writeBatch } from "firebase/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 import { connectionFor } from "../../common/connection";
 import {
@@ -20,12 +20,12 @@ import type {
   FirebaseResponse,
 } from "../firebase";
 import {
-  authFirebase,
-  eventFirestore,
   getApprovalRef,
   getEvent,
   getPayerKeypair,
+  getResponseRef,
   getTicket,
+  getWriteBatch,
 } from "../firebase";
 
 export async function approve(data: ApproveData): Promise<{
@@ -34,8 +34,6 @@ export async function approve(data: ApproveData): Promise<{
   message?: string;
   error?: string;
 }> {
-  // 0. setup firebase
-  await authFirebase();
   // 1. get ticket
   const checkTicket = await getTicket(data.ticketId);
   // 2. get event
@@ -59,7 +57,7 @@ export async function approve(data: ApproveData): Promise<{
   const amount = Number(data.amount);
   if (isNaN(amount)) throw "Invalid supply provided";
 
-  const firebaseBatch = writeBatch(eventFirestore);
+  const firebaseBatch = getWriteBatch();
   const signerKeypair = Keypair.generate();
   const serializedTransactions: string[] = [];
   for (let i = 0; i < amount; i++) {
@@ -143,7 +141,7 @@ export async function approve(data: ApproveData): Promise<{
     serializedTransactions.push(claimSerialized);
 
     ////////////// UPDATE RESPONSES //////////////
-    const responseRef = doc(collection(eventFirestore, "responses"));
+    const responseRef = getResponseRef();
     firebaseBatch.set(responseRef, {
       eventId: checkEvent.docId,
       ticketId: data.ticketId,
