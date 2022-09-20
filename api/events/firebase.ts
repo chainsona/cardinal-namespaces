@@ -15,7 +15,7 @@ import { getStorage } from "firebase-admin/storage";
 const firebaseConfig: AppOptions = {
   credential: credential.cert({
     projectId: "cardinal-events",
-    privateKey: process.env.ADMIN_PRIVATE_KEY || "FIREBASE_PRIVATE_KEY",
+    privateKey: process.env.FIREBASE_PRIVATE_KEY || "FIREBASE_PRIVATE_KEY",
     clientEmail:
       "cardinal-firebase-serverless@cardinal-events.iam.gserviceaccount.com",
   }),
