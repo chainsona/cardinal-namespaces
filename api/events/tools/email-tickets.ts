@@ -41,13 +41,12 @@ const wallet = Keypair.fromSecretKey(
 );
 
 export const getLinks = async (
-  numLinks: number,
+  userData: UserData[],
   cluster = "devnet",
   baseUrl = "https://events.cardinal.so",
   ticketId = "crd-vF1rCIVARtDGV8udx9tZ-30573",
   eventShortLink = "solana-spaces-unveiling",
   config = "solana-spaces",
-  destination = "team@cardinal.so",
   dryRun = false
 ) => {
   const allLinks: string[] = [];
@@ -55,10 +54,13 @@ export const getLinks = async (
   const event = await tryGetEventFromShortlink(eventShortLink);
   if (!event) throw "Invalid event";
   const ticket = await getTicket(ticketId);
+  const failedUserData: { userData: UserData; claimLink: string }[] = [];
 
-  for (let i = 0; i < numLinks; i++) {
-    console.log(`----------(${i}/${numLinks})--------------`);
-
+  for (let i = 0; i < userData.length; i++) {
+    console.log(`----------(${i + 1}/${userData.length})--------------`);
+    const destination = userData[i].email;
+    const firstName = userData[i].firstName ?? "";
+    let claimLink = "";
     try {
       const mintTx = new Transaction();
       const masterEditionMint = Keypair.generate();
@@ -173,7 +175,7 @@ export const getLinks = async (
           }
         ));
 
-      const claimLink = `${baseUrl}/solana-spaces/solana-spaces-unveiling/claim?mint=${masterEditionMint.publicKey.toString()}&otp=${utils.bytes.bs58.encode(
+      claimLink = `${baseUrl}/solana-spaces/solana-spaces-unveiling/claim?mint=${masterEditionMint.publicKey.toString()}&otp=${utils.bytes.bs58.encode(
         otp?.secretKey
       )}&ticketId=${ticketId}`;
       const tkm = await connection.getAccountInfo(tokenManagerId);
@@ -218,6 +220,7 @@ export const getLinks = async (
           value: destination,
           entryName,
           approvalSignerPubkey: otp.publicKey.toString(),
+          firstName: firstName,
         },
         approvalTransactionId: null,
         approvalSignerPubkey: otp.publicKey.toString(),
@@ -234,13 +237,30 @@ export const getLinks = async (
       !dryRun && (await firebaseBatch.commit());
     } catch (e) {
       console.log("Failed", e);
+      failedUserData.push({ userData: userData[i], claimLink: claimLink });
     }
+  }
+
+  if (failedUserData.length > 0) {
+    console.log(failedUserData);
   }
 
   return allLinks;
 };
 
-getLinks(1, "mainnet")
+type UserData = {
+  email: string;
+  firstName?: string;
+};
+
+const users: UserData[] = [
+  {
+    email: "avinash@cardinal.so",
+    firstName: "Avinash",
+  },
+];
+
+getLinks(users, "mainnet")
   .then((links) => {
     console.log(links);
   })
