@@ -186,8 +186,7 @@ export async function createOrUpdate(
         .bucket()
         .file(`tickets/${ticketRef.id}/metadata.json`);
       await metadataFile
-        .save(contents, {
-          gzip: true,
+        .save(JSON.stringify(JSON.parse(contents.toString())), {
           contentType: "application/json",
         })
         .then(() => {
