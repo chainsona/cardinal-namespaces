@@ -47,7 +47,8 @@ export const getLinks = async (
   ticketId = "crd-vF1rCIVARtDGV8udx9tZ-30573",
   eventShortLink = "solana-spaces-unveiling",
   config = "solana-spaces",
-  destination = "jpbogle22@gmail.com"
+  destination = "team@cardinal.so",
+  dryRun = false
 ) => {
   const allLinks: string[] = [];
   const connection = connectionFor(cluster);
@@ -76,13 +77,14 @@ export const getLinks = async (
         await connection.getRecentBlockhash("max")
       ).blockhash;
       mintTransaction.sign(wallet, masterEditionMint);
-      await sendAndConfirmRawTransaction(
-        connection,
-        mintTransaction.serialize(),
-        {
-          commitment: "confirmed",
-        }
-      );
+      !dryRun &&
+        (await sendAndConfirmRawTransaction(
+          connection,
+          mintTransaction.serialize(),
+          {
+            commitment: "confirmed",
+          }
+        ));
 
       // create master edition
       const masterEditionMetadataId = await Metadata.getPDA(
@@ -162,9 +164,14 @@ export const getLinks = async (
         await connection.getRecentBlockhash("max")
       ).blockhash;
       transaction.sign(wallet);
-      await sendAndConfirmRawTransaction(connection, transaction.serialize(), {
-        commitment: "confirmed",
-      });
+      !dryRun &&
+        (await sendAndConfirmRawTransaction(
+          connection,
+          transaction.serialize(),
+          {
+            commitment: "confirmed",
+          }
+        ));
 
       const claimLink = `${baseUrl}/solana-spaces/solana-spaces-unveiling/claim?mint=${masterEditionMint.publicKey.toString()}&otp=${utils.bytes.bs58.encode(
         otp?.secretKey
@@ -224,7 +231,7 @@ export const getLinks = async (
         secretKey: utils.bytes.bs58.encode(otp.secretKey),
         approvalData: null,
       } as FirebaseApproval);
-      await firebaseBatch.commit();
+      !dryRun && (await firebaseBatch.commit());
     } catch (e) {
       console.log("Failed", e);
     }

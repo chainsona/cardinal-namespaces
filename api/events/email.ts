@@ -13,13 +13,23 @@ export const approvalSuccessfulEmail = (
   config: string | null
 ) => {
   const eventUri = eventUrl(event.shortLink, config);
+  const eventStart = (
+    typeof event.eventStartTime === "string"
+      ? new Date(event.eventStartTime)
+      : event.eventStartTime.toDate()
+  ).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  });
   const eventStartDate = (
     typeof event.eventStartTime === "string"
       ? new Date(event.eventStartTime)
       : event.eventStartTime.toDate()
   ).toLocaleDateString("en-US", {
     weekday: "long",
-    year: "numeric",
     month: "long",
     day: "numeric",
   });
@@ -33,7 +43,6 @@ export const approvalSuccessfulEmail = (
     year: "numeric",
     hour: "numeric",
     minute: "numeric",
-    second: "numeric",
   });
   const locationLink = `https://maps.google.com/?q=${encodeURIComponent(
     event.eventLocation
@@ -64,9 +73,9 @@ export const approvalSuccessfulEmail = (
       target="_blank"
       rel="noreferer"
       href=${eventUri} style="text-decoration: none; color: inherit;"</a>${ticketName} ticket</u>! </h3>
-      <h5> <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>${
+      <h5><a style="color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>${eventStart}</a> at Solana Spaces Embassy: <a style="color: inherit; target='_blank' rel="noreferrer" href=${locationLink}>${
     event.eventLocation
-  } </a> at <a style="color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>${eventStartDate}</a> </h5>
+  } </a></h5>
       <div style="display: block; margin-left: auto; margin-right: auto; margin-bottom: 20px; width: max-content;">
         <a
         target="_blank"
@@ -76,7 +85,8 @@ export const approvalSuccessfulEmail = (
           on Mobile</a>
       </div>
       <div style="width: 600px; margin: auto; font-size: 14px; color: #000 font-weight: 500;">
-        Note: This is a ONE TIME USE only link that is only compatible with your name and email address. You will need a <b>mobile Phantom wallet</b> to claim this ticket. This ticket is non-transferrable.
+        Note: This is a ONE TIME USE only link that is only compatible with your name and email address. You will need a <b>mobile <a>
+        <a target="_blank" rel="noreferer" href=${`https://phantom.app`} style="color: #8820fe; text-decoration: none;">Phanom</a> wallet</b> to claim this ticket. This ticket is non-transferrable.
       </div>
 
     </div>
@@ -110,8 +120,7 @@ export const approvalSuccessfulEmail = (
             target="_blank"
             rel="noreferer"
             href=${eventUri}
-              style="padding: 12px 16px; color: white; text-decoration: none; background-color: #8820fe; border-radius: 5px; border: 1px solid #8820fe; display: block; font-size: 16px;">View
-              Event Details</a>
+              style="padding: 12px 16px; color: white; text-decoration: none; background-color: #8820fe; border-radius: 5px; border: 1px solid #8820fe; display: block; font-size: 16px;">View Details</a>
           </div>
         </div>
       </div>
