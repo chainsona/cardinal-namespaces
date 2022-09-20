@@ -255,8 +255,8 @@ type UserData = {
 
 const users: UserData[] = [
   {
-    email: "giannis@cardinal.so",
-    firstName: "Giannis",
+    email: "avinash@cardinal.so",
+    firstName: "Avinash",
   },
 ];
 

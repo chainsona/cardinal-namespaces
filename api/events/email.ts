@@ -1,9 +1,16 @@
 import { SES } from "aws-sdk";
 import type { SendEmailRequest } from "aws-sdk/clients/ses";
+import { Timestamp } from "firebase-admin/firestore";
 
 import { eventUrl } from "./common";
 import type { FirebaseEvent } from "./firebase";
 import { getEventBannerImage } from "./firebase";
+
+const parseEventStartTime = (startTime: string | Timestamp) => {
+  return typeof startTime === "string"
+    ? new Date(startTime)
+    : new Timestamp(startTime.seconds, startTime.nanoseconds).toDate();
+};
 
 export const approvalSuccessfulEmail = (
   event: FirebaseEvent,
@@ -14,10 +21,9 @@ export const approvalSuccessfulEmail = (
   firstName?: string
 ) => {
   const eventUri = eventUrl(event.shortLink, config);
-  const eventStart = (
-    typeof event.eventStartTime === "string"
-      ? new Date(event.eventStartTime)
-      : event.eventStartTime.toDate()
+
+  const eventStart = parseEventStartTime(
+    event.eventStartTime
   ).toLocaleDateString("en-US", {
     weekday: "long",
     month: "short",
@@ -25,19 +31,15 @@ export const approvalSuccessfulEmail = (
     hour: "numeric",
     minute: "numeric",
   });
-  const eventStartDate = (
-    typeof event.eventStartTime === "string"
-      ? new Date(event.eventStartTime)
-      : event.eventStartTime.toDate()
+  const eventStartDate = parseEventStartTime(
+    event.eventStartTime
   ).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
-  const eventStartime = (
-    typeof event.eventStartTime === "string"
-      ? new Date(event.eventStartTime)
-      : event.eventStartTime.toDate()
+  const eventStartime = parseEventStartTime(
+    event.eventStartTime
   ).toLocaleTimeString("en-US", {
     month: "numeric",
     day: "numeric",
@@ -51,7 +53,7 @@ export const approvalSuccessfulEmail = (
   const calendarInviteLink = `http://www.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(
     event.eventName
   )}&dates=${encodeURIComponent(
-    new Date(event.eventStartTime.toString()).toLocaleString()
+    parseEventStartTime(event.eventStartTime).toLocaleString()
   )}&details=Event%20Details%20Here&location=${encodeURIComponent(
     event.eventLocation
   )}`;
@@ -125,10 +127,10 @@ export const approvalSuccessfulEmail = (
               You've been invited by <b>Solana Spaces</b>, <b>Phantom</b>, <b>FTX</b>, and <b>Palm Tree Crew</b> to celebrate the unveiling of the Solana Spaces Embassy in Miami on Thursday, September 29th, beginning at 8:00pm.
             </div>
             <div style="margin-bottom: 8px">
-              The evening will feature performances by <b>DJ Sam Feldt</b> and Astrals Co-founder and <b>DJ Myles O'Neal</b>. This is an invite-only event, and we'd love to see you there.
+              The evening will feature performances by <b>Sam Feldt</b> and Astrals Co-founder and <b>DJ Myles O'Neal</b>. This is an invite-only event, and we'd love to see you there.
             </div>
             <div style="margin-bottom: 8px">
-              Enjoy light bites and an open bar with other Solana Embassy insiders. We invite you to shop curated merchandise and experience our 'learn & earn' tutorial stations for the first time.
+              Enjoy light bites and an open bar with other Solana VIPs. We’re thrilled to have you preview the experience with our team, sponsors, and supporters! Should you need, Valet parking will be available upon arrival.
             </div>
           </div>
           <div style="display:block; width: max-content; margin-top: 20px;">
