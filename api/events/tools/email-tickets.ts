@@ -195,7 +195,8 @@ export const getLinks = async (
           ticket.ticketName,
           ticket.docId,
           claimLink,
-          config
+          config,
+          firstName
         ),
         ticket.ticketDescription
       );

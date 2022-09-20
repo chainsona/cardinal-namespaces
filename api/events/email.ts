@@ -96,13 +96,12 @@ export const approvalSuccessfulEmail = (
     <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
     <div style="width: 100%; border-radius: 20px;">
       <h2 style="margin-bottom: 15px; text-align: center;"> About the event </h2>
-      <div style="text-align: center; margin: 0px auto; background-color: #f8f8f8; overflow: hidden; border-radius: 20px; display: flex; justify-content: center; width: auto;">
+      <div style="text-align: center; margin: 0px auto; background-color: #f8f8f8; flex-wrap: wrap; overflow: hidden; border-radius: 20px; display: flex; justify-content: center; width: auto;">
         <img src=${getEventBannerImage(
           event.docId
-        )} width="48%" style="object-fit: contain; display: inline-block; vertical-align:middle;">
-        <div style="width: 4%; display: inline-block;"></div>
+        )} style="width: 100%; flex-grow: 1; float: left; object-fit: contain; display: inline-block; vertical-align:middle;">
         <div
-          style="justify-self: start; padding-top: 20px; padding-right: 20px; padding-bottom: 20px; height: 100%; width: 48%; display: inline-block; text-align: left; vertical-align: top;">
+          style="font-size: 14px; float: left; flex-grow: 1; justify-self: start; padding: 20px; height: 100%; width: 48%; display: inline-block; text-align: left; vertical-align: top;">
           <div style="font-weight: 600; justify-content: center;">
             <a style="text-decoration: none; color: inherit;" target='_blank' rel="noreferrer" href=${calendarInviteLink}>
               <div style="display: block; padding-bottom: 8px;">
