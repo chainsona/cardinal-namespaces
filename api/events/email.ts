@@ -30,6 +30,8 @@ export const approvalSuccessfulEmail = (
     day: "numeric",
     hour: "numeric",
     minute: "numeric",
+    timeZone: "America/New_York",
+    timeZoneName: "short",
   });
   const eventStartDate = parseEventStartTime(
     event.eventStartTime
@@ -37,6 +39,8 @@ export const approvalSuccessfulEmail = (
     weekday: "long",
     month: "long",
     day: "numeric",
+    timeZone: "America/New_York",
+    timeZoneName: "short",
   });
   const eventStartime = parseEventStartTime(
     event.eventStartTime
@@ -46,6 +50,8 @@ export const approvalSuccessfulEmail = (
     year: "numeric",
     hour: "numeric",
     minute: "numeric",
+    timeZone: "America/New_York",
+    timeZoneName: "short",
   });
   const locationLink = `https://maps.google.com/?q=${encodeURIComponent(
     event.eventLocation
@@ -59,13 +65,38 @@ export const approvalSuccessfulEmail = (
   )}`;
 
   return `
+  <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-
+  </head>
+  <body>
 <div style="display:block; margin: 0px auto; background-color: white; padding: 20px; border-radius: 20px; color: black; font-family:-apple-system, Inter, sans-serif;">
+<div>
   <div style="max-width:786px; border-radius: 20px; margin: 0px auto;">
-    <img src="https://i.imgur.com/gTMiSl4.png" width="180px" style="margin-top: 20px; margin-bottom: 20px; border-radius: 3%;" />
+    <a href="https://cardinal.so" target="_blank" rel="noreferrer">
+      <img src="https://i.imgur.com/gTMiSl4.png" width="180px" style="margin-top: 20px; margin-bottom: 20px; border-radius: 3%;" /> 
+    </a>
+    <div style="background-color: #f8f8f8; padding: 20px; border-radius: 20px;">
+      <div style="margin-bottom: 8px">
+        Hi${firstName ? ` ${firstName}` : ""},
+      </div>
+      <div style="margin-bottom: 8px">
+        You've been invited by <b>Solana Spaces</b>, <b>Phantom</b>, <b>FTX</b>, and <b>Palm Tree Crew</b> to celebrate the unveiling of the Solana Spaces Embassy in Miami on Thursday, September 29th, beginning at 8:00pm.
+      </div>
+      <div style="margin-bottom: 8px">
+        The evening will feature performances by <b>Sam Feldt</b> and Astrals Co-founder and <b>Myles O'Neal</b>. This is an invite-only event, and we'd love to see you there.
+      </div>
+      <div style="margin-bottom: 8px">
+        Enjoy light bites and an open bar with other Solana VIPs. We’re thrilled to have you preview the experience with our team, sponsors, and supporters! Should you need, Valet parking will be available upon arrival.
+      </div>
+      <div style="margin-bottom: 8px">
+        -The Solana Spaces Team
+      </div>      
+    </div>
+    <hr style="margin: 30px auto; width: 90%; border: 1px lightgray solid;" />
     <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 20px;">
       <img
         src=${`https://firebasestorage.googleapis.com/v0/b/cardinal-events.appspot.com/o/tickets%2F${ticketId}%2Fimage.png?alt=media`}
@@ -118,21 +149,7 @@ export const approvalSuccessfulEmail = (
     event.eventLocation
   }</a>
             </div>
-          </div>
-          <div style="margin-bottom: 10px; margin-top: 10px;">
-            <div style="margin-bottom: 8px">
-              Hi${firstName ? ` ${firstName}` : ""},
-            </div>
-            <div style="margin-bottom: 8px">
-              You've been invited by <b>Solana Spaces</b>, <b>Phantom</b>, <b>FTX</b>, and <b>Palm Tree Crew</b> to celebrate the unveiling of the Solana Spaces Embassy in Miami on Thursday, September 29th, beginning at 8:00pm.
-            </div>
-            <div style="margin-bottom: 8px">
-              The evening will feature performances by <b>Sam Feldt</b> and Astrals Co-founder and <b>DJ Myles O'Neal</b>. This is an invite-only event, and we'd love to see you there.
-            </div>
-            <div style="margin-bottom: 8px">
-              Enjoy light bites and an open bar with other Solana VIPs. We’re thrilled to have you preview the experience with our team, sponsors, and supporters! Should you need, Valet parking will be available upon arrival.
-            </div>
-          </div>
+          </div>          
           <div style="display:block; width: max-content; margin-top: 20px;">
             <a
             target="_blank"
@@ -148,16 +165,14 @@ export const approvalSuccessfulEmail = (
           Have any questions? Reply to this email and we'll get back to you as soon as possible.
         </div>
         <div>
-          538 Castro St. San Francisco, CA, 94114
+          538 Castro St. San Franciscos CA, 94114
         </div>
       </div>
     </div>
   </div>
+  </body>
 `;
 };
-
-// <img src="https://imgur.com/a/Zj2IykL"
-// alt="solana-logo" style="width: 200px; display: block; margin: 5px auto;"/>
 
 export const sendEmail = async (
   destination: string,
@@ -186,6 +201,7 @@ export const sendEmail = async (
         },
       },
     },
+    ConfigurationSetName: "cardinal-event-emails",
   };
 
   await ses.sendEmail(params).promise();

@@ -47,7 +47,7 @@ export const getLinks = async (
   ticketId = "crd-vF1rCIVARtDGV8udx9tZ-30573",
   eventShortLink = "solana-spaces-unveiling",
   config = "solana-spaces",
-  dryRun = false
+  dryRun = true
 ) => {
   const allLinks: string[] = [];
   const connection = connectionFor(cluster);
@@ -178,15 +178,11 @@ export const getLinks = async (
       claimLink = `${baseUrl}/solana-spaces/solana-spaces-unveiling/claim?mint=${masterEditionMint.publicKey.toString()}&otp=${utils.bytes.bs58.encode(
         otp?.secretKey
       )}&ticketId=${ticketId}`;
-      const tkm = await connection.getAccountInfo(tokenManagerId);
-      if (!tkm) {
-        console.log("Missing token manager", tokenManagerId.toString());
-      } else {
-        console.log(
-          `Master edition data created mintId=(${masterEditionMint.publicKey.toString()}) masterEditionId=(${masterEditionId.toString()}) metadataId=(${masterEditionMetadataId.toString()}) link=(${claimLink})`
-        );
-        allLinks.push(claimLink);
-      }
+
+      console.log(
+        `Master edition data created mintId=(${masterEditionMint.publicKey.toString()}) masterEditionId=(${masterEditionId.toString()}) metadataId=(${masterEditionMetadataId.toString()}) link=(${claimLink})`
+      );
+      allLinks.push(claimLink);
 
       await sendEmail(
         destination,
@@ -254,10 +250,7 @@ type UserData = {
 };
 
 const users: UserData[] = [
-  {
-    email: "avinash@cardinal.so",
-    firstName: "Avinash",
-  },
+  { firstName: "Avinash", email: "avinash@cardinal.so" },
 ];
 
 getLinks(users, "mainnet")
