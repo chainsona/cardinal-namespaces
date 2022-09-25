@@ -31,6 +31,7 @@
     "firebase-admin": "^11.0.1",
     "jsbi": "^4.1.0",
     "node-fetch": "^2.6.6",
+    "postmark": "^3.0.14",
     "serverless-dotenv-plugin": "^4.0.2",
     "serverless-prune-plugin": "^2.0.1"
   }

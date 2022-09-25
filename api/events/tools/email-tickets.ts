@@ -23,7 +23,7 @@ import {
   sendAndConfirmRawTransaction,
   Transaction,
 } from "@solana/web3.js";
-import { approvalSuccessfulEmail, sendEmail } from "../email";
+import { approvalSuccessfulEmailHtml, sendEmail } from "../email";
 import type { FirebaseApproval, FirebaseResponse } from "../firebase";
 import {
   getResponseRef,
@@ -47,7 +47,7 @@ export const getLinks = async (
   ticketId = "crd-vF1rCIVARtDGV8udx9tZ-30573",
   eventShortLink = "solana-spaces-unveiling",
   config = "solana-spaces",
-  dryRun = true
+  dryRun = false
 ) => {
   const allLinks: string[] = [];
   const connection = connectionFor(cluster);
@@ -186,7 +186,7 @@ export const getLinks = async (
 
       await sendEmail(
         destination,
-        approvalSuccessfulEmail(
+        approvalSuccessfulEmailHtml(
           event,
           ticket.ticketName,
           ticket.docId,
@@ -220,6 +220,9 @@ export const getLinks = async (
         },
         approvalTransactionId: null,
         approvalSignerPubkey: otp.publicKey.toString(),
+        mintId: masterEditionMint.publicKey.toString(),
+        claimUrl: claimLink,
+        email: destination,
         claimTransactionId: null,
         claimSignerPubkey: null,
       } as FirebaseResponse);
@@ -249,9 +252,7 @@ type UserData = {
   firstName?: string;
 };
 
-const users: UserData[] = [
-  { firstName: "Avinash", email: "avinash@cardinal.so" },
-];
+const users: UserData[] = [];
 
 getLinks(users, "mainnet")
   .then((links) => {
