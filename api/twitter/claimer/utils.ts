@@ -10,6 +10,7 @@ export const TWITTER_API_KEYS = process.env.TWITTER_API_KEYS
   : [];
 
 export type TweetJson = {
+  errors?: { title: string }[];
   data: { text: string };
   includes: { users: { username: string }[] };
 };
@@ -37,7 +38,14 @@ export const tweetContainsPublicKey = async (
       } catch (e) {
         console.log("Invalid twitter API response", e);
         if (i === TWITTER_API_KEYS.length - 1) {
-          throw new Error(`Invalid twitter API response`);
+          if (
+            tweetJson?.errors &&
+            tweetJson?.errors[0].title === "Authorization Error"
+          ) {
+            throw new Error("Cannot read tweet because account is private");
+          } else {
+            throw new Error(`Invalid twitter API response`);
+          }
         }
       }
     }
