@@ -51,7 +51,7 @@ make
 
 **Namepsace**
 
-Namespaces are the base component of the protocol. A namespace is a PDA owned by the program that forms a logical grouping of NFTs under a common name. Often similar to a TLD (top-level domain), but can the use of a namespace can vary widely. Essentially a namespace is the creator of tokens that belong in the namespace. It contians an authority who can update the parameters of the namespace, and when users claim entries in a namespace, they are issued by the namespace.
+Namespaces are the base component of the protocol. A namespace is a PDA owned by the program that forms a logical grouping of NFTs under a common name. Often similar to a TLD (top-level domain), but the use of a namespace can vary widely. Essentially a namespace is the creator of tokens that belongs in the namespace. It contains an authority who can update the parameters of the namespace, and when users claim entries in a namespace, they are issued by the namespace.
 
 ```
 #[account]
@@ -76,7 +76,7 @@ Namespaces are a collection of name entries. Each name entry stores information 
 
 Name entry NFTs are dynamically generated using cardinal-generator.
 
-Name entries are issued by the namespace according to the paramaters of the namespace. The namespaces uses cardinal-token-manager to create revocable and expiring NFTs that represent each entry. This setup allows for subscriptions, and revocable badges issued by a namespace.
+Name entries are issued by the namespace according to the paramaters of the namespace. The namespaces use the cardinal-token-manager to create revocable and expiring NFTs that represent each entry. This setup allows for subscriptions, and revocable badges issued by a namespace.
 
 ```
 #[account]
