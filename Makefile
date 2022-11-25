@@ -2,19 +2,15 @@
 
 TEST_KEY := $(shell solana-keygen pubkey ./tests/test-key.json)
 
-all: install test-keys build stop start test clean-test-keys stop
+all: install build stop start test stop
 
 install:
 	yarn install
 
-test-keys:
-	anchor build
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w/$$(solana-keygen pubkey ./target/deploy/namespaces-keypair.json)/g" {} +
-	anchor build
-
 build:
 	anchor build
 	yarn idl:generate
+	yarn lint
 
 start:
 	solana-test-validator --url https://api.devnet.solana.com \
@@ -23,7 +19,7 @@ start:
 		--clone tmeEDp1RgoDtZFtx6qod3HkbQmv9LMe36uqKVvsLTDE --clone DwoZ1RMgLEgSAsHNC2fecJqhvWvwhEkb9u29hVs2hNvg \
 		--clone crt4Ymiqtk3M5w6JuKDT7GuZfUDiPLnhwRVqymSSBBn --clone 94mjR7rAf12K6u8WrLzUaZZnxtX1ZNBo3SPeQKZwXLx9 \
 		--clone pmvYY6Wgvpe3DEj3UX1FcRpMx43sMLYLJrFTVGcqpdn --clone 355AtuHH98Jy9XFg5kWodfmvSfrhcxYUKGoJe8qziFNY \
-		--bpf-program ./target/deploy/namespaces-keypair.json ./target/deploy/namespaces.so \
+		--bpf-program nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w ./target/deploy/namespaces.so \
 		--reset --quiet & echo $$! > validator.PID
 	sleep 10
 	solana-keygen pubkey ./tests/test-key.json
@@ -31,9 +27,6 @@ start:
 
 test:
 	anchor test --skip-local-validator --skip-build --skip-deploy --provider.cluster localnet
-
-clean-test-keys:
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey ./target/deploy/namespaces-keypair.json)/nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w/g" {} +
 
 stop: validator.PID
 	pkill solana-test-validator

@@ -1,12 +1,12 @@
 import { findAta } from "@cardinal/common";
-import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/token-manager/dist/cjs/programs/paymentManager";
-import { findPaymentManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/pda";
+import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/payment-manager";
+import { findPaymentManagerAddress } from "@cardinal/payment-manager/dist/cjs/pda";
+import { withRemainingAccountsForPayment } from "@cardinal/payment-manager/dist/cjs/utils";
 import { TIME_INVALIDATOR_ADDRESS } from "@cardinal/token-manager/dist/cjs/programs/timeInvalidator";
 import { findTimeInvalidatorAddress } from "@cardinal/token-manager/dist/cjs/programs/timeInvalidator/pda";
 import {
   getRemainingAccountsForKind,
   TokenManagerKind,
-  withRemainingAccountsForPayment,
 } from "@cardinal/token-manager/dist/cjs/programs/tokenManager";
 import type { Wallet } from "@saberhq/solana-contrib";
 import type {

@@ -1,6 +1,6 @@
 {
   "name": "@cardinal/namespaces",
-  "version": "4.1.58",
+  "version": "4.1.59",
   "description": "Cardinal namespaces SDK",
   "keywords": [
     "solana",
@@ -48,7 +48,8 @@
   "dependencies": {
     "@cardinal/certificates": "^2.0.1",
     "@cardinal/common": "^3.0.1",
-    "@cardinal/token-manager": "^1.5.12",
+    "@cardinal/token-manager": "^2.0.0",
+    "@cardinal/payment-manager": "^2.1.1",
     "@metaplex-foundation/mpl-token-metadata": "^1.2.5",
     "@project-serum/anchor": "^0.24.2"
   },

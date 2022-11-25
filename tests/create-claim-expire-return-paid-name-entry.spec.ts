@@ -1,8 +1,8 @@
 import { findAta, tryGetAccount } from "@cardinal/common";
-import { DEFAULT_PAYMENT_MANAGER_NAME } from "@cardinal/token-manager/dist/cjs/programs/paymentManager";
-import { getPaymentManager } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/accounts";
-import { init } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/instruction";
-import { findPaymentManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/paymentManager/pda";
+import { DEFAULT_PAYMENT_MANAGER_NAME } from "@cardinal/payment-manager";
+import { getPaymentManager } from "@cardinal/payment-manager/dist/cjs/accounts";
+import { findPaymentManagerAddress } from "@cardinal/payment-manager/dist/cjs/pda";
+import { withInit } from "@cardinal/payment-manager/dist/cjs/transaction";
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import { expectTXTable } from "@saberhq/chai-solana";
@@ -111,18 +111,17 @@ describe("create-claim-expire-name-entry", () => {
     const provider = getProvider();
     const transaction = new web3.Transaction();
 
-    const [ix] = await init(
+    await withInit(
+      transaction,
       provider.connection,
       provider.wallet,
       DEFAULT_PAYMENT_MANAGER_NAME,
-      {
-        feeCollector: feeCollector.publicKey,
-        makerFeeBasisPoints: MAKER_FEE,
-        takerFeeBasisPoints: TAKER_FEE,
-      }
+      feeCollector.publicKey,
+      MAKER_FEE,
+      TAKER_FEE,
+      false
     );
 
-    transaction.add(ix);
     const txEnvelope = new TransactionEnvelope(
       SolanaProvider.init({
         connection: provider.connection,

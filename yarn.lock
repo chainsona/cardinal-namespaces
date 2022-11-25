@@ -60,6 +60,19 @@
     polished "^4.2.2"
     tslib "^2.4.0"
 
+"@cardinal/common@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@cardinal/common/-/common-4.0.1.tgz#cf6895c47a986e7f5a75b1260eb1a663233b141a"
+  integrity sha512-We4m3pTQouHhay4RrPJJOvmV0KOGy7vuKSRaseLPvUjdEfQRZ9SN/Oy2U4v326wBcdonVc72EAYFAqYWBJgRFQ==
+  dependencies:
+    "@project-serum/anchor" "^0.24.2"
+    "@solana/buffer-layout" "^4.0.0"
+    "@solana/spl-token" "^0.3.5"
+    "@solana/web3.js" "^1.66.2"
+    bignumber.js "^9.1.0"
+    polished "^4.2.2"
+    tslib "^2.4.0"
+
 "@cardinal/payment-manager@^1.7.9":
   version "1.7.9"
   resolved "https://registry.yarnpkg.com/@cardinal/payment-manager/-/payment-manager-1.7.9.tgz#47d894ccfbce5a40d90006e243d7b31e33524a89"
@@ -74,10 +87,23 @@
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "^1.66.2"
 
-"@cardinal/token-manager@^1.5.12":
-  version "1.7.9"
-  resolved "https://registry.yarnpkg.com/@cardinal/token-manager/-/token-manager-1.7.9.tgz#0413f99489051612482d6387b99b6299e9729791"
-  integrity sha512-aFx5BVGeHdVNxXP/rMyIgw7GEY+1NbN1xwDcZzVy1neS3fRA9IZPQg0RYbJmUHRW3befZfE1miP18JdmhgjJGg==
+"@cardinal/payment-manager@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@cardinal/payment-manager/-/payment-manager-2.1.1.tgz#029ac64f327925c1fbe4a7e5d6aa6b3eb42014c6"
+  integrity sha512-SkUt1y6hKaYinoTnHmfimj9iAV9EP5vbB7t/bMgBWbmWtCSzG27jzicBreE6RRzcz5FXjqnSS+oVTkFbknthTQ==
+  dependencies:
+    "@cardinal/common" "^4.0.1"
+    "@metaplex-foundation/mpl-token-metadata" "^1.2.5"
+    "@project-serum/anchor" "^0.25.0"
+    "@saberhq/anchor-contrib" "^1.14.9"
+    "@saberhq/solana-contrib" "^1.14.9"
+    "@solana/spl-token" "^0.1.8"
+    "@solana/web3.js" "^1.66.2"
+
+"@cardinal/token-manager@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@cardinal/token-manager/-/token-manager-2.0.0.tgz#5993b00180baaa1ab6b7bb4146e1bd9cbf376c76"
+  integrity sha512-ZLUZmRh7Bc+3TPLzouYkpEWXF/R9xA6SfQzXNyoud9gidTXrZA/OujqtQBWZg+sOlGzUQQEc91/GcuXUQu3Q+Q==
   dependencies:
     "@cardinal/common" "^2.0.12"
     "@cardinal/payment-manager" "^1.7.9"
