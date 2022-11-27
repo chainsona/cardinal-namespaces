@@ -9,13 +9,13 @@ cluster = "localnet"
 wallet = "./tests/test-key.json"
 
 [programs.mainnet]
-cardinal_namespaces = "nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w"
+namespaces = "nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w"
 
 [programs.devnet]
-cardinal_namespaces = "nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w"
+namespaces = "nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w"
 
 [programs.testnet]
-cardinal_namespaces = "nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w"
+namespaces = "nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w"
 
 [programs.localnet]
-cardinal_namespaces = "nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w"
+namespaces = "nameXpT2PwZ2iA6DTNYTotTmiMYusBCYqwBLN2QgF4w"
