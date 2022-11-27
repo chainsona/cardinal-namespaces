@@ -41,7 +41,7 @@
     "typecheck": "tsc",
     "lint": "eslint . --cache",
     "lint:ci": "eslint . --max-warnings=0",
-    "test:e2e": "anchor test --skip-build 'tests/**/*.ts'",
+    "test": "yarn mocha tests/**/*.spec.ts",
     "docs:generate": "typedoc --excludePrivate --includeVersion --out site/ src/index.ts",
     "prepare": "husky install"
   },
