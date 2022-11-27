@@ -301,7 +301,7 @@ describe("create-claim-expire-released-name-entry", () => {
   });
 
   it("Wait and invalidate token", async () => {
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 2000));
     const nameEntry = await getNameEntry(
       provider.connection,
       namespaceName,
