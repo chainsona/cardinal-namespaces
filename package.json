@@ -39,8 +39,7 @@
     "clean": "rm -fr dist/",
     "idl:generate": "./scripts/generate-idls-types.sh",
     "typecheck": "tsc",
-    "lint": "eslint . --cache",
-    "lint:ci": "eslint . --max-warnings=0",
+    "lint": "eslint 'src/**/*.{js,ts}' --fix",
     "test": "yarn mocha tests/**/*.spec.ts",
     "docs:generate": "typedoc --excludePrivate --includeVersion --out site/ src/index.ts",
     "prepare": "husky install"
