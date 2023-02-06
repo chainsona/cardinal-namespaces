@@ -1,6 +1,11 @@
 import { certificateIdForMint } from "@cardinal/certificates";
+import {
+  CardinalProvider,
+  newAccountWithLamports,
+  withFindOrInitAssociatedTokenAccount,
+} from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
-import * as splToken from "@solana/spl-token";
+import { getAccount, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 import assert from "assert";
 import { BN } from "bn.js";
@@ -19,29 +24,35 @@ import {
   withInitEntry,
   withSetReverseEntry,
 } from "../../src/deprecated";
-import { createMint, withFindOrInitAssociatedTokenAccount } from "../utils";
-import { getProvider } from "../workspace";
+import { createMint } from "../utils";
+import { getTestProvider } from "@cardinal/common";
 
 describe("namespace-create-rent", () => {
-  const provider = getProvider();
-
   // test params
   const namespaceName = `ns-${Math.random()}`;
   const entryName = `testname-${Math.random()}`;
-  const mintAuthority = web3.Keypair.generate();
   const paymentAmountDaily = new anchor.BN(864000);
   const rentDuration = 500;
   const PAYMENT_MINT_START = 10000;
 
   // global
-  let paymentMint: splToken.Token;
+  let paymentMintId: web3.PublicKey;
+
+  let mintAuthority: web3.Keypair;
+  let provider: CardinalProvider;
+  beforeAll(async () => {
+    provider = await getTestProvider();
+    mintAuthority = await newAccountWithLamports(provider.connection);
+  });
 
   it("Creates a namespace", async () => {
-    [, paymentMint] = await createMint(
+    [, paymentMintId] = await createMint(
       provider.connection,
-      mintAuthority,
-      provider.wallet.publicKey,
-      PAYMENT_MINT_START
+      new anchor.Wallet(mintAuthority),
+      {
+        target: provider.wallet.publicKey,
+        amount: PAYMENT_MINT_START,
+      }
     );
 
     const transaction = new web3.Transaction();
@@ -56,7 +67,7 @@ describe("namespace-create-rent", () => {
         rentAuthority: provider.wallet.publicKey,
         approveAuthority: provider.wallet.publicKey,
         paymentAmountDaily,
-        paymentMint: paymentMint.publicKey,
+        paymentMint: paymentMintId,
         maxRentalSeconds: new BN(86400),
         transferableEntries: true,
       }
@@ -178,12 +189,13 @@ describe("namespace-create-rent", () => {
       await withFindOrInitAssociatedTokenAccount(
         transaction,
         provider.connection,
-        paymentMint.publicKey,
+        paymentMintId,
         provider.wallet.publicKey,
         provider.wallet.publicKey
       );
 
-    const userPaymentTokenAccountBefore = await paymentMint.getAccountInfo(
+    const userPaymentTokenAccountBefore = await getAccount(
+      provider.connection,
       userPaymentTokenAccountId
     );
 
@@ -224,32 +236,32 @@ describe("namespace-create-rent", () => {
 
     const [certificateId] = await certificateIdForMint(certificateMintId);
 
-    const certificatePaymentTokenAccountId =
-      await splToken.Token.getAssociatedTokenAddress(
-        splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-        splToken.TOKEN_PROGRAM_ID,
-        paymentMint.publicKey,
-        certificateId,
-        true
-      );
+    const certificatePaymentTokenAccountId = getAssociatedTokenAddressSync(
+      paymentMintId,
+      certificateId,
+      true
+    );
 
-    const checkCertificatePaymentTokenAccount =
-      await paymentMint.getAccountInfo(certificatePaymentTokenAccountId);
+    const checkCertificatePaymentTokenAccount = await getAccount(
+      provider.connection,
+      certificatePaymentTokenAccountId
+    );
 
     const expectedPayment =
       rentDuration * (paymentAmountDaily.toNumber() / (60 * 60 * 24));
     assert(
-      checkCertificatePaymentTokenAccount.amount.eq(
+      new BN(checkCertificatePaymentTokenAccount.amount.toString()).eq(
         new anchor.BN(expectedPayment)
       )
     );
 
-    const userPaymentTokenAccountAfter = await paymentMint.getAccountInfo(
+    const userPaymentTokenAccountAfter = await getAccount(
+      provider.connection,
       userPaymentTokenAccountId
     );
     assert(
-      userPaymentTokenAccountBefore.amount
-        .sub(userPaymentTokenAccountAfter.amount)
+      new BN(userPaymentTokenAccountBefore.amount.toString())
+        .sub(new BN(userPaymentTokenAccountAfter.amount.toString()))
         .eq(new anchor.BN(expectedPayment))
     );
   });

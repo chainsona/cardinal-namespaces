@@ -1,12 +1,14 @@
-import { findAta, tryGetAccount } from "@cardinal/common";
+import {
+  CardinalProvider,
+  executeTransaction,
+  findAta,
+  getTestProvider,
+  tryGetAccount,
+} from "@cardinal/common";
 import { withInvalidate } from "@cardinal/token-manager";
-import { TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
-import { expectTXTable } from "@saberhq/chai-solana";
-import { SolanaProvider, TransactionEnvelope } from "@saberhq/solana-contrib";
-import * as splToken from "@solana/spl-token";
+import { getAccount } from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 import assert from "assert";
-import { expect } from "chai";
 
 import {
   findNamespaceId,
@@ -26,15 +28,17 @@ import {
   withSetNamespaceReverseEntry,
   withUpdateClaimRequest,
 } from "../src";
-import { getProvider } from "./workspace";
 
 describe("set-reverse-entry-and-invalidate-name-entry", () => {
-  const provider = getProvider();
-
   // test params
   const namespaceName = `ns-${Math.random()}`;
   const entryName1 = `testname-${Math.random()}`;
   const entryName2 = `testname-${Math.random()}`;
+
+  let provider: CardinalProvider;
+  beforeAll(async () => {
+    provider = await getTestProvider();
+  });
 
   it("Creates a namespace", async () => {
     const transaction = new web3.Transaction();
@@ -50,17 +54,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
         transferableEntries: false,
       }
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -91,19 +85,14 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName1,
       mintKeypair
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions,
-        [mintKeypair]
-      ),
-      "before",
+    await executeTransaction(
+      provider.connection,
+      transaction,
+      provider.wallet,
       {
-        verbosity: "error",
-        formatLogs: true,
+        signers: [mintKeypair],
       }
-    ).to.be.fulfilled;
-
+    );
     const checkEntry = await getNameEntry(
       provider.connection,
       namespaceName,
@@ -128,17 +117,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       transaction
     );
 
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Approve claim request", async () => {
@@ -158,17 +137,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       true,
       transaction
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Claim", async () => {
@@ -188,17 +157,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName1,
       mintId
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkClaimRequest = await tryGetAccount(async () =>
       getClaimRequest(
@@ -208,7 +167,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
         provider.wallet.publicKey
       )
     );
-    expect(checkClaimRequest).to.eq(null);
+    expect(checkClaimRequest).toEqual(null);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -223,14 +182,12 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     assert.equal(checkNameEntry.parsed.name, entryName1);
     assert.equal(checkNameEntry.parsed.mint.toString(), mintId.toString());
 
-    const checkRecipientTokenAccount = await new splToken.Token(
+    const checkRecipientTokenAccount = await getAccount(
       provider.connection,
-      mintId,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(await findAta(mintId, provider.wallet.publicKey));
-    expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
-    expect(checkRecipientTokenAccount.isFrozen).to.eq(true);
+      await findAta(mintId, provider.wallet.publicKey)
+    );
+    expect(Number(checkRecipientTokenAccount.amount.toString())).toEqual(1);
+    expect(checkRecipientTokenAccount.isFrozen).toEqual(true);
   });
 
   it("Set reverse entry", async () => {
@@ -250,17 +207,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName1,
       mintId
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
@@ -294,19 +241,14 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName2,
       mintKeypair
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions,
-        [mintKeypair]
-      ),
-      "before",
+    await executeTransaction(
+      provider.connection,
+      transaction,
+      provider.wallet,
       {
-        verbosity: "error",
-        formatLogs: true,
+        signers: [mintKeypair],
       }
-    ).to.be.fulfilled;
-
+    );
     const checkEntry = await getNameEntry(
       provider.connection,
       namespaceName,
@@ -331,17 +273,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       transaction
     );
 
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Approve claim request", async () => {
@@ -361,17 +293,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       true,
       transaction
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Claim", async () => {
@@ -391,17 +313,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName2,
       mintId
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkClaimRequest = await tryGetAccount(async () =>
       getClaimRequest(
@@ -411,7 +323,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
         provider.wallet.publicKey
       )
     );
-    expect(checkClaimRequest).to.eq(null);
+    expect(checkClaimRequest).toEqual(null);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -426,14 +338,12 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     assert.equal(checkNameEntry.parsed.name, entryName2);
     assert.equal(checkNameEntry.parsed.mint.toString(), mintId.toString());
 
-    const checkRecipientTokenAccount = await new splToken.Token(
+    const checkRecipientTokenAccount = await getAccount(
       provider.connection,
-      mintId,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(await findAta(mintId, provider.wallet.publicKey));
-    expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
-    expect(checkRecipientTokenAccount.isFrozen).to.eq(true);
+      await findAta(mintId, provider.wallet.publicKey)
+    );
+    expect(Number(checkRecipientTokenAccount.amount.toString())).toEqual(1);
+    expect(checkRecipientTokenAccount.isFrozen).toEqual(true);
   });
 
   it("Set reverse entry", async () => {
@@ -453,17 +363,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName2,
       mintId
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
@@ -492,25 +392,13 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       mintId
     );
 
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
-    const checkRecipientTokenAccount = await new splToken.Token(
+    const checkRecipientTokenAccount = await getAccount(
       provider.connection,
-      mintId,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(await findAta(mintId, provider.wallet.publicKey));
-    expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(0);
+      await findAta(mintId, provider.wallet.publicKey)
+    );
+    expect(Number(checkRecipientTokenAccount.amount.toString())).toEqual(0);
   });
 
   it("Invalidate name entry", async () => {
@@ -587,24 +475,14 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       }
     );
 
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const namespaceDataAfter = await getNamespaceByName(
       provider.connection,
       namespaceName
     );
 
-    expect(namespaceDataAfter.parsed.count).to.eq(
+    expect(namespaceDataAfter.parsed.count).toEqual(
       namespaceDataBefore.parsed.count - 1
     );
 
@@ -614,7 +492,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       )[0],
       provider.wallet.publicKey
     );
-    expect(checkNameEntry.parsed.reverseEntry?.toString()).to.eq(
+    expect(checkNameEntry.parsed.reverseEntry?.toString()).toEqual(
       reverseEntryId.toString()
     );
     // const checkReverseEntry = await tryGetAccount(async () =>
@@ -626,20 +504,16 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     //     )[0]
     //   )
     // );
-    // expect(checkReverseEntry).to.eq(null);
+    // expect(checkReverseEntry).toEqual(null);
 
     const entryAfter = await tryGetAccount(() =>
       getNameEntry(provider.connection, namespaceName, entryName1)
     );
-    expect(entryAfter?.parsed.isClaimed).to.be.false;
-    expect(entryAfter?.parsed.data).to.be.null;
+    expect(entryAfter?.parsed.isClaimed).toBeFalsy;
+    expect(entryAfter?.parsed.data).toBeNull;
 
-    const checkNamespaceTokenAccount = await new splToken.Token(
+    const checkNamespaceTokenAccount = await getAccount(
       provider.connection,
-      checkNameEntry.parsed.mint,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(
       await findAta(
         checkNameEntry.parsed.mint,
         (
@@ -648,6 +522,6 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
         true
       )
     );
-    expect(checkNamespaceTokenAccount.amount.toNumber()).to.eq(1);
+    expect(Number(checkNamespaceTokenAccount.amount.toString())).toEqual(1);
   });
 });

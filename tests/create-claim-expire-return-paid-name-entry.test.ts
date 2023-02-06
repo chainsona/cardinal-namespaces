@@ -1,16 +1,19 @@
-import { findAta, tryGetAccount } from "@cardinal/common";
+import {
+  CardinalProvider,
+  executeTransaction,
+  findAta,
+  getTestProvider,
+  newAccountWithLamports,
+  tryGetAccount,
+} from "@cardinal/common";
 import { DEFAULT_PAYMENT_MANAGER_NAME } from "@cardinal/payment-manager";
 import { getPaymentManager } from "@cardinal/payment-manager/dist/cjs/accounts";
 import { findPaymentManagerAddress } from "@cardinal/payment-manager/dist/cjs/pda";
 import { withInit } from "@cardinal/payment-manager/dist/cjs/transaction";
 import * as anchor from "@project-serum/anchor";
-import { TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
-import { expectTXTable } from "@saberhq/chai-solana";
-import { SolanaProvider, TransactionEnvelope } from "@saberhq/solana-contrib";
-import * as splToken from "@solana/spl-token";
+import { getAccount } from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 import assert from "assert";
-import { expect } from "chai";
 
 import {
   findNamespaceId,
@@ -27,17 +30,13 @@ import {
   withUpdateClaimRequest,
 } from "../src";
 import { createMint } from "./utils";
-import { getProvider } from "./workspace";
 
 describe("create-claim-expire-name-entry", () => {
-  const provider = getProvider();
-
   // test params
   const namespaceName = `ns-${Math.random()}`;
   const entryName = `testname-${Math.random()}`;
   const mintKeypair = web3.Keypair.generate();
   const nameEntryMint = mintKeypair.publicKey;
-  const mintAuthority = web3.Keypair.generate();
   const invalidator = web3.Keypair.generate();
   const paymentAmountDaily = new anchor.BN(10000000);
   const PAYMENT_MINT_START = 100000000;
@@ -48,14 +47,22 @@ describe("create-claim-expire-name-entry", () => {
   const feeCollector = web3.Keypair.generate();
 
   // global
-  let paymentMint: splToken.Token;
+  let paymentMintId: web3.PublicKey;
+  let mintAuthority: web3.Keypair;
+  let provider: CardinalProvider;
+  beforeAll(async () => {
+    provider = await getTestProvider();
+    mintAuthority = await newAccountWithLamports(provider.connection);
+  });
 
   it("Creates a namespace", async () => {
-    [, paymentMint] = await createMint(
+    [, paymentMintId] = await createMint(
       provider.connection,
-      mintAuthority,
-      provider.wallet.publicKey,
-      PAYMENT_MINT_START
+      new anchor.Wallet(mintAuthority),
+      {
+        target: provider.wallet.publicKey,
+        amount: PAYMENT_MINT_START,
+      }
     );
 
     // airdrop invalidator
@@ -77,23 +84,13 @@ describe("create-claim-expire-name-entry", () => {
         rentAuthority: provider.wallet.publicKey,
         approveAuthority: provider.wallet.publicKey,
         paymentAmountDaily,
-        paymentMint: paymentMint.publicKey,
+        paymentMint: paymentMintId,
         transferableEntries: false,
         maxExpiration: new anchor.BN(Date.now() / 1000 + 2 * 86400),
       }
     );
 
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -108,9 +105,7 @@ describe("create-claim-expire-name-entry", () => {
   });
 
   it("Create payment manager", async () => {
-    const provider = getProvider();
     const transaction = new web3.Transaction();
-
     await withInit(transaction, provider.connection, provider.wallet, {
       paymentManagerName: DEFAULT_PAYMENT_MANAGER_NAME,
       feeCollectorId: feeCollector.publicKey,
@@ -119,18 +114,7 @@ describe("create-claim-expire-name-entry", () => {
       includeSellerFeeBasisPoints: false,
     });
 
-    const txEnvelope = new TransactionEnvelope(
-      SolanaProvider.init({
-        connection: provider.connection,
-        wallet: provider.wallet,
-        opts: provider.opts,
-      }),
-      [...transaction.instructions]
-    );
-    await expectTXTable(txEnvelope, "Create Payment Manager", {
-      verbosity: "error",
-      formatLogs: true,
-    }).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkPaymentManagerId = findPaymentManagerAddress(
       DEFAULT_PAYMENT_MANAGER_NAME
@@ -139,9 +123,11 @@ describe("create-claim-expire-name-entry", () => {
       provider.connection,
       checkPaymentManagerId
     );
-    expect(paymentManagerData.parsed.name).to.eq(DEFAULT_PAYMENT_MANAGER_NAME);
-    expect(paymentManagerData.parsed.makerFeeBasisPoints).to.eq(MAKER_FEE);
-    expect(paymentManagerData.parsed.takerFeeBasisPoints).to.eq(TAKER_FEE);
+    expect(paymentManagerData.parsed.name).toEqual(
+      DEFAULT_PAYMENT_MANAGER_NAME
+    );
+    expect(paymentManagerData.parsed.makerFeeBasisPoints).toEqual(MAKER_FEE);
+    expect(paymentManagerData.parsed.takerFeeBasisPoints).toEqual(TAKER_FEE);
   });
 
   it("Init entry and mint", async () => {
@@ -163,19 +149,14 @@ describe("create-claim-expire-name-entry", () => {
       entryName,
       mintKeypair
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions,
-        [mintKeypair]
-      ),
-      "before",
+    await executeTransaction(
+      provider.connection,
+      transaction,
+      provider.wallet,
       {
-        verbosity: "error",
-        formatLogs: true,
+        signers: [mintKeypair],
       }
-    ).to.be.fulfilled;
-
+    );
     const checkEntry = await getNameEntry(
       provider.connection,
       namespaceName,
@@ -200,17 +181,7 @@ describe("create-claim-expire-name-entry", () => {
       transaction
     );
 
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Approve claim request", async () => {
@@ -230,17 +201,7 @@ describe("create-claim-expire-name-entry", () => {
       true,
       transaction
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Claim", async () => {
@@ -262,17 +223,7 @@ describe("create-claim-expire-name-entry", () => {
       entryName,
       nameEntryMint
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkClaimRequest = await tryGetAccount(async () =>
       getClaimRequest(
@@ -282,7 +233,7 @@ describe("create-claim-expire-name-entry", () => {
         provider.wallet.publicKey
       )
     );
-    expect(checkClaimRequest).to.eq(null);
+    expect(checkClaimRequest).toEqual(null);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -300,14 +251,12 @@ describe("create-claim-expire-name-entry", () => {
       nameEntryMint.toString()
     );
 
-    const checkRecipientTokenAccount = await new splToken.Token(
+    const checkRecipientTokenAccount = await getAccount(
       provider.connection,
-      nameEntryMint,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(await findAta(nameEntryMint, provider.wallet.publicKey));
-    expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
-    expect(checkRecipientTokenAccount.isFrozen).to.eq(true);
+      await findAta(nameEntryMint, provider.wallet.publicKey)
+    );
+    expect(Number(checkRecipientTokenAccount.amount.toString())).toEqual(1);
+    expect(checkRecipientTokenAccount.isFrozen).toEqual(true);
 
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,

@@ -1,6 +1,9 @@
+import {
+  CardinalProvider,
+  executeTransaction,
+  getTestProvider,
+} from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
-import { expectTXTable } from "@saberhq/chai-solana";
-import { SolanaProvider, TransactionEnvelope } from "@saberhq/solana-contrib";
 import * as web3 from "@solana/web3.js";
 import assert from "assert";
 
@@ -9,14 +12,17 @@ import {
   withCreateNamespace,
   withUpdateNamespace,
 } from "../src";
-import { getProvider } from "./workspace";
 
 describe("create-update-namespace", () => {
-  const provider = getProvider();
-
   // test params
   const namespaceName = `ns-${Math.random()}`;
   const paymentAmountDaily = new anchor.BN(0);
+
+  // global
+  let provider: CardinalProvider;
+  beforeAll(async () => {
+    provider = await getTestProvider();
+  });
 
   it("Creates a namespace", async () => {
     const transaction = new web3.Transaction();
@@ -33,17 +39,7 @@ describe("create-update-namespace", () => {
         limit: 1,
       }
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -82,17 +78,7 @@ describe("create-update-namespace", () => {
         invalidationType: namespace.parsed.invalidationType,
       }
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
