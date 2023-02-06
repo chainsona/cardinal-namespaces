@@ -1,5 +1,9 @@
-import type { AnchorTypes } from "@saberhq/anchor-contrib";
-import { PublicKey } from "@solana/web3.js";
+import type { ParsedIdlAccountData } from "@cardinal/common";
+import { emptyWallet } from "@cardinal/common";
+import { AnchorProvider, Program } from "@project-serum/anchor";
+import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
+import type { ConfirmOptions, Connection } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 
 import * as NAMESPACES_TYPES from "./idl/cardinal_namespaces";
 
@@ -13,19 +17,27 @@ export type NAMESPACES_PROGRAM = NAMESPACES_TYPES.Namespaces;
 
 export const NAMESPACES_IDL = NAMESPACES_TYPES.IDL;
 
-export type NamespacesTypes = AnchorTypes<NAMESPACES_PROGRAM>;
+export type GlobalContextData = ParsedIdlAccountData<
+  "globalContext",
+  NAMESPACES_PROGRAM
+>;
 
-type Accounts = NamespacesTypes["Accounts"];
+export type NamespaceData = ParsedIdlAccountData<
+  "namespace",
+  NAMESPACES_PROGRAM
+>;
 
-export type GlobalContextData = Accounts["globalContext"];
+export type EntryData = ParsedIdlAccountData<"entry", NAMESPACES_PROGRAM>;
 
-export type NamespaceData = Accounts["namespace"];
+export type ReverseEntryData = ParsedIdlAccountData<
+  "reverseEntry",
+  NAMESPACES_PROGRAM
+>;
 
-export type EntryData = Accounts["entry"];
-
-export type ReverseEntryData = Accounts["reverseEntry"];
-
-export type ClaimRequestData = Accounts["claimRequest"];
+export type ClaimRequestData = ParsedIdlAccountData<
+  "claimRequest",
+  NAMESPACES_PROGRAM
+>;
 
 export const DEFAULT_PAYMENT_MANAGER = "cardinal";
 export const IDENTITIES = [
@@ -42,3 +54,19 @@ export const NAMESPACE_SEED = "namespace";
 export const ENTRY_SEED = "entry";
 export const REVERSE_ENTRY_SEED = "reverse-entry";
 export const CLAIM_REQUEST_SEED = "rent-request";
+
+export const namespacesProgram = (
+  connection: Connection,
+  wallet?: Wallet,
+  confirmOptions?: ConfirmOptions
+) => {
+  return new Program<NAMESPACES_PROGRAM>(
+    NAMESPACES_IDL,
+    NAMESPACES_PROGRAM_ID,
+    new AnchorProvider(
+      connection,
+      wallet ?? emptyWallet(Keypair.generate().publicKey),
+      confirmOptions ?? {}
+    )
+  );
+};

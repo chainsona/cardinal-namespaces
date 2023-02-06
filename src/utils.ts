@@ -104,18 +104,14 @@ export const withRemainingAccountsForClaim = async (
   duration?: number
 ): Promise<AccountMeta[]> => {
   const namespace = await getNamespace(connection, namespaceId);
-  const [paymentManagerId] = await findPaymentManagerAddress(
-    DEFAULT_PAYMENT_MANAGER
-  );
+  const paymentManagerId = findPaymentManagerAddress(DEFAULT_PAYMENT_MANAGER);
 
   const accounts: AccountMeta[] = [];
   if (
     namespace.parsed.paymentAmountDaily.gt(new BN(0)) ||
     namespace.parsed.maxExpiration
   ) {
-    const [timeInvalidatorId] = await findTimeInvalidatorAddress(
-      tokenManagerId
-    );
+    const timeInvalidatorId = findTimeInvalidatorAddress(tokenManagerId);
     accounts.push(
       ...[
         {
@@ -141,7 +137,7 @@ export const withRemainingAccountsForClaim = async (
       ]
     );
   }
-  const remainingAccountsForKind = await getRemainingAccountsForKind(
+  const remainingAccountsForKind = getRemainingAccountsForKind(
     mintId,
     TokenManagerKind.Edition
   );
