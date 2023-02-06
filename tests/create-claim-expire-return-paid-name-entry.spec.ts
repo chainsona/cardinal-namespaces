@@ -111,16 +111,13 @@ describe("create-claim-expire-name-entry", () => {
     const provider = getProvider();
     const transaction = new web3.Transaction();
 
-    await withInit(
-      transaction,
-      provider.connection,
-      provider.wallet,
-      DEFAULT_PAYMENT_MANAGER_NAME,
-      feeCollector.publicKey,
-      MAKER_FEE,
-      TAKER_FEE,
-      false
-    );
+    await withInit(transaction, provider.connection, provider.wallet, {
+      paymentManagerName: DEFAULT_PAYMENT_MANAGER_NAME,
+      feeCollectorId: feeCollector.publicKey,
+      makerFeeBasisPoints: MAKER_FEE,
+      takerFeeBasisPoints: TAKER_FEE,
+      includeSellerFeeBasisPoints: false,
+    });
 
     const txEnvelope = new TransactionEnvelope(
       SolanaProvider.init({
@@ -135,7 +132,7 @@ describe("create-claim-expire-name-entry", () => {
       formatLogs: true,
     }).to.be.fulfilled;
 
-    const [checkPaymentManagerId] = await findPaymentManagerAddress(
+    const checkPaymentManagerId = findPaymentManagerAddress(
       DEFAULT_PAYMENT_MANAGER_NAME
     );
     const paymentManagerData = await getPaymentManager(

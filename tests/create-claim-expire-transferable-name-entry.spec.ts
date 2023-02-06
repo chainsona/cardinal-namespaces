@@ -339,7 +339,7 @@ describe("create-claim-expire-transferable-name-entry", () => {
     ).getAccountInfo(await findAta(mintId, provider.wallet.publicKey));
     expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
 
-    const [tokenManagerId] = await findTokenManagerAddress(mintId);
+    const tokenManagerId = findTokenManagerAddress(mintId);
     const tokenManager = await getTokenManager(
       provider.connection,
       tokenManagerId

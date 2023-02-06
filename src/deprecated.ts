@@ -4,11 +4,18 @@ import {
   CERTIFICATE_SEED,
   MINT_MANAGER_SEED,
 } from "@cardinal/certificates";
-import { withFindOrInitAssociatedTokenAccount } from "@cardinal/common";
-import * as mplTokenMetadata from "@metaplex-foundation/mpl-token-metadata";
+import {
+  findMintMetadataId,
+  METADATA_PROGRAM_ID,
+  withFindOrInitAssociatedTokenAccount,
+} from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
 import type { Wallet } from "@saberhq/solana-contrib";
 import * as splToken from "@solana/spl-token";
+import {
+  getAssociatedTokenAddressSync,
+  getMinimumBalanceForRentExemptMint,
+} from "@solana/spl-token";
 import type { Connection, Transaction } from "@solana/web3.js";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 
@@ -85,13 +92,7 @@ export async function withClaimEntry(
   );
 
   const namespaceCertificateTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      certificateMintId,
-      namespaceId,
-      true
-    );
+    await getAssociatedTokenAddressSync(certificateMintId, namespaceId, true);
 
   const certificatePaymentTokenAccountId =
     await withFindOrInitAssociatedTokenAccount(
@@ -120,14 +121,11 @@ export async function withClaimEntry(
     provider.wallet.publicKey
   );
 
-  const certificateTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      certificateMintId,
-      certificateId,
-      true
-    );
+  const certificateTokenAccountId = await getAssociatedTokenAddressSync(
+    certificateMintId,
+    certificateId,
+    true
+  );
   transaction.add(
     namespacesProgram.instruction.claimEntry(
       {
@@ -206,16 +204,8 @@ export async function withInitEntry(
     CERTIFICATE_PROGRAM_ID
   );
 
-  const [certificateMintMetadataId] = await PublicKey.findProgramAddress(
-    [
-      Buffer.from(mplTokenMetadata.MetadataProgram.PREFIX),
-      mplTokenMetadata.MetadataProgram.PUBKEY.toBuffer(),
-      certificateMintId.toBuffer(),
-    ],
-    mplTokenMetadata.MetadataProgram.PUBKEY
-  );
-
-  const mintBalanceNeeded = await splToken.Token.getMinBalanceRentForExemptMint(
+  const certificateMintMetadataId = findMintMetadataId(certificateMintId);
+  const mintBalanceNeeded = await getMinimumBalanceForRentExemptMint(
     provider.connection
   );
 
@@ -231,13 +221,7 @@ export async function withInitEntry(
   );
 
   const namespaceCertificateTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      certificateMintId,
-      namespaceId,
-      true
-    );
+    await getAssociatedTokenAddressSync(certificateMintId, namespaceId, true);
 
   transaction.add(
     namespacesProgram.instruction.initEntry(
@@ -260,7 +244,7 @@ export async function withInitEntry(
 
           // programs
           certificateProgram: CERTIFICATE_PROGRAM_ID,
-          tokenMetadataProgram: mplTokenMetadata.MetadataProgram.PUBKEY,
+          tokenMetadataProgram: METADATA_PROGRAM_ID,
           tokenProgram: splToken.TOKEN_PROGRAM_ID,
           associatedToken: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
@@ -326,13 +310,7 @@ export async function withRevokeEntry(
   );
 
   const namespaceCertificateTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      certificateMintId,
-      namespaceId,
-      true
-    );
+    await getAssociatedTokenAddressSync(certificateMintId, namespaceId, true);
 
   const namespacePaymentTokenAccountId =
     await withFindOrInitAssociatedTokenAccount(
@@ -344,22 +322,16 @@ export async function withRevokeEntry(
       true
     );
 
-  const certificatePaymentTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      namespace.paymentMint,
-      certificateId,
-      true
-    );
+  const certificatePaymentTokenAccountId = await getAssociatedTokenAddressSync(
+    namespace.paymentMint,
+    certificateId,
+    true
+  );
 
-  const userCertificateTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      certificateMintId,
-      certificateOwnerId
-    );
+  const userCertificateTokenAccountId = await getAssociatedTokenAddressSync(
+    certificateMintId,
+    certificateOwnerId
+  );
 
   const userPaymentTokenAccountId = await withFindOrInitAssociatedTokenAccount(
     transaction,
@@ -369,14 +341,11 @@ export async function withRevokeEntry(
     provider.wallet.publicKey
   );
 
-  const certificateTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      certificateMintId,
-      certificateId,
-      true
-    );
+  const certificateTokenAccountId = await getAssociatedTokenAddressSync(
+    certificateMintId,
+    certificateId,
+    true
+  );
 
   transaction.add(
     namespacesProgram.instruction.revokeEntry({
@@ -510,13 +479,10 @@ export async function withSetReverseEntry(
     certificateMintId
   );
 
-  const userCertificateTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      certificateMintId,
-      provider.wallet.publicKey
-    );
+  const userCertificateTokenAccountId = await getAssociatedTokenAddressSync(
+    certificateMintId,
+    provider.wallet.publicKey
+  );
 
   transaction.add(
     namespacesProgram.instruction.setReverseEntry(reverseEntryBump, {

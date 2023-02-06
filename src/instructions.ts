@@ -1,5 +1,11 @@
 import { withFindOrInitAssociatedTokenAccount } from "@cardinal/certificates";
-import { findAta, tryGetAccount } from "@cardinal/common";
+import {
+  findAta,
+  findMintEditionId,
+  findMintMetadataId,
+  METADATA_PROGRAM_ID,
+  tryGetAccount,
+} from "@cardinal/common";
 import {
   getRemainingAccountsForKind,
   InvalidationType,
@@ -12,15 +18,14 @@ import {
   findMintCounterId,
   findTokenManagerAddress,
 } from "@cardinal/token-manager/dist/cjs/programs/tokenManager/pda";
-import * as mplTokenMetadata from "@metaplex-foundation/mpl-token-metadata";
-import {
-  MasterEdition,
-  Metadata,
-} from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
 import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import type { Wallet } from "@saberhq/solana-contrib";
-import * as splToken from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import type { Connection, Keypair, Transaction } from "@solana/web3.js";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { BN } from "bn.js";
@@ -214,25 +219,19 @@ export async function withClaimNameEntry(
     entryName,
     requestor
   );
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
 
-  const namespaceTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      mintId,
-      namespaceId,
-      true
-    );
+  const namespaceTokenAccountId = getAssociatedTokenAddressSync(
+    mintId,
+    namespaceId,
+    true
+  );
 
-  const tokenManagerTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      mintId,
-      tokenManagerId,
-      true
-    );
+  const tokenManagerTokenAccountId = getAssociatedTokenAddressSync(
+    mintId,
+    tokenManagerId,
+    true
+  );
 
   const recipientTokenAccount = await withFindOrInitAssociatedTokenAccount(
     transaction,
@@ -243,7 +242,7 @@ export async function withClaimNameEntry(
     true
   );
 
-  const [mintCounterId] = await findMintCounterId(mintId);
+  const mintCounterId = findMintCounterId(mintId);
 
   const remainingAccountsForClaim = await withRemainingAccountsForClaim(
     connection,
@@ -275,8 +274,8 @@ export async function withClaimNameEntry(
           mintCounter: mintCounterId,
           recipientTokenAccount: recipientTokenAccount,
           tokenManagerProgram: TOKEN_MANAGER_ADDRESS,
-          tokenProgram: splToken.TOKEN_PROGRAM_ID,
-          associatedToken: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedToken: ASSOCIATED_TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
@@ -340,18 +339,14 @@ export async function withInitNameEntryMint(
   const [namespaceId] = await findNamespaceId(namespaceName);
   const [entryId] = await findNameEntryId(namespaceId, entryName);
 
-  const namespaceTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      mintKeypair.publicKey,
-      namespaceId,
-      true
-    );
+  const namespaceTokenAccountId = getAssociatedTokenAddressSync(
+    mintKeypair.publicKey,
+    namespaceId,
+    true
+  );
 
-  const mintMetadataId = await Metadata.getPDA(mintKeypair.publicKey);
-  const mintMasterEditionId = await MasterEdition.getPDA(mintKeypair.publicKey);
-
+  const mintMetadataId = findMintMetadataId(mintKeypair.publicKey);
+  const mintMasterEditionId = findMintEditionId(mintKeypair.publicKey);
   transaction.add(
     namespacesProgram.instruction.initNameEntryMint({
       accounts: {
@@ -362,9 +357,9 @@ export async function withInitNameEntryMint(
         mint: mintKeypair.publicKey,
         mintMetadata: mintMetadataId,
         masterEdition: mintMasterEditionId,
-        tokenMetadataProgram: mplTokenMetadata.MetadataProgram.PUBKEY,
-        tokenProgram: splToken.TOKEN_PROGRAM_ID,
-        associatedToken: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: METADATA_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedToken: ASSOCIATED_TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId,
       },
@@ -393,7 +388,7 @@ export async function withRevokeNameEntry(
   const [entryId] = await findNameEntryId(namespaceId, entryName);
 
   const nameEntry = await getNameEntry(connection, namespaceName, entryName);
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
   const tokenManagerData = await getTokenManager(connection, tokenManagerId);
 
   const tokenManagerTokenAccount = await withFindOrInitAssociatedTokenAccount(
@@ -411,7 +406,7 @@ export async function withRevokeNameEntry(
     true
   );
 
-  const remainingAccountsForKind = await getRemainingAccountsForKind(
+  const remainingAccountsForKind = getRemainingAccountsForKind(
     mintId,
     TokenManagerKind.Edition
   );
@@ -420,8 +415,7 @@ export async function withRevokeNameEntry(
     transaction,
     connection,
     wallet,
-    tokenManagerData,
-    true
+    tokenManagerData
   );
 
   transaction.add(
@@ -436,7 +430,7 @@ export async function withRevokeNameEntry(
         tokenManagerTokenAccount: tokenManagerTokenAccount,
         recipientTokenAccount: recipientTokenAccount,
         tokenManagerProgram: TOKEN_MANAGER_ADDRESS,
-        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
       },
       remainingAccounts: [
@@ -520,7 +514,7 @@ export async function withInvalidateTransferableNameEntry(
   );
   const [namespaceId] = await findNamespaceId(params.namespaceName);
   const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
-  const [tokenManagerId] = await findTokenManagerAddress(params.mintId);
+  const tokenManagerId = findTokenManagerAddress(params.mintId);
   transaction.add(
     namespacesProgram.instruction.invalidateTransferableNameEntry({
       accounts: {
@@ -581,7 +575,7 @@ export async function withSetEntryData(
   const [entryId] = await findNameEntryId(namespaceId, entryName);
 
   const entry = await namespacesProgram.account.entry.fetch(entryId);
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
 
   const userTokenAccountId = await withFindOrInitAssociatedTokenAccount(
     transaction,
@@ -629,13 +623,11 @@ export async function withSetNamespaceReverseEntry(
     wallet.publicKey
   );
 
-  const userTokenAccountId = await splToken.Token.getAssociatedTokenAddress(
-    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-    splToken.TOKEN_PROGRAM_ID,
+  const userTokenAccountId = getAssociatedTokenAddressSync(
     mintId,
     provider.wallet.publicKey
   );
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
   transaction.add(
     namespacesProgram.instruction.setNamespaceReverseEntry({
       accounts: {
@@ -812,7 +804,7 @@ export async function withInvalidateTransferableReverseEntry(
   );
   const [namespaceId] = await findNamespaceId(params.namespaceName);
   const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
-  const [tokenManagerId] = await findTokenManagerAddress(params.mintId);
+  const tokenManagerId = findTokenManagerAddress(params.mintId);
   transaction.add(
     namespacesProgram.instruction.invalidateTransferableReverseEntry({
       accounts: {
@@ -857,22 +849,21 @@ export async function withInvalidateReverseEntry(
   }
 }
 
-export async function withUpdateMintMetadata(
+export function withUpdateMintMetadata(
   connection: Connection,
   wallet: Wallet,
   namespaceId: PublicKey,
   entryId: PublicKey,
   mintId: PublicKey,
   transaction: Transaction
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
     NAMESPACES_PROGRAM_ID,
     provider
   );
-
-  const mintMetadataId = await Metadata.getPDA(mintId);
+  const mintMetadataId = findMintMetadataId(mintId);
   transaction.add(
     namespacesProgram.instruction.updateNameEntryMintMetadata({
       accounts: {
@@ -880,7 +871,7 @@ export async function withUpdateMintMetadata(
         updateAuthority: provider.wallet.publicKey,
         nameEntry: entryId,
         mintMetadata: mintMetadataId,
-        tokenMetadataProgram: mplTokenMetadata.MetadataProgram.PUBKEY,
+        tokenMetadataProgram: METADATA_PROGRAM_ID,
       },
     })
   );
@@ -978,7 +969,7 @@ export async function withSetGlobalReverseEntry(
     wallet.publicKey
   );
 
-  const [tokenManagerId] = await findTokenManagerAddress(params.mintId);
+  const tokenManagerId = findTokenManagerAddress(params.mintId);
 
   const userNameEntryMintTokenAccount = await findAta(
     params.mintId,
@@ -1027,9 +1018,7 @@ export async function withMigrateNameEntryMint(
   );
   const [namespaceId] = await findNamespaceId(params.namespaceName);
   const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
-  const [tokenManagerId] = await findTokenManagerAddress(
-    params.mintKeypair.publicKey
-  );
+  const tokenManagerId = findTokenManagerAddress(params.mintKeypair.publicKey);
   const namespace = await getNamespace(connection, namespaceId);
 
   const [claimRequestId] = await findClaimRequestId(
@@ -1038,43 +1027,31 @@ export async function withMigrateNameEntryMint(
     params.requestor || provider.wallet.publicKey
   );
 
-  const namespaceTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      params.mintKeypair.publicKey,
-      namespaceId,
-      true
-    );
+  const namespaceTokenAccountId = getAssociatedTokenAddressSync(
+    params.mintKeypair.publicKey,
+    namespaceId,
+    true
+  );
 
-  const tokenManagerTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      params.mintKeypair.publicKey,
-      tokenManagerId,
-      true
-    );
+  const tokenManagerTokenAccountId = getAssociatedTokenAddressSync(
+    params.mintKeypair.publicKey,
+    tokenManagerId,
+    true
+  );
 
-  const recipientTokenAccount = await splToken.Token.getAssociatedTokenAddress(
-    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-    splToken.TOKEN_PROGRAM_ID,
+  const recipientTokenAccount = getAssociatedTokenAddressSync(
     params.mintKeypair.publicKey,
     params.payer || provider.wallet.publicKey,
     true
   );
 
-  const namespaceCertificateTokenAccountId =
-    await splToken.Token.getAssociatedTokenAddress(
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      splToken.TOKEN_PROGRAM_ID,
-      params.certificateMint,
-      namespaceId,
-      true
-    );
+  const namespaceCertificateTokenAccountId = getAssociatedTokenAddressSync(
+    params.certificateMint,
+    namespaceId,
+    true
+  );
 
-  const [mintCounterId] = await findMintCounterId(params.mintKeypair.publicKey);
-
+  const mintCounterId = findMintCounterId(params.mintKeypair.publicKey);
   const remainingAccountsForClaim = await withRemainingAccountsForClaim(
     connection,
     transaction,
@@ -1085,18 +1062,15 @@ export async function withMigrateNameEntryMint(
     params.duration && params.duration > 0 ? params.duration : undefined
   );
 
-  const remainingAccountsForKind = await getRemainingAccountsForKind(
+  const remainingAccountsForKind = getRemainingAccountsForKind(
     params.mintKeypair.publicKey,
     namespace.parsed.transferableEntries
       ? TokenManagerKind.Unmanaged
       : TokenManagerKind.Edition
   );
 
-  const mintMetadataId = await Metadata.getPDA(params.mintKeypair.publicKey);
-  const mintMasterEditionId = await MasterEdition.getPDA(
-    params.mintKeypair.publicKey
-  );
-
+  const mintMetadataId = findMintMetadataId(params.mintKeypair.publicKey);
+  const mintMasterEditionId = findMintEditionId(params.mintKeypair.publicKey);
   transaction.add(
     namespacesProgram.instruction.migrateNameEntryMint(
       {
@@ -1120,8 +1094,8 @@ export async function withMigrateNameEntryMint(
           tokenManagerTokenAccount: tokenManagerTokenAccountId,
           recipientTokenAccount: recipientTokenAccount,
           claimRequest: claimRequestId,
-          tokenMetadataProgram: mplTokenMetadata.MetadataProgram.PUBKEY,
-          tokenProgram: splToken.TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
           associatedToken: ASSOCIATED_PROGRAM_ID,
           tokenManagerProgram: TOKEN_MANAGER_ADDRESS,
           rent: SYSVAR_RENT_PUBKEY,
