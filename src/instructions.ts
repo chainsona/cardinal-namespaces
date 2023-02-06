@@ -1,10 +1,10 @@
-import { withFindOrInitAssociatedTokenAccount } from "@cardinal/certificates";
 import {
   findAta,
   findMintEditionId,
   findMintMetadataId,
   METADATA_PROGRAM_ID,
   tryGetAccount,
+  withFindOrInitAssociatedTokenAccount,
 } from "@cardinal/common";
 import {
   getRemainingAccountsForKind,

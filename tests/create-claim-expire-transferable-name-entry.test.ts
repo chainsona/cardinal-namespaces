@@ -1,24 +1,25 @@
-import { findAta, tryGetAccount } from "@cardinal/common";
-import { withInvalidate } from "@cardinal/token-manager";
-import { InvalidationType } from "@cardinal/token-manager/dist/cjs/programs/tokenManager";
-import * as anchor from "@project-serum/anchor";
-import { TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
-import { expectTXTable } from "@saberhq/chai-solana";
 import {
-  SignerWallet,
-  SolanaProvider,
-  TransactionEnvelope,
-} from "@saberhq/solana-contrib";
-import * as splToken from "@solana/spl-token";
+  CardinalProvider,
+  executeTransaction,
+  findAta,
+  getTestProvider,
+  newAccountWithLamports,
+  tryGetAccount,
+} from "@cardinal/common";
+import { withInvalidate } from "@cardinal/token-manager";
+import { TokenManagerState } from "@cardinal/token-manager/dist/cjs/programs/tokenManager";
+import { getTokenManager } from "@cardinal/token-manager/dist/cjs/programs/tokenManager/accounts";
+import { findTokenManagerAddress } from "@cardinal/token-manager/dist/cjs/programs/tokenManager/pda";
+import * as anchor from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
+import { getAccount } from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 import assert from "assert";
-import { expect } from "chai";
 
 import {
   findNamespaceId,
   findReverseNameEntryForNamespaceId,
   getClaimRequest,
-  getGlobalReverseNameEntry,
   getNameEntry,
   getNamespaceByName,
   getReverseNameEntryForNamespace,
@@ -33,30 +34,34 @@ import {
   withUpdateClaimRequest,
 } from "../src";
 import { createMint } from "./utils";
-import { getProvider } from "./workspace";
 
-describe("create-claim-expire-released-name-entry", () => {
-  const provider = getProvider();
-
+describe("create-claim-expire-transferable-name-entry", () => {
   // test params
   const namespaceName = `ns-${Math.random()}`;
   const entryName = `testname-${Math.random()}`;
   const mintKeypair = web3.Keypair.generate();
   const nameEntryMint = mintKeypair.publicKey;
-  const mintAuthority = web3.Keypair.generate();
   const invalidator = web3.Keypair.generate();
   const paymentAmountDaily = new anchor.BN(0);
   const PAYMENT_MINT_START = 10000;
 
   // global
-  let paymentMint: splToken.Token;
+  let paymentMintId: web3.PublicKey;
+  let mintAuthority: web3.Keypair;
+  let provider: CardinalProvider;
+  beforeAll(async () => {
+    provider = await getTestProvider();
+    mintAuthority = await newAccountWithLamports(provider.connection);
+  });
 
   it("Creates a namespace", async () => {
-    [, paymentMint] = await createMint(
+    [, paymentMintId] = await createMint(
       provider.connection,
-      mintAuthority,
-      provider.wallet.publicKey,
-      PAYMENT_MINT_START
+      new anchor.Wallet(mintAuthority),
+      {
+        target: provider.wallet.publicKey,
+        amount: PAYMENT_MINT_START,
+      }
     );
 
     // airdrop invalidator
@@ -78,23 +83,12 @@ describe("create-claim-expire-released-name-entry", () => {
         rentAuthority: provider.wallet.publicKey,
         approveAuthority: provider.wallet.publicKey,
         paymentAmountDaily,
-        paymentMint: paymentMint.publicKey,
-        transferableEntries: false,
+        paymentMint: paymentMintId,
+        transferableEntries: true,
         maxExpiration: new anchor.BN(Date.now() / 1000 + 1),
-        invalidationType: InvalidationType.Release,
       }
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -127,19 +121,14 @@ describe("create-claim-expire-released-name-entry", () => {
       entryName,
       mintKeypair
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions,
-        [mintKeypair]
-      ),
-      "before",
+    await executeTransaction(
+      provider.connection,
+      transaction,
+      provider.wallet,
       {
-        verbosity: "error",
-        formatLogs: true,
+        signers: [mintKeypair],
       }
-    ).to.be.fulfilled;
-
+    );
     const checkEntry = await getNameEntry(
       provider.connection,
       namespaceName,
@@ -164,17 +153,7 @@ describe("create-claim-expire-released-name-entry", () => {
       transaction
     );
 
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Approve claim request", async () => {
@@ -194,17 +173,7 @@ describe("create-claim-expire-released-name-entry", () => {
       true,
       transaction
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Claim", async () => {
@@ -225,17 +194,7 @@ describe("create-claim-expire-released-name-entry", () => {
       entryName,
       nameEntryMint
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkClaimRequest = await tryGetAccount(async () =>
       getClaimRequest(
@@ -245,7 +204,7 @@ describe("create-claim-expire-released-name-entry", () => {
         provider.wallet.publicKey
       )
     );
-    expect(checkClaimRequest).to.eq(null);
+    expect(checkClaimRequest).toEqual(null);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -263,14 +222,12 @@ describe("create-claim-expire-released-name-entry", () => {
       nameEntryMint.toString()
     );
 
-    const checkRecipientTokenAccount = await new splToken.Token(
+    const checkRecipientTokenAccount = await getAccount(
       provider.connection,
-      nameEntryMint,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(await findAta(nameEntryMint, provider.wallet.publicKey));
-    expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
-    expect(checkRecipientTokenAccount.isFrozen).to.eq(true);
+      await findAta(nameEntryMint, provider.wallet.publicKey)
+    );
+    expect(Number(checkRecipientTokenAccount.amount.toString())).toEqual(1);
+    expect(checkRecipientTokenAccount.isFrozen).toEqual(false);
 
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
@@ -290,25 +247,21 @@ describe("create-claim-expire-released-name-entry", () => {
       new SignerWallet(invalidator),
       nameEntryMint
     );
-    expect(async () => {
-      await expectTXTable(
-        new TransactionEnvelope(SolanaProvider.init(provider), [
-          ...transaction.instructions,
-        ]),
-        "Fail close"
-      ).to.be.rejectedWith(Error);
-    });
+    await expect(
+      executeTransaction(provider.connection, transaction, provider.wallet, {
+        silent: true,
+      })
+    ).rejects.toThrow();
   });
 
   it("Wait and invalidate token", async () => {
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 1000));
     const nameEntry = await getNameEntry(
       provider.connection,
       namespaceName,
       entryName
     );
     const mintId = nameEntry.parsed.mint;
-
     const transaction = new web3.Transaction();
     await withInvalidate(
       transaction,
@@ -316,30 +269,24 @@ describe("create-claim-expire-released-name-entry", () => {
       new SignerWallet(invalidator),
       mintId
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init({
-          connection: provider.connection,
-          wallet: new SignerWallet(invalidator),
-          opts: provider.opts,
-        }),
-        transaction.instructions
-      ),
-      "Wait and invalidate",
-      {
-        verbosity: "always",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
-
-    const checkRecipientTokenAccount = await new splToken.Token(
+    await executeTransaction(
       provider.connection,
-      mintId,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(await findAta(mintId, provider.wallet.publicKey));
-    expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
-    expect(checkRecipientTokenAccount.isFrozen).to.eq(false);
+      transaction,
+      new anchor.Wallet(invalidator)
+    );
+
+    const checkRecipientTokenAccount = await getAccount(
+      provider.connection,
+      await findAta(mintId, provider.wallet.publicKey)
+    );
+    expect(Number(checkRecipientTokenAccount.amount.toString())).toEqual(1);
+
+    const tokenManagerId = findTokenManagerAddress(mintId);
+    const tokenManager = await getTokenManager(
+      provider.connection,
+      tokenManagerId
+    );
+    expect(tokenManager.parsed.state).toEqual(TokenManagerState.Invalidated);
   });
 
   it("Invalidate entry", async () => {
@@ -354,45 +301,17 @@ describe("create-claim-expire-released-name-entry", () => {
     );
 
     const transaction = new web3.Transaction();
-
-    const [namespaceId] = await findNamespaceId(namespaceName);
-    const namespaceReverseEntry = await tryGetAccount(() =>
-      getReverseNameEntryForNamespace(
-        provider.connection,
-        provider.wallet.publicKey,
-        namespaceId
-      )
+    await withInvalidateTransferableReverseEntry(
+      transaction,
+      provider.connection,
+      new SignerWallet(invalidator),
+      {
+        namespaceName,
+        entryName,
+        mintId: nameEntry.parsed.mint,
+        reverseEntryId: nameEntry.parsed.reverseEntry!,
+      }
     );
-    if (namespaceReverseEntry) {
-      await withInvalidateTransferableReverseEntry(
-        transaction,
-        provider.connection,
-        new SignerWallet(invalidator),
-        {
-          namespaceName,
-          entryName,
-          mintId: nameEntry.parsed.mint,
-          reverseEntryId: namespaceReverseEntry.pubkey,
-        }
-      );
-    }
-
-    const globalReverseEntry = await tryGetAccount(() =>
-      getGlobalReverseNameEntry(provider.connection, provider.wallet.publicKey)
-    );
-    if (globalReverseEntry) {
-      await withInvalidateTransferableReverseEntry(
-        transaction,
-        provider.connection,
-        new SignerWallet(invalidator),
-        {
-          namespaceName,
-          entryName,
-          mintId: nameEntry.parsed.mint,
-          reverseEntryId: globalReverseEntry.pubkey,
-        }
-      );
-    }
 
     await withInvalidateTransferableNameEntry(
       transaction,
@@ -404,28 +323,18 @@ describe("create-claim-expire-released-name-entry", () => {
         mintId: nameEntry.parsed.mint,
       }
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init({
-          connection: provider.connection,
-          wallet: new SignerWallet(invalidator),
-          opts: provider.opts,
-        }),
-        transaction.instructions
-      ),
-      "Wait and invalidate",
-      {
-        verbosity: "always",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(
+      provider.connection,
+      transaction,
+      new anchor.Wallet(invalidator)
+    );
 
     const namespaceDataAfter = await getNamespaceByName(
       provider.connection,
       namespaceName
     );
 
-    expect(namespaceDataAfter.parsed.count).to.eq(
+    expect(namespaceDataAfter.parsed.count).toEqual(
       namespaceDataBefore.parsed.count - 1
     );
 
@@ -435,10 +344,10 @@ describe("create-claim-expire-released-name-entry", () => {
       )[0],
       provider.wallet.publicKey
     );
-    expect(nameEntry.parsed.reverseEntry?.toString()).to.eq(
+    expect(nameEntry.parsed.reverseEntry?.toString()).toEqual(
       reverseEntryId.toString()
     );
-    const checknNamespaceReverseEntry = await tryGetAccount(async () =>
+    const checkReverseEntry = await tryGetAccount(async () =>
       getReverseNameEntryForNamespace(
         provider.connection,
         provider.wallet.publicKey,
@@ -447,25 +356,16 @@ describe("create-claim-expire-released-name-entry", () => {
         )[0]
       )
     );
-    expect(checknNamespaceReverseEntry).to.eq(null);
-
-    const checkGlobalReverseEntry = await tryGetAccount(async () =>
-      getGlobalReverseNameEntry(provider.connection, provider.wallet.publicKey)
-    );
-    expect(checkGlobalReverseEntry).to.eq(null);
+    expect(checkReverseEntry).toEqual(null);
 
     const entryAfter = await tryGetAccount(() =>
       getNameEntry(provider.connection, namespaceName, entryName)
     );
-    expect(entryAfter?.parsed.isClaimed).to.be.false;
-    expect(entryAfter?.parsed.data).to.be.null;
+    expect(entryAfter?.parsed.isClaimed).toBeFalsy;
+    expect(entryAfter?.parsed.data).toBeNull;
 
-    const checkNamespaceTokenAccount = await new splToken.Token(
+    const checkNamespaceTokenAccount = await getAccount(
       provider.connection,
-      nameEntry.parsed.mint,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(
       await findAta(
         nameEntry.parsed.mint,
         (
@@ -474,17 +374,12 @@ describe("create-claim-expire-released-name-entry", () => {
         true
       )
     );
-    expect(checkNamespaceTokenAccount.amount.toNumber()).to.eq(0);
+    expect(Number(checkNamespaceTokenAccount.amount.toString())).toEqual(0);
 
-    const checkRecipientTokenAccount = await new splToken.Token(
+    const checkRecipientTokenAccount = await getAccount(
       provider.connection,
-      nameEntry.parsed.mint,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(
       await findAta(nameEntry.parsed.mint, provider.wallet.publicKey)
     );
-    expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
-    expect(checkRecipientTokenAccount.isFrozen).to.eq(false);
+    expect(Number(checkRecipientTokenAccount.amount.toString())).toEqual(1);
   });
 });

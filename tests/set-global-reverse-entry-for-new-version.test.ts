@@ -1,12 +1,15 @@
-import { findAta, tryGetAccount } from "@cardinal/common";
+import {
+  CardinalProvider,
+  executeTransaction,
+  findAta,
+  getTestProvider,
+  newAccountWithLamports,
+  tryGetAccount,
+} from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
-import { TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
-import { expectTXTable } from "@saberhq/chai-solana";
-import { SolanaProvider, TransactionEnvelope } from "@saberhq/solana-contrib";
-import * as splToken from "@solana/spl-token";
+import { getAccount } from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 import assert from "assert";
-import { expect } from "chai";
 
 import {
   findDeprecatedReverseEntryId,
@@ -25,30 +28,34 @@ import {
   withUpdateClaimRequest,
 } from "../src";
 import { createMint } from "./utils";
-import { getProvider } from "./workspace";
 
 describe("set-global-reverse-entry-for-new-version", () => {
-  const provider = getProvider();
-
   // test params
   const namespaceName = `ns-${Math.random()}`;
   const entryName = `testname-${Math.random()}`;
   const mintKeypair = web3.Keypair.generate();
   const nameEntryMint = mintKeypair.publicKey;
-  const mintAuthority = web3.Keypair.generate();
   const invalidator = web3.Keypair.generate();
   const paymentAmountDaily = new anchor.BN(0);
   const PAYMENT_MINT_START = 10000;
 
   // global
-  let paymentMint: splToken.Token;
+  let paymentMintId: web3.PublicKey;
+  let mintAuthority: web3.Keypair;
+  let provider: CardinalProvider;
+  beforeAll(async () => {
+    provider = await getTestProvider();
+    mintAuthority = await newAccountWithLamports(provider.connection);
+  });
 
   it("Creates a namespace", async () => {
-    [, paymentMint] = await createMint(
+    [, paymentMintId] = await createMint(
       provider.connection,
-      mintAuthority,
-      provider.wallet.publicKey,
-      PAYMENT_MINT_START
+      new anchor.Wallet(mintAuthority),
+      {
+        target: provider.wallet.publicKey,
+        amount: PAYMENT_MINT_START,
+      }
     );
 
     // airdrop invalidator
@@ -70,22 +77,12 @@ describe("set-global-reverse-entry-for-new-version", () => {
         rentAuthority: provider.wallet.publicKey,
         approveAuthority: provider.wallet.publicKey,
         paymentAmountDaily,
-        paymentMint: paymentMint.publicKey,
+        paymentMint: paymentMintId,
         transferableEntries: false,
         maxExpiration: new anchor.BN(Date.now() / 1000 + 1),
       }
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -118,19 +115,14 @@ describe("set-global-reverse-entry-for-new-version", () => {
       entryName,
       mintKeypair
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions,
-        [mintKeypair]
-      ),
-      "before",
+    await executeTransaction(
+      provider.connection,
+      transaction,
+      provider.wallet,
       {
-        verbosity: "error",
-        formatLogs: true,
+        signers: [mintKeypair],
       }
-    ).to.be.fulfilled;
-
+    );
     const checkEntry = await getNameEntry(
       provider.connection,
       namespaceName,
@@ -155,17 +147,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
       transaction
     );
 
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Approve claim request", async () => {
@@ -185,17 +167,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
       true,
       transaction
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
   });
 
   it("Claim", async () => {
@@ -216,17 +188,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
       entryName,
       nameEntryMint
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkClaimRequest = await tryGetAccount(async () =>
       getClaimRequest(
@@ -236,7 +198,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
         provider.wallet.publicKey
       )
     );
-    expect(checkClaimRequest).to.eq(null);
+    expect(checkClaimRequest).toEqual(null);
 
     const checkNamespace = await getNamespaceByName(
       provider.connection,
@@ -254,14 +216,12 @@ describe("set-global-reverse-entry-for-new-version", () => {
       nameEntryMint.toString()
     );
 
-    const checkRecipientTokenAccount = await new splToken.Token(
+    const checkRecipientTokenAccount = await getAccount(
       provider.connection,
-      nameEntryMint,
-      TOKEN_PROGRAM_ID,
-      web3.Keypair.generate()
-    ).getAccountInfo(await findAta(nameEntryMint, provider.wallet.publicKey));
-    expect(checkRecipientTokenAccount.amount.toNumber()).to.eq(1);
-    expect(checkRecipientTokenAccount.isFrozen).to.eq(true);
+      await findAta(nameEntryMint, provider.wallet.publicKey)
+    );
+    expect(Number(checkRecipientTokenAccount.amount.toString())).toEqual(1);
+    expect(checkRecipientTokenAccount.isFrozen).toEqual(true);
 
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
@@ -285,17 +245,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
         mintId: nameEntryMint,
       }
     );
-    await expectTXTable(
-      new TransactionEnvelope(
-        SolanaProvider.init(provider),
-        transaction.instructions
-      ),
-      "before",
-      {
-        verbosity: "error",
-        formatLogs: true,
-      }
-    ).to.be.fulfilled;
+    await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const nameEntry = await getNameEntry(
       provider.connection,
@@ -305,7 +255,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
     const [reverseEntryId] = await findDeprecatedReverseEntryId(
       provider.wallet.publicKey
     );
-    expect(nameEntry.parsed.reverseEntry?.toString()).to.eq(
+    expect(nameEntry.parsed.reverseEntry?.toString()).toEqual(
       reverseEntryId.toString()
     );
   });

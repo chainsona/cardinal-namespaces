@@ -1,6 +1,10 @@
+import {
+  CardinalProvider,
+  getTestProvider,
+  newAccountWithLamports,
+} from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
-import type * as splToken from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 import assert from "assert";
 import { BN } from "bn.js";
@@ -13,20 +17,25 @@ import {
   withUpdateNamespace,
 } from "../../src";
 import { createMint, NAMESPACE_SEED } from "../utils";
-import { getProvider } from "../workspace";
 
 describe("namespace-create-update", () => {
-  const provider = getProvider();
-
-  const mintAuthority = web3.Keypair.generate();
   const NAMESPACE_NAME = `ns2-${Math.random()}`;
-  let paymentMint: splToken.Token;
+  let paymentMintId: web3.PublicKey;
+
+  let mintAuthority: web3.Keypair;
+  let provider: CardinalProvider;
+  beforeAll(async () => {
+    provider = await getTestProvider();
+    mintAuthority = await newAccountWithLamports(provider.connection);
+  });
 
   it("Creates a namespace", async () => {
-    [, paymentMint] = await createMint(
+    [, paymentMintId] = await createMint(
       provider.connection,
-      mintAuthority,
-      provider.wallet.publicKey
+      new anchor.Wallet(mintAuthority),
+      {
+        target: provider.wallet.publicKey,
+      }
     );
 
     const [namespaceId] = await web3.PublicKey.findProgramAddress(
@@ -51,7 +60,7 @@ describe("namespace-create-update", () => {
         minRentalSeconds: new BN(100),
         maxRentalSeconds: new BN(86400),
         paymentAmountDaily: new BN(1),
-        paymentMint: paymentMint.publicKey,
+        paymentMint: paymentMintId,
         transferableEntries: true,
       }
     );
@@ -91,7 +100,7 @@ describe("namespace-create-update", () => {
         minRentalSeconds: new BN(100),
         maxRentalSeconds: new BN(86400),
         paymentAmountDaily: new BN(1),
-        paymentMint: paymentMint.publicKey,
+        paymentMint: paymentMintId,
         transferableEntries: true,
         schema: namespace.parsed.schema,
         invalidationType: namespace.parsed.invalidationType,
@@ -137,7 +146,7 @@ describe("namespace-create-update", () => {
         minRentalSeconds: new BN(100),
         maxRentalSeconds: new BN(86500),
         paymentAmountDaily: new BN(1),
-        paymentMint: paymentMint.publicKey,
+        paymentMint: paymentMintId,
         transferableEntries: true,
         schema: namespace.parsed.schema,
         invalidationType: namespace.parsed.invalidationType,

@@ -91,8 +91,11 @@ export async function withClaimEntry(
     CERTIFICATE_PROGRAM_ID
   );
 
-  const namespaceCertificateTokenAccountId =
-    await getAssociatedTokenAddressSync(certificateMintId, namespaceId, true);
+  const namespaceCertificateTokenAccountId = getAssociatedTokenAddressSync(
+    certificateMintId,
+    namespaceId,
+    true
+  );
 
   const certificatePaymentTokenAccountId =
     await withFindOrInitAssociatedTokenAccount(
@@ -121,7 +124,7 @@ export async function withClaimEntry(
     provider.wallet.publicKey
   );
 
-  const certificateTokenAccountId = await getAssociatedTokenAddressSync(
+  const certificateTokenAccountId = getAssociatedTokenAddressSync(
     certificateMintId,
     certificateId,
     true
@@ -220,8 +223,11 @@ export async function withInitEntry(
     })
   );
 
-  const namespaceCertificateTokenAccountId =
-    await getAssociatedTokenAddressSync(certificateMintId, namespaceId, true);
+  const namespaceCertificateTokenAccountId = getAssociatedTokenAddressSync(
+    certificateMintId,
+    namespaceId,
+    true
+  );
 
   transaction.add(
     namespacesProgram.instruction.initEntry(
@@ -309,8 +315,11 @@ export async function withRevokeEntry(
     CERTIFICATE_PROGRAM_ID
   );
 
-  const namespaceCertificateTokenAccountId =
-    await getAssociatedTokenAddressSync(certificateMintId, namespaceId, true);
+  const namespaceCertificateTokenAccountId = getAssociatedTokenAddressSync(
+    certificateMintId,
+    namespaceId,
+    true
+  );
 
   const namespacePaymentTokenAccountId =
     await withFindOrInitAssociatedTokenAccount(
@@ -322,13 +331,13 @@ export async function withRevokeEntry(
       true
     );
 
-  const certificatePaymentTokenAccountId = await getAssociatedTokenAddressSync(
+  const certificatePaymentTokenAccountId = getAssociatedTokenAddressSync(
     namespace.paymentMint,
     certificateId,
     true
   );
 
-  const userCertificateTokenAccountId = await getAssociatedTokenAddressSync(
+  const userCertificateTokenAccountId = getAssociatedTokenAddressSync(
     certificateMintId,
     certificateOwnerId
   );
@@ -341,7 +350,7 @@ export async function withRevokeEntry(
     provider.wallet.publicKey
   );
 
-  const certificateTokenAccountId = await getAssociatedTokenAddressSync(
+  const certificateTokenAccountId = getAssociatedTokenAddressSync(
     certificateMintId,
     certificateId,
     true
@@ -479,7 +488,7 @@ export async function withSetReverseEntry(
     certificateMintId
   );
 
-  const userCertificateTokenAccountId = await getAssociatedTokenAddressSync(
+  const userCertificateTokenAccountId = getAssociatedTokenAddressSync(
     certificateMintId,
     provider.wallet.publicKey
   );
