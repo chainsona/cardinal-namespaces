@@ -123,15 +123,15 @@ jobs:
       - run: solana airdrop 1000 $(solana-keygen pubkey tests/test-key.json) --url http://localhost:8899
       - run: yarn test
 
-     - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: Integration Tests
-          path: tests/out.xml
-      - uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Integration Tests Results
-          path: tests/out.xml
-          reporter: jest-junit
+      - name: Upload Test Results
+          if: always()
+          uses: actions/upload-artifact@v3
+          with:
+            name: Integration Tests
+            path: tests/out.xml
+        - uses: dorny/test-reporter@v1
+          if: always()
+          with:
+            name: Integration Tests Results
+            path: tests/out.xml
+            reporter: jest-junit
