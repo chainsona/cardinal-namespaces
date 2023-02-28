@@ -19,8 +19,8 @@ import {
   findTokenManagerAddress,
 } from "@cardinal/token-manager/dist/cjs/programs/tokenManager/pda";
 import * as anchor from "@project-serum/anchor";
+import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
-import type { Wallet } from "@saberhq/solana-contrib";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,

@@ -10,7 +10,7 @@ import {
   withFindOrInitAssociatedTokenAccount,
 } from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
-import type { Wallet } from "@saberhq/solana-contrib";
+import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 import * as splToken from "@solana/spl-token";
 import {
   getAssociatedTokenAddressSync,
