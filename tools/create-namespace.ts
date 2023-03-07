@@ -21,7 +21,7 @@ export const createNamespace = async (
     utils.bytes.bs58.decode(utils.bytes.bs58.encode([]))
   );
 
-  transaction = await withCreateNamespace(
+  transaction = withCreateNamespace(
     transaction,
     connection,
     new SignerWallet(wallet),

@@ -22,7 +22,7 @@ export const updateNamespace = async (
   const newAuthority = new PublicKey(
     "twtXa9zEztzPTvmjqQMQEatUXUfoY3GVsxKLdLZQMi6"
   );
-  transaction = await withUpdateNamespace(
+  transaction = withUpdateNamespace(
     transaction,
     connection,
     new SignerWallet(wallet),

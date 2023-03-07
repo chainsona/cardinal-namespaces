@@ -45,12 +45,12 @@ import {
   withRemainingAccountsForClaim,
 } from ".";
 
-export async function withInit(
+export function withInit(
   connection: Connection,
   wallet: Wallet,
   rentalPercentage: number,
   transaction: Transaction
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
@@ -58,7 +58,7 @@ export async function withInit(
     provider
   );
 
-  const [globalContextId] = await findGlobalContextId();
+  const globalContextId = findGlobalContextId();
 
   transaction.add(
     namespacesProgram.instruction.initGlobalContext(
@@ -78,7 +78,7 @@ export async function withInit(
   return transaction;
 }
 
-export async function withCreateNamespace(
+export function withCreateNamespace(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
@@ -97,7 +97,7 @@ export async function withCreateNamespace(
     maxExpiration?: anchor.BN;
     invalidationType?: InvalidationType;
   }
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
@@ -105,7 +105,7 @@ export async function withCreateNamespace(
     provider
   );
 
-  const [namespaceId] = await findNamespaceId(params.namespaceName);
+  const namespaceId = findNamespaceId(params.namespaceName);
 
   transaction.add(
     namespacesProgram.instruction.createNamespace(
@@ -140,7 +140,7 @@ export async function withCreateNamespace(
   return transaction;
 }
 
-export async function withUpdateNamespace(
+export function withUpdateNamespace(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
@@ -159,7 +159,7 @@ export async function withUpdateNamespace(
     limit?: number;
     maxExpiration?: anchor.BN;
   }
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
@@ -167,7 +167,7 @@ export async function withUpdateNamespace(
     provider
   );
 
-  const [namespaceId] = await findNamespaceId(namespaceName);
+  const namespaceId = findNamespaceId(namespaceName);
   transaction.add(
     namespacesProgram.instruction.updateNamespace(
       {
@@ -212,13 +212,9 @@ export async function withClaimNameEntry(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [entryId] = await findNameEntryId(namespaceId, entryName);
-  const [claimRequestId] = await findClaimRequestId(
-    namespaceId,
-    entryName,
-    requestor
-  );
+  const namespaceId = findNamespaceId(namespaceName);
+  const entryId = findNameEntryId(namespaceId, entryName);
+  const claimRequestId = findClaimRequestId(namespaceId, entryName, requestor);
   const tokenManagerId = findTokenManagerAddress(mintId);
 
   const namespaceTokenAccountId = getAssociatedTokenAddressSync(
@@ -286,13 +282,13 @@ export async function withClaimNameEntry(
   return transaction;
 }
 
-export async function withInitNameEntry(
+export function withInitNameEntry(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
   namespaceName: string,
   entryName: string
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
@@ -300,8 +296,8 @@ export async function withInitNameEntry(
     provider
   );
 
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [entryId] = await findNameEntryId(namespaceId, entryName);
+  const namespaceId = findNamespaceId(namespaceName);
+  const entryId = findNameEntryId(namespaceId, entryName);
 
   transaction.add(
     namespacesProgram.instruction.initNameEntry(
@@ -321,14 +317,14 @@ export async function withInitNameEntry(
   return transaction;
 }
 
-export async function withInitNameEntryMint(
+export function withInitNameEntryMint(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
   namespaceName: string,
   entryName: string,
   mintKeypair: Keypair
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
@@ -336,8 +332,8 @@ export async function withInitNameEntryMint(
     provider
   );
 
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [entryId] = await findNameEntryId(namespaceId, entryName);
+  const namespaceId = findNamespaceId(namespaceName);
+  const entryId = findNameEntryId(namespaceId, entryName);
 
   const namespaceTokenAccountId = getAssociatedTokenAddressSync(
     mintKeypair.publicKey,
@@ -384,8 +380,8 @@ export async function withRevokeNameEntry(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [entryId] = await findNameEntryId(namespaceId, entryName);
+  const namespaceId = findNamespaceId(namespaceName);
+  const entryId = findNameEntryId(namespaceId, entryName);
 
   const nameEntry = await getNameEntry(connection, namespaceName, entryName);
   const tokenManagerId = findTokenManagerAddress(mintId);
@@ -459,8 +455,8 @@ export async function withInvalidateExpiredNameEntry(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(params.namespaceName);
-  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+  const namespaceId = findNamespaceId(params.namespaceName);
+  const nameEntryId = findNameEntryId(namespaceId, params.entryName);
   const namespaceTokenAccountId = await findAta(
     params.mintId,
     namespaceId,
@@ -495,7 +491,7 @@ export async function withInvalidateExpiredNameEntry(
   return transaction;
 }
 
-export async function withInvalidateTransferableNameEntry(
+export function withInvalidateTransferableNameEntry(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
@@ -505,15 +501,15 @@ export async function withInvalidateTransferableNameEntry(
     entryName: string;
     invalidator?: PublicKey;
   }
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(params.namespaceName);
-  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+  const namespaceId = findNamespaceId(params.namespaceName);
+  const nameEntryId = findNameEntryId(namespaceId, params.entryName);
   const tokenManagerId = findTokenManagerAddress(params.mintId);
   transaction.add(
     namespacesProgram.instruction.invalidateTransferableNameEntry({
@@ -571,8 +567,8 @@ export async function withSetEntryData(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [entryId] = await findNameEntryId(namespaceId, entryName);
+  const namespaceId = findNamespaceId(namespaceName);
+  const entryId = findNameEntryId(namespaceId, entryName);
 
   const entry = await namespacesProgram.account.entry.fetch(entryId);
   const tokenManagerId = findTokenManagerAddress(mintId);
@@ -601,7 +597,7 @@ export async function withSetEntryData(
   return transaction;
 }
 
-export async function withSetNamespaceReverseEntry(
+export function withSetNamespaceReverseEntry(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
@@ -609,23 +605,24 @@ export async function withSetNamespaceReverseEntry(
   entryName: string,
   mintId: PublicKey,
   payer = wallet.publicKey
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [entryId] = await findNameEntryId(namespaceId, entryName);
-  const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
+  const namespaceId = findNamespaceId(namespaceName);
+  const entryId = findNameEntryId(namespaceId, entryName);
+  const reverseEntryId = findReverseNameEntryForNamespaceId(
     namespaceId,
     wallet.publicKey
   );
 
   const userTokenAccountId = getAssociatedTokenAddressSync(
     mintId,
-    provider.wallet.publicKey
+    wallet.publicKey,
+    true
   );
   const tokenManagerId = findTokenManagerAddress(mintId);
   transaction.add(
@@ -645,46 +642,38 @@ export async function withSetNamespaceReverseEntry(
   return transaction;
 }
 
-export async function withCreateClaimRequest(
+export function withCreateClaimRequest(
   connection: Connection,
   wallet: Wallet,
   namespaceName: string,
   entryName: string,
   user: PublicKey,
   transaction: Transaction
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [claimRequestId, claimRequestBump] = await findClaimRequestId(
-    namespaceId,
-    entryName,
-    user
-  );
+  const namespaceId = findNamespaceId(namespaceName);
+  const claimRequestId = findClaimRequestId(namespaceId, entryName, user);
 
   transaction.add(
-    namespacesProgram.instruction.createClaimRequest(
-      entryName,
-      claimRequestBump,
-      user,
-      {
-        accounts: {
-          namespace: namespaceId,
-          payer: provider.wallet.publicKey,
-          claimRequest: claimRequestId,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        },
-      }
-    )
+    // bump not used anymore, defaulting to placeholder zero
+    namespacesProgram.instruction.createClaimRequest(entryName, 0, user, {
+      accounts: {
+        namespace: namespaceId,
+        payer: provider.wallet.publicKey,
+        claimRequest: claimRequestId,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+    })
   );
   return transaction;
 }
 
-export async function withUpdateClaimRequest(
+export function withUpdateClaimRequest(
   connection: Connection,
   wallet: Wallet,
   namespaceName: string,
@@ -692,15 +681,15 @@ export async function withUpdateClaimRequest(
   rentRequestId: PublicKey,
   isApproved: boolean,
   transaction: Transaction
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [nameEntryId] = await findNameEntryId(namespaceId, entryName);
+  const namespaceId = findNamespaceId(namespaceName);
+  const nameEntryId = findNameEntryId(namespaceId, entryName);
   transaction.add(
     namespacesProgram.instruction.updateClaimRequest(isApproved, {
       accounts: {
@@ -714,7 +703,7 @@ export async function withUpdateClaimRequest(
   return transaction;
 }
 
-export async function withRevokeReverseEntry(
+export function withRevokeReverseEntry(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
@@ -722,15 +711,15 @@ export async function withRevokeReverseEntry(
   entryName: string,
   reverseEntryId: PublicKey,
   claimRequestId: PublicKey
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [nameEntryId] = await findNameEntryId(namespaceId, entryName);
+  const namespaceId = findNamespaceId(namespaceName);
+  const nameEntryId = findNameEntryId(namespaceId, entryName);
   transaction.add(
     namespacesProgram.instruction.revokeReverseEntry({
       accounts: {
@@ -763,8 +752,8 @@ export async function withInvalidateExpiredReverseEntry(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(params.namespaceName);
-  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+  const namespaceId = findNamespaceId(params.namespaceName);
+  const nameEntryId = findNameEntryId(namespaceId, params.entryName);
   const namespaceTokenAccountId = await findAta(
     params.mintId,
     namespaceId,
@@ -784,7 +773,7 @@ export async function withInvalidateExpiredReverseEntry(
   return transaction;
 }
 
-export async function withInvalidateTransferableReverseEntry(
+export function withInvalidateTransferableReverseEntry(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
@@ -795,15 +784,15 @@ export async function withInvalidateTransferableReverseEntry(
     reverseEntryId: PublicKey;
     invalidator?: PublicKey;
   }
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(params.namespaceName);
-  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+  const namespaceId = findNamespaceId(params.namespaceName);
+  const nameEntryId = findNameEntryId(namespaceId, params.entryName);
   const tokenManagerId = findTokenManagerAddress(params.mintId);
   transaction.add(
     namespacesProgram.instruction.invalidateTransferableReverseEntry({
@@ -902,7 +891,7 @@ export function withCloseNameEntry(
   return transaction;
 }
 
-export async function withApproveClaimRequest(
+export function withApproveClaimRequest(
   transaction: Transaction,
   connection: Connection,
   wallet: Wallet,
@@ -912,20 +901,20 @@ export async function withApproveClaimRequest(
     user: PublicKey;
     approveAuthority?: PublicKey;
   }
-): Promise<Transaction> {
+): Transaction {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const namespacesProgram = new anchor.Program<NAMESPACES_PROGRAM>(
     NAMESPACES_IDL,
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(params.namespaceName);
-  const [claimRequestId] = await findClaimRequestId(
+  const namespaceId = findNamespaceId(params.namespaceName);
+  const claimRequestId = findClaimRequestId(
     namespaceId,
     params.entryName,
     params.user
   );
-  const [entryNameId] = await findNameEntryId(namespaceId, params.entryName);
+  const entryNameId = findNameEntryId(namespaceId, params.entryName);
 
   transaction.add(
     namespacesProgram.instruction.approveClaimRequest(
@@ -963,11 +952,9 @@ export async function withSetGlobalReverseEntry(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(params.namespaceName);
-  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
-  const [reverseNameEntry] = await findGlobalReverseNameEntryId(
-    wallet.publicKey
-  );
+  const namespaceId = findNamespaceId(params.namespaceName);
+  const nameEntryId = findNameEntryId(namespaceId, params.entryName);
+  const reverseNameEntry = findGlobalReverseNameEntryId(wallet.publicKey);
 
   const tokenManagerId = findTokenManagerAddress(params.mintId);
 
@@ -1016,12 +1003,12 @@ export async function withMigrateNameEntryMint(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(params.namespaceName);
-  const [nameEntryId] = await findNameEntryId(namespaceId, params.entryName);
+  const namespaceId = findNamespaceId(params.namespaceName);
+  const nameEntryId = findNameEntryId(namespaceId, params.entryName);
   const tokenManagerId = findTokenManagerAddress(params.mintKeypair.publicKey);
   const namespace = await getNamespace(connection, namespaceId);
 
-  const [claimRequestId] = await findClaimRequestId(
+  const claimRequestId = findClaimRequestId(
     namespaceId,
     params.entryName,
     params.requestor || provider.wallet.publicKey

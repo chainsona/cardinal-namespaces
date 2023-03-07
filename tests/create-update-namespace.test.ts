@@ -1,8 +1,5 @@
-import {
-  CardinalProvider,
-  executeTransaction,
-  getTestProvider,
-} from "@cardinal/common";
+import type { CardinalProvider } from "@cardinal/common";
+import { executeTransaction, getTestProvider } from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
 import * as web3 from "@solana/web3.js";
 import assert from "assert";
@@ -26,19 +23,14 @@ describe("create-update-namespace", () => {
 
   it("Creates a namespace", async () => {
     const transaction = new web3.Transaction();
-    await withCreateNamespace(
-      transaction,
-      provider.connection,
-      provider.wallet,
-      {
-        namespaceName,
-        updateAuthority: provider.wallet.publicKey,
-        rentAuthority: provider.wallet.publicKey,
-        approveAuthority: provider.wallet.publicKey,
-        transferableEntries: false,
-        limit: 1,
-      }
-    );
+    withCreateNamespace(transaction, provider.connection, provider.wallet, {
+      namespaceName,
+      updateAuthority: provider.wallet.publicKey,
+      rentAuthority: provider.wallet.publicKey,
+      approveAuthority: provider.wallet.publicKey,
+      transferableEntries: false,
+      limit: 1,
+    });
     await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
@@ -59,7 +51,7 @@ describe("create-update-namespace", () => {
       provider.connection,
       namespaceName
     );
-    await withUpdateNamespace(
+    withUpdateNamespace(
       transaction,
       provider.connection,
       provider.wallet,

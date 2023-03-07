@@ -1,5 +1,5 @@
+import type { CardinalProvider } from "@cardinal/common";
 import {
-  CardinalProvider,
   executeTransaction,
   findAta,
   getTestProvider,
@@ -58,20 +58,15 @@ describe("create-claim-revoke-name-entry", () => {
     );
 
     const transaction = new web3.Transaction();
-    await withCreateNamespace(
-      transaction,
-      provider.connection,
-      provider.wallet,
-      {
-        namespaceName,
-        updateAuthority: provider.wallet.publicKey,
-        rentAuthority: provider.wallet.publicKey,
-        approveAuthority: provider.wallet.publicKey,
-        paymentAmountDaily,
-        paymentMint: paymentMintId,
-        transferableEntries: false,
-      }
-    );
+    withCreateNamespace(transaction, provider.connection, provider.wallet, {
+      namespaceName,
+      updateAuthority: provider.wallet.publicKey,
+      rentAuthority: provider.wallet.publicKey,
+      approveAuthority: provider.wallet.publicKey,
+      paymentAmountDaily,
+      paymentMint: paymentMintId,
+      transferableEntries: false,
+    });
     await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
@@ -90,7 +85,7 @@ describe("create-claim-revoke-name-entry", () => {
     const mintKeypair = web3.Keypair.generate();
     const transaction = new web3.Transaction();
 
-    await withInitNameEntry(
+    withInitNameEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -98,7 +93,7 @@ describe("create-claim-revoke-name-entry", () => {
       entryName
     );
 
-    await withInitNameEntryMint(
+    withInitNameEntryMint(
       transaction,
       provider.connection,
       provider.wallet,
@@ -129,7 +124,7 @@ describe("create-claim-revoke-name-entry", () => {
   it("Create claim request", async () => {
     const transaction = new web3.Transaction();
 
-    await withCreateClaimRequest(
+    withCreateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -149,7 +144,7 @@ describe("create-claim-revoke-name-entry", () => {
       provider.wallet.publicKey
     );
     const transaction = new web3.Transaction();
-    await withUpdateClaimRequest(
+    withUpdateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -220,7 +215,7 @@ describe("create-claim-revoke-name-entry", () => {
     const mintId = entry.parsed.mint;
 
     const transaction = new web3.Transaction();
-    await withSetNamespaceReverseEntry(
+    withSetNamespaceReverseEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -233,9 +228,7 @@ describe("create-claim-revoke-name-entry", () => {
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
-      (
-        await findNamespaceId(namespaceName)
-      )[0]
+      findNamespaceId(namespaceName)
     );
     assert.equal(checkReverseEntry.parsed.entryName, entryName);
   });
@@ -247,14 +240,14 @@ describe("create-claim-revoke-name-entry", () => {
       entryName
     );
     const mintId = entry.parsed.mint;
-    const [namespaceId] = await findNamespaceId(namespaceName);
-    const [claimRequestId] = await findClaimRequestId(
+    const namespaceId = findNamespaceId(namespaceName);
+    const claimRequestId = findClaimRequestId(
       namespaceId,
       entryName,
       provider.wallet.publicKey
     );
     const transaction = new web3.Transaction();
-    await withCreateClaimRequest(
+    withCreateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -262,7 +255,7 @@ describe("create-claim-revoke-name-entry", () => {
       provider.wallet.publicKey,
       transaction
     );
-    await withUpdateClaimRequest(
+    withUpdateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -272,7 +265,7 @@ describe("create-claim-revoke-name-entry", () => {
       transaction
     );
     if (entry.parsed.reverseEntry) {
-      await withRevokeReverseEntry(
+      withRevokeReverseEntry(
         transaction,
         provider.connection,
         provider.wallet,
@@ -294,10 +287,8 @@ describe("create-claim-revoke-name-entry", () => {
     );
     await executeTransaction(provider.connection, transaction, provider.wallet);
 
-    const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
-      (
-        await findNamespaceId(namespaceName)
-      )[0],
+    const reverseEntryId = findReverseNameEntryForNamespaceId(
+      findNamespaceId(namespaceName),
       provider.wallet.publicKey
     );
     expect(entry.parsed.reverseEntry?.toString()).toEqual(
@@ -307,9 +298,7 @@ describe("create-claim-revoke-name-entry", () => {
       getReverseNameEntryForNamespace(
         provider.connection,
         provider.wallet.publicKey,
-        (
-          await findNamespaceId(namespaceName)
-        )[0]
+        findNamespaceId(namespaceName)
       )
     );
     expect(checkReverseEntry).toEqual(null);

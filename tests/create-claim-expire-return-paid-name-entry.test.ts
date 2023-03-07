@@ -1,5 +1,5 @@
+import type { CardinalProvider } from "@cardinal/common";
 import {
-  CardinalProvider,
   executeTransaction,
   findAta,
   getTestProvider,
@@ -74,21 +74,16 @@ describe("create-claim-expire-name-entry", () => {
     );
 
     const transaction = new web3.Transaction();
-    await withCreateNamespace(
-      transaction,
-      provider.connection,
-      provider.wallet,
-      {
-        namespaceName,
-        updateAuthority: provider.wallet.publicKey,
-        rentAuthority: provider.wallet.publicKey,
-        approveAuthority: provider.wallet.publicKey,
-        paymentAmountDaily,
-        paymentMint: paymentMintId,
-        transferableEntries: false,
-        maxExpiration: new anchor.BN(Date.now() / 1000 + 2 * 86400),
-      }
-    );
+    withCreateNamespace(transaction, provider.connection, provider.wallet, {
+      namespaceName,
+      updateAuthority: provider.wallet.publicKey,
+      rentAuthority: provider.wallet.publicKey,
+      approveAuthority: provider.wallet.publicKey,
+      paymentAmountDaily,
+      paymentMint: paymentMintId,
+      transferableEntries: false,
+      maxExpiration: new anchor.BN(Date.now() / 1000 + 2 * 86400),
+    });
 
     await executeTransaction(provider.connection, transaction, provider.wallet);
 
@@ -133,7 +128,7 @@ describe("create-claim-expire-name-entry", () => {
   it("Init entry and mint", async () => {
     const transaction = new web3.Transaction();
 
-    await withInitNameEntry(
+    withInitNameEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -141,7 +136,7 @@ describe("create-claim-expire-name-entry", () => {
       entryName
     );
 
-    await withInitNameEntryMint(
+    withInitNameEntryMint(
       transaction,
       provider.connection,
       provider.wallet,
@@ -172,7 +167,7 @@ describe("create-claim-expire-name-entry", () => {
   it("Create claim request", async () => {
     const transaction = new web3.Transaction();
 
-    await withCreateClaimRequest(
+    withCreateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -192,7 +187,7 @@ describe("create-claim-expire-name-entry", () => {
       provider.wallet.publicKey
     );
     const transaction = new web3.Transaction();
-    await withUpdateClaimRequest(
+    withUpdateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -215,7 +210,7 @@ describe("create-claim-expire-name-entry", () => {
       nameEntryMint,
       duration
     );
-    await withSetNamespaceReverseEntry(
+    withSetNamespaceReverseEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -261,9 +256,7 @@ describe("create-claim-expire-name-entry", () => {
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
-      (
-        await findNamespaceId(namespaceName)
-      )[0]
+      findNamespaceId(namespaceName)
     );
     assert.equal(checkReverseEntry.parsed.entryName, entryName);
   });

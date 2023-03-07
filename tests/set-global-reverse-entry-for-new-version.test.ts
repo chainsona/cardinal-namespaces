@@ -1,5 +1,5 @@
+import type { CardinalProvider } from "@cardinal/common";
 import {
-  CardinalProvider,
   executeTransaction,
   findAta,
   getTestProvider,
@@ -67,21 +67,16 @@ describe("set-global-reverse-entry-for-new-version", () => {
     );
 
     const transaction = new web3.Transaction();
-    await withCreateNamespace(
-      transaction,
-      provider.connection,
-      provider.wallet,
-      {
-        namespaceName,
-        updateAuthority: provider.wallet.publicKey,
-        rentAuthority: provider.wallet.publicKey,
-        approveAuthority: provider.wallet.publicKey,
-        paymentAmountDaily,
-        paymentMint: paymentMintId,
-        transferableEntries: false,
-        maxExpiration: new anchor.BN(Date.now() / 1000 + 1),
-      }
-    );
+    withCreateNamespace(transaction, provider.connection, provider.wallet, {
+      namespaceName,
+      updateAuthority: provider.wallet.publicKey,
+      rentAuthority: provider.wallet.publicKey,
+      approveAuthority: provider.wallet.publicKey,
+      paymentAmountDaily,
+      paymentMint: paymentMintId,
+      transferableEntries: false,
+      maxExpiration: new anchor.BN(Date.now() / 1000 + 1),
+    });
     await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
@@ -99,7 +94,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
   it("Init entry and mint", async () => {
     const transaction = new web3.Transaction();
 
-    await withInitNameEntry(
+    withInitNameEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -107,7 +102,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
       entryName
     );
 
-    await withInitNameEntryMint(
+    withInitNameEntryMint(
       transaction,
       provider.connection,
       provider.wallet,
@@ -138,7 +133,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
   it("Create claim request", async () => {
     const transaction = new web3.Transaction();
 
-    await withCreateClaimRequest(
+    withCreateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -158,7 +153,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
       provider.wallet.publicKey
     );
     const transaction = new web3.Transaction();
-    await withUpdateClaimRequest(
+    withUpdateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -180,7 +175,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
       entryName,
       nameEntryMint
     );
-    await withSetNamespaceReverseEntry(
+    withSetNamespaceReverseEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -226,9 +221,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
-      (
-        await findNamespaceId(namespaceName)
-      )[0]
+      findNamespaceId(namespaceName)
     );
     assert.equal(checkReverseEntry.parsed.entryName, entryName);
   });
@@ -252,7 +245,7 @@ describe("set-global-reverse-entry-for-new-version", () => {
       namespaceName,
       entryName
     );
-    const [reverseEntryId] = await findDeprecatedReverseEntryId(
+    const reverseEntryId = findDeprecatedReverseEntryId(
       provider.wallet.publicKey
     );
     expect(nameEntry.parsed.reverseEntry?.toString()).toEqual(

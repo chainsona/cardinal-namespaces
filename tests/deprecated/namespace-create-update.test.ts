@@ -1,8 +1,5 @@
-import {
-  CardinalProvider,
-  getTestProvider,
-  newAccountWithLamports,
-} from "@cardinal/common";
+import type { CardinalProvider } from "@cardinal/common";
+import { getTestProvider, newAccountWithLamports } from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
 import { SignerWallet } from "@saberhq/solana-contrib";
 import * as web3 from "@solana/web3.js";
@@ -48,22 +45,17 @@ describe("namespace-create-update", () => {
 
     const transaction = new web3.Transaction();
 
-    await withCreateNamespace(
-      transaction,
-      provider.connection,
-      provider.wallet,
-      {
-        namespaceName: NAMESPACE_NAME,
-        updateAuthority: provider.wallet.publicKey,
-        rentAuthority: provider.wallet.publicKey,
-        approveAuthority: provider.wallet.publicKey,
-        minRentalSeconds: new BN(100),
-        maxRentalSeconds: new BN(86400),
-        paymentAmountDaily: new BN(1),
-        paymentMint: paymentMintId,
-        transferableEntries: true,
-      }
-    );
+    withCreateNamespace(transaction, provider.connection, provider.wallet, {
+      namespaceName: NAMESPACE_NAME,
+      updateAuthority: provider.wallet.publicKey,
+      rentAuthority: provider.wallet.publicKey,
+      approveAuthority: provider.wallet.publicKey,
+      minRentalSeconds: new BN(100),
+      maxRentalSeconds: new BN(86400),
+      paymentAmountDaily: new BN(1),
+      paymentMint: paymentMintId,
+      transferableEntries: true,
+    });
     transaction.feePayer = provider.wallet.publicKey;
     transaction.recentBlockhash = (
       await provider.connection.getRecentBlockhash("max")
@@ -88,7 +80,7 @@ describe("namespace-create-update", () => {
       provider.connection,
       NAMESPACE_NAME
     );
-    await withUpdateNamespace(
+    withUpdateNamespace(
       transaction,
       provider.connection,
       provider.wallet,
@@ -134,7 +126,7 @@ describe("namespace-create-update", () => {
     );
 
     const transaction = new web3.Transaction();
-    await withUpdateNamespace(
+    withUpdateNamespace(
       transaction,
       provider.connection,
       provider.wallet,

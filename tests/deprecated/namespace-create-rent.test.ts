@@ -1,6 +1,7 @@
 import { certificateIdForMint } from "@cardinal/certificates";
+import type { CardinalProvider } from "@cardinal/common";
 import {
-  CardinalProvider,
+  getTestProvider,
   newAccountWithLamports,
   withFindOrInitAssociatedTokenAccount,
 } from "@cardinal/common";
@@ -25,7 +26,6 @@ import {
   withSetReverseEntry,
 } from "../../src/deprecated";
 import { createMint } from "../utils";
-import { getTestProvider } from "@cardinal/common";
 
 describe("namespace-create-rent", () => {
   // test params
@@ -57,21 +57,16 @@ describe("namespace-create-rent", () => {
 
     const transaction = new web3.Transaction();
 
-    await withCreateNamespace(
-      transaction,
-      provider.connection,
-      provider.wallet,
-      {
-        namespaceName,
-        updateAuthority: provider.wallet.publicKey,
-        rentAuthority: provider.wallet.publicKey,
-        approveAuthority: provider.wallet.publicKey,
-        paymentAmountDaily,
-        paymentMint: paymentMintId,
-        maxRentalSeconds: new BN(86400),
-        transferableEntries: true,
-      }
-    );
+    withCreateNamespace(transaction, provider.connection, provider.wallet, {
+      namespaceName,
+      updateAuthority: provider.wallet.publicKey,
+      rentAuthority: provider.wallet.publicKey,
+      approveAuthority: provider.wallet.publicKey,
+      paymentAmountDaily,
+      paymentMint: paymentMintId,
+      maxRentalSeconds: new BN(86400),
+      transferableEntries: true,
+    });
     transaction.feePayer = provider.wallet.publicKey;
     transaction.recentBlockhash = (
       await provider.connection.getRecentBlockhash("max")
@@ -128,7 +123,7 @@ describe("namespace-create-rent", () => {
   it("Create claim request", async () => {
     const transaction = new web3.Transaction();
 
-    await withCreateClaimRequest(
+    withCreateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -156,7 +151,7 @@ describe("namespace-create-rent", () => {
       provider.wallet.publicKey
     );
     const transaction = new web3.Transaction();
-    await withUpdateClaimRequest(
+    withUpdateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,

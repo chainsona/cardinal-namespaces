@@ -29,7 +29,7 @@ export async function getNamespaceByName(
   connection: Connection,
   namespaceName: string
 ): Promise<AccountData<NamespaceData>> {
-  const [namespaceId] = await findNamespaceId(namespaceName);
+  const namespaceId = findNamespaceId(namespaceName);
   return getNamespace(connection, namespaceId);
 }
 
@@ -55,7 +55,7 @@ export async function getNamespace(
 export async function getGlobalContext(
   connection: Connection
 ): Promise<AccountData<NamespaceData>> {
-  const [globalContextId] = await findGlobalContextId();
+  const globalContextId = findGlobalContextId();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const provider = new AnchorProvider(connection, null, {});
@@ -125,8 +125,8 @@ export async function getNameEntry(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [entryId] = await findNameEntryId(namespaceId, entryName);
+  const namespaceId = findNamespaceId(namespaceName);
+  const entryId = findNameEntryId(namespaceId, entryName);
   const parsed = await namespacesProgram.account.entry.fetch(entryId);
   return {
     parsed,
@@ -147,11 +147,10 @@ export async function getNameEntriesForNamespace(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const entryTuples = await Promise.all(
+  const namespaceId = findNamespaceId(namespaceName);
+  const entryIds = await Promise.all(
     entryNames.map((entryName) => findNameEntryId(namespaceId, entryName))
   );
-  const entryIds = entryTuples.map((tuple) => tuple[0]);
   const result = (await namespacesProgram.account.entry.fetchMultiple(
     entryIds
   )) as EntryData[];
@@ -176,12 +175,8 @@ export async function getClaimRequest(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [namespaceId] = await findNamespaceId(namespaceName);
-  const [claimRequestId] = await findClaimRequestId(
-    namespaceId,
-    entryName,
-    requestor
-  );
+  const namespaceId = findNamespaceId(namespaceName);
+  const claimRequestId = findClaimRequestId(namespaceId, entryName, requestor);
   const parsed = await namespacesProgram.account.claimRequest.fetch(
     claimRequestId
   );
@@ -243,10 +238,7 @@ export async function getReverseNameEntryForNamespace(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
-    namespace,
-    pubkey
-  );
+  const reverseEntryId = findReverseNameEntryForNamespaceId(namespace, pubkey);
   const parsed = await namespacesProgram.account.reverseEntry.fetch(
     reverseEntryId
   );
@@ -268,7 +260,7 @@ export async function getGlobalReverseNameEntry(
     NAMESPACES_PROGRAM_ID,
     provider
   );
-  const [reverseEntryId] = await findGlobalReverseNameEntryId(pubkey);
+  const reverseEntryId = findGlobalReverseNameEntryId(pubkey);
   const parsed = await namespacesProgram.account.reverseEntry.fetch(
     reverseEntryId
   );
@@ -301,7 +293,7 @@ export async function getReverseEntry(
     if (!namespace) {
       throw new Error("Skipping to deprecated version");
     }
-    const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
+    const reverseEntryId = findReverseNameEntryForNamespaceId(
       namespace,
       pubkey
     );
@@ -321,7 +313,7 @@ export async function getReverseEntry(
         "Reverse entry not found and global reverse entry disallowed"
       );
     }
-    const [reverseEntryId] = await findDeprecatedReverseEntryId(pubkey);
+    const reverseEntryId = findDeprecatedReverseEntryId(pubkey);
     const parsed = await namespacesProgram.account.reverseEntry.fetch(
       reverseEntryId
     );

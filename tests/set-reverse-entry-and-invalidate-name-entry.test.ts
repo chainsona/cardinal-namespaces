@@ -1,5 +1,5 @@
+import type { CardinalProvider } from "@cardinal/common";
 import {
-  CardinalProvider,
   executeTransaction,
   findAta,
   getTestProvider,
@@ -42,18 +42,13 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
 
   it("Creates a namespace", async () => {
     const transaction = new web3.Transaction();
-    await withCreateNamespace(
-      transaction,
-      provider.connection,
-      provider.wallet,
-      {
-        namespaceName,
-        updateAuthority: provider.wallet.publicKey,
-        rentAuthority: provider.wallet.publicKey,
-        approveAuthority: provider.wallet.publicKey,
-        transferableEntries: false,
-      }
-    );
+    withCreateNamespace(transaction, provider.connection, provider.wallet, {
+      namespaceName,
+      updateAuthority: provider.wallet.publicKey,
+      rentAuthority: provider.wallet.publicKey,
+      approveAuthority: provider.wallet.publicKey,
+      transferableEntries: false,
+    });
     await executeTransaction(provider.connection, transaction, provider.wallet);
 
     const checkNamespace = await getNamespaceByName(
@@ -69,7 +64,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     const mintKeypair = web3.Keypair.generate();
     const transaction = new web3.Transaction();
 
-    await withInitNameEntry(
+    withInitNameEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -77,7 +72,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName1
     );
 
-    await withInitNameEntryMint(
+    withInitNameEntryMint(
       transaction,
       provider.connection,
       provider.wallet,
@@ -108,7 +103,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
   it("Create claim request", async () => {
     const transaction = new web3.Transaction();
 
-    await withCreateClaimRequest(
+    withCreateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -128,7 +123,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       provider.wallet.publicKey
     );
     const transaction = new web3.Transaction();
-    await withUpdateClaimRequest(
+    withUpdateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -199,7 +194,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     const mintId = entry.parsed.mint;
 
     const transaction = new web3.Transaction();
-    await withSetNamespaceReverseEntry(
+    withSetNamespaceReverseEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -212,9 +207,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
-      (
-        await findNamespaceId(namespaceName)
-      )[0]
+      findNamespaceId(namespaceName)
     );
     assert.equal(checkReverseEntry.parsed.entryName, entryName1);
   });
@@ -225,7 +218,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     const mintKeypair = web3.Keypair.generate();
     const transaction = new web3.Transaction();
 
-    await withInitNameEntry(
+    withInitNameEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -233,7 +226,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName2
     );
 
-    await withInitNameEntryMint(
+    withInitNameEntryMint(
       transaction,
       provider.connection,
       provider.wallet,
@@ -264,7 +257,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
   it("Create claim request", async () => {
     const transaction = new web3.Transaction();
 
-    await withCreateClaimRequest(
+    withCreateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -284,7 +277,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       provider.wallet.publicKey
     );
     const transaction = new web3.Transaction();
-    await withUpdateClaimRequest(
+    withUpdateClaimRequest(
       provider.connection,
       provider.wallet,
       namespaceName,
@@ -355,7 +348,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     const mintId = entry.parsed.mint;
 
     const transaction = new web3.Transaction();
-    await withSetNamespaceReverseEntry(
+    withSetNamespaceReverseEntry(
       transaction,
       provider.connection,
       provider.wallet,
@@ -368,9 +361,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     const checkReverseEntry = await getReverseNameEntryForNamespace(
       provider.connection,
       provider.wallet.publicKey,
-      (
-        await findNamespaceId(namespaceName)
-      )[0]
+      findNamespaceId(namespaceName)
     );
     assert.equal(checkReverseEntry.parsed.entryName, entryName2);
   });
@@ -409,7 +400,7 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       entryName1
     );
     const mintId = checkNameEntry.parsed.mint;
-    const [namespaceId] = await findNamespaceId(namespaceName);
+    const namespaceId = findNamespaceId(namespaceName);
     const namespaceReverseEntryData = await tryGetAccount(() =>
       getReverseNameEntryForNamespace(
         provider.connection,
@@ -486,10 +477,8 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
       namespaceDataBefore.parsed.count - 1
     );
 
-    const [reverseEntryId] = await findReverseNameEntryForNamespaceId(
-      (
-        await findNamespaceId(namespaceName)
-      )[0],
+    const reverseEntryId = findReverseNameEntryForNamespaceId(
+      findNamespaceId(namespaceName),
       provider.wallet.publicKey
     );
     expect(checkNameEntry.parsed.reverseEntry?.toString()).toEqual(
@@ -509,16 +498,14 @@ describe("set-reverse-entry-and-invalidate-name-entry", () => {
     const entryAfter = await tryGetAccount(() =>
       getNameEntry(provider.connection, namespaceName, entryName1)
     );
-    expect(entryAfter?.parsed.isClaimed).toBeFalsy;
-    expect(entryAfter?.parsed.data).toBeNull;
+    expect(entryAfter?.parsed.isClaimed).toBeFalsy();
+    expect(entryAfter?.parsed.data).toBeNull();
 
     const checkNamespaceTokenAccount = await getAccount(
       provider.connection,
       await findAta(
         checkNameEntry.parsed.mint,
-        (
-          await findNamespaceId(namespaceName)
-        )[0],
+        findNamespaceId(namespaceName),
         true
       )
     );
