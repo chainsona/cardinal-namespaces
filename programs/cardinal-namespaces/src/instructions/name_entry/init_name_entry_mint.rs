@@ -1,5 +1,5 @@
 use anchor_lang::solana_program::program::invoke;
-use mpl_token_metadata::instruction::{create_master_edition_v3, create_metadata_accounts_v2};
+use mpl_token_metadata::instruction::{create_master_edition_v3, create_metadata_accounts_v3};
 
 use {
     crate::{errors::ErrorCode, state::*},
@@ -80,7 +80,7 @@ pub fn handler(ctx: Context<InitNameEntryMintCtx>) -> Result<()> {
 
     // create metadata
     invoke_signed(
-        &create_metadata_accounts_v2(
+        &create_metadata_accounts_v3(
             *ctx.accounts.token_metadata_program.key,
             *ctx.accounts.mint_metadata.key,
             *ctx.accounts.mint.key,
@@ -99,6 +99,7 @@ pub fn handler(ctx: Context<InitNameEntryMintCtx>) -> Result<()> {
             0,
             true,
             true,
+            None,
             None,
             None,
         ),

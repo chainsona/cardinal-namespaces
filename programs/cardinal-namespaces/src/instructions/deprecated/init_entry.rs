@@ -1,3 +1,5 @@
+use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+
 use {
     crate::state::*,
     anchor_lang::{prelude::*, solana_program::program::invoke_signed},
@@ -79,7 +81,7 @@ pub fn handler(ctx: Context<InitEntry>, ix: InitEntryIx) -> Result<()> {
 
     // create metadata
     invoke_signed(
-        &create_metadata_accounts(
+        &create_metadata_accounts_v3(
             *ctx.accounts.token_metadata_program.key,
             *ctx.accounts.certificate_mint_metadata.key,
             *ctx.accounts.certificate_mint.key,
@@ -98,6 +100,9 @@ pub fn handler(ctx: Context<InitEntry>, ix: InitEntryIx) -> Result<()> {
             0,
             true,
             true,
+            None,
+            None,
+            None,
         ),
         &[
             ctx.accounts.certificate_mint_metadata.to_account_info(),
