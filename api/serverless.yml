@@ -18,28 +18,6 @@ package:
 
 functions:
   ################################ V1 Twitter ################################
-  v1-twitter-approver:
-    handler: twitter/approver/handler.approve
-    timeout: 30
-    environment:
-      TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
-    events:
-      - http:
-          path: /approve
-          method: get
-          cors: true
-  v1-twitter-revoker:
-    handler: twitter/revoker/handler.revoke
-    timeout: 30
-    environment:
-      TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
-    events:
-      - http:
-          path: /revoke
-          method: get
-          cors: true
   v1-twitter-proxy:
     handler: twitter/proxy/handler.proxy
     environment:
