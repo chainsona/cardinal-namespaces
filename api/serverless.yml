@@ -200,96 +200,6 @@ functions:
           method: post
           cors: true
 
-  ################################ Events ################################
-  event-create:
-    handler: events/eventCreate/handler.handle
-    timeout: 30
-    environment:
-      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
-    events:
-      - http:
-          path: /events
-          method: post
-          cors: true
-  event-update:
-    handler: events/eventUpdate/handler.handle
-    timeout: 30
-    environment:
-      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
-    events:
-      - http:
-          path: /events/{eventId}
-          method: put
-          cors: true
-  ticket-create:
-    handler: events/ticketsManager/handler.handle
-    timeout: 30
-    environment:
-      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
-      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
-      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
-      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
-    events:
-      - http:
-          path: /tickets
-          method: post
-          cors: true
-  tickets-claimer:
-    handler: events/ticketsClaimer/handler.handle
-    timeout: 30
-    environment:
-      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
-      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
-      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
-      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
-    events:
-      - http:
-          path: /tickets/{ticketId}/claim
-          method: post
-          cors: true
-  ticket-otp-claimer:
-    handler: events/ticketClaimerFromOtp/handler.otpClaim
-    timeout: 30
-    environment:
-      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
-      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
-      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
-      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
-    events:
-      - http:
-          path: /tickets/{ticketId}/approve/claim
-          method: post
-          cors: true
-  tickets-approver:
-    handler: events/ticketsApprover/handler.handle
-    timeout: 30
-    environment:
-      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
-      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
-      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
-      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
-    events:
-      - http:
-          path: /tickets/{ticketId}/approve
-          method: post
-          cors: true
-  tickets-confirm-transaction:
-    handler: events/ticketsConfirmTransaction/handler.handle
-    timeout: 30
-    environment:
-      EVENT_APPROVER_WALLET: ${ssm:/EVENT_APPROVER_WALLET~true}
-      EVENT_APPROVER_COLLECTION: ${ssm:/EVENT_APPROVER_COLLECTION~true}
-      EVENT_APPROVER_TYPEFORM: ${ssm:/EVENT_APPROVER_TYPEFORM~true}
-      EVENT_APPROVER_NONE: ${ssm:/EVENT_APPROVER_NONE~true}
-      SES_ACCESS_KEY_ID: ${ssm:/SES_ACCESS_KEY_ID~true}
-      SES_SECRET_ACCESS_KEY: ${ssm:/SES_SECRET_ACCESS_KEY~true}
-      CONFIRM_TRANSACTIONS_DISABLED: ${param:CONFIRM_TRANSACTIONS_DISABLED,false}
-      FIREBASE_PRIVATE_KEY: ${ssm:/FIREBASE_PRIVATE_KEY~true}
-
   ################################ Passbase ################################
   passbase-webhook:
     handler: passbase/passbase-webhook/handler.webhook
@@ -348,43 +258,6 @@ functions:
           method: get
           cors: true
 
-stepFunctions:
-  stateMachines:
-    everyminute:
-      type: EXPRESS
-      events:
-        - schedule:
-            rate: rate(1 minute)
-      id: tickets-confirm-transaction-${opt:stage}
-      name: tickets-confirm-transaction-${opt:stage}
-      definition:
-        StartAt: Create Loop Items
-        States:
-          Create Loop Items:
-            Type: Pass
-            Next: Loop
-            Result:
-              items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-          Loop:
-            Type: Map
-            ItemsPath: "$.items"
-            MaxConcurrency: 1
-            Iterator:
-              StartAt: Wait 5 Seconds
-              States:
-                Wait 5 Seconds:
-                  Type: Wait
-                  Seconds: 5
-                  Next: TicketConfirmTransaction
-                TicketConfirmTransaction:
-                  Type: Task
-                  Resource: arn:aws:states:::lambda:invoke
-                  Parameters:
-                    FunctionName: !GetAtt tickets-confirm-transaction.Arn
-                    InvocationType: Event
-                  End: true
-            End: true
-
 custom:
   # domains:
   #   main:
@@ -413,5 +286,3 @@ plugins:
   - serverless-offline
   - serverless-plugin-include-dependencies
   - serverless-dotenv-plugin
-  - serverless-prune-plugin
-  - serverless-step-functions
