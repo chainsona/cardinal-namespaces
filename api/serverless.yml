@@ -59,17 +59,6 @@ functions:
               - name: request.path.usernames
 
   ################################ Twitter ################################
-  twitter-approver:
-    handler: twitter/approver/handler.approve
-    timeout: 30
-    environment:
-      TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
-    events:
-      - http:
-          path: /twitter/approve
-          method: get
-          cors: true
   twitter-migrate:
     handler: twitter/migrate/handler.migrate
     timeout: 30
@@ -79,16 +68,6 @@ functions:
     events:
       - http:
           path: /twitter/migrate
-          method: post
-          cors: true
-  twitter-unlinker:
-    handler: twitter/unlinker/handler.unlink
-    environment:
-      TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
-    events:
-      - http:
-          path: /twitter/unlink
           method: post
           cors: true
   twitter-verifier:
@@ -110,17 +89,6 @@ functions:
       - http:
           path: /twitter/claim
           method: post
-          cors: true
-  twitter-revoker:
-    handler: twitter/revoker/handler.revoke
-    timeout: 30
-    environment:
-      TWITTER_SOLANA_KEY: ${ssm:/TWITTER_SOLANA_KEY~true}
-      TWITTER_API_KEYS: ${ssm:/TWITTER_API_KEYS~true}
-    events:
-      - http:
-          path: /twitter/revoke
-          method: get
           cors: true
   twitter-proxy:
     handler: twitter/proxy/handler.proxy
