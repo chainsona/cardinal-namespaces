@@ -145,9 +145,6 @@ fn handle_init_name_entry_mint_and_claim<'info>(ctx: Context<'_, '_, '_, 'info, 
     let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
     token::initialize_mint(cpi_context, 0, &ctx.accounts.namespace.key(), Some(&ctx.accounts.namespace.key()))?;
 
-    // do you have plans for tomorrow
-    // you tryna go out in the city
-
     // create metadata
     invoke_signed(
         &create_metadata_accounts_v3(
