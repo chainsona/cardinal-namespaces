@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 
 import { claimTransaction } from "../../common/claimTransaction";
 import { connectionFor } from "../../common/connection";
-import type { DiscordUserInfoParams } from "../../tools/types";
+import type { DiscordUserInfoParams } from "../../common/types";
 
 const NAMESPACE_NAME = "discord";
 

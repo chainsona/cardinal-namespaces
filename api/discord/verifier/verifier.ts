@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import type {
   DiscordResponseParams,
   DiscordUserInfoParams,
-} from "../../tools/types";
+} from "../../common/types";
 
 export async function verify(
   publicKey: string,

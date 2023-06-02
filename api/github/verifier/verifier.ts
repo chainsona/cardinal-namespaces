@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import type {
   GithubResponseParams,
   GithubUserInfoParams,
-} from "../../tools/types";
+} from "../../common/types";
 
 export async function verify(
   publicKey: string,

@@ -3,19 +3,15 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 import type { AccountData } from "@cardinal/common";
-import type {
-  ClaimRequestData,
-  EntryData,
-  ReverseEntryData,
-} from "@cardinal/namespaces";
-import { NAMESPACES_IDL, NAMESPACES_PROGRAM_ID } from "@cardinal/namespaces";
 import * as anchor from "@project-serum/anchor";
 import type * as web3 from "@solana/web3.js";
 
-import { connectionFor } from "../common/connection";
+import type { ClaimRequestData, EntryData, ReverseEntryData } from "../src";
+import { NAMESPACES_IDL, NAMESPACES_PROGRAM_ID } from "../src";
+import { connectionFor } from "./connection";
 
 export async function countEntries(connection: web3.Connection): Promise<void> {
-  const coder = new anchor.BorshCoder(NAMESPACES_IDL);
+  const coder = new anchor.BorshAccountsCoder(NAMESPACES_IDL);
   const programAccounts = await connection.getProgramAccounts(
     NAMESPACES_PROGRAM_ID
   );
@@ -25,14 +21,16 @@ export async function countEntries(connection: web3.Connection): Promise<void> {
   const reverseEntries: AccountData<ReverseEntryData>[] = [];
   programAccounts.forEach((account) => {
     try {
-      const entryData = coder.accounts.decode("entry", account.account.data);
+      const entryData = coder.decode<EntryData>("entry", account.account.data);
       namespaceEntries.push({
         ...account,
         parsed: entryData,
       });
-    } catch (e) {}
+    } catch (e) {
+      // pass
+    }
     try {
-      const claimRequestData = coder.accounts.decode(
+      const claimRequestData = coder.decode<ClaimRequestData>(
         "claimRequest",
         account.account.data
       );
@@ -40,10 +38,11 @@ export async function countEntries(connection: web3.Connection): Promise<void> {
         ...account,
         parsed: claimRequestData,
       });
-    } catch (e) {}
-
+    } catch (e) {
+      // pass
+    }
     try {
-      const reverseEntryData = coder.accounts.decode(
+      const reverseEntryData = coder.decode<ReverseEntryData>(
         "reverseEntry",
         account.account.data
       );
@@ -51,7 +50,9 @@ export async function countEntries(connection: web3.Connection): Promise<void> {
         ...account,
         parsed: reverseEntryData,
       });
-    } catch (e) {}
+    } catch (e) {
+      // pass
+    }
   });
   console.log(
     `Found (${namespaceEntries.length}) name entries (${claimRequests.length}) reverse entries and (${claimRequests.length}) claim requests`
