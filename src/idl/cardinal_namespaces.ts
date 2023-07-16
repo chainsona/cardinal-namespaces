@@ -2004,6 +2004,11 @@ export type Namespaces = {
       code: 6027;
       name: "InvalidReverseEntryForNameEntry";
       msg: "Invalid reverse entry for name entry";
+    },
+    {
+      code: 6028;
+      name: "ProtocolsShutdown";
+      msg: "Cardinal Protocols are shutting down. Please read latest twitter post for more information";
     }
   ];
 };
@@ -4014,6 +4019,11 @@ export const IDL: Namespaces = {
       code: 6027,
       name: "InvalidReverseEntryForNameEntry",
       msg: "Invalid reverse entry for name entry",
+    },
+    {
+      code: 6028,
+      name: "ProtocolsShutdown",
+      msg: "Cardinal Protocols are shutting down. Please read latest twitter post for more information",
     },
   ],
 };

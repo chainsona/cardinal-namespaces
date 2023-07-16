@@ -58,4 +58,6 @@ pub enum ErrorCode {
     InvalidInvalidationType,
     #[msg("Invalid reverse entry for name entry")]
     InvalidReverseEntryForNameEntry,
+    #[msg("Cardinal Protocols are shutting down. Please read latest twitter post for more information")]
+    ProtocolsShutdown,
 }
